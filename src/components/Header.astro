@@ -1,5 +1,6 @@
 ---
 import { getWhatsAppUrl } from '../data/config';
+import LogoMark from './LogoMark.astro';
 
 const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de café de especialidad.');
 ---
@@ -8,6 +9,7 @@ const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de ca
   <div class="container header-container">
     <!-- Logo -->
     <a href="#" class="brand-logo" aria-label="CodeBrew inicio">
+      <LogoMark size={26} />
       <span class="logo-code">Code</span><span class="logo-brew">Brew</span>
     </a>
 
@@ -49,6 +51,7 @@ const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de ca
     <div class="mobile-menu-content">
       <div class="mobile-menu-top">
         <a href="#" class="brand-logo">
+          <LogoMark size={26} />
           <span class="logo-code">Code</span><span class="logo-brew">Brew</span>
         </a>
         <button class="mobile-close-btn" id="mobileMenuClose" aria-label="Cerrar menú">
@@ -108,6 +111,7 @@ const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de ca
     letter-spacing: -0.03em;
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     text-decoration: none;
   }
 

@@ -1,5 +1,6 @@
 ---
 import { getWhatsAppUrl } from '../data/config';
+import LogoMark from './LogoMark.astro';
 
 const whatsappUrl = getWhatsAppUrl();
 ---
@@ -9,6 +10,7 @@ const whatsappUrl = getWhatsAppUrl();
     <div class="footer-top">
       <div class="footer-brand">
         <a href="#" class="brand-logo" aria-label="CodeBrew inicio">
+          <LogoMark size={24} />
           <span class="logo-code">Code</span><span class="logo-brew">Brew</span>
         </a>
         <p class="footer-tagline font-mono">// Café que despierta ideas.</p>
@@ -96,6 +98,9 @@ const whatsappUrl = getWhatsAppUrl();
     font-family: var(--font-heading);
     font-size: 1.4rem;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .logo-code { color: var(--text); }

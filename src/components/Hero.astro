@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { getWhatsAppUrl } from '../data/config';
+import heroBag from '../assets/products/bag-dark.png';
 
 const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quiero pedir café de especialidad.');
 ---
@@ -49,14 +51,16 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
       </div>
     </div>
 
-    <!-- Columna de Imagen (Placeholder estricto) -->
+    <!-- Columna de Imagen -->
     <div class="hero-media">
-      <div class="img-slot hero-img-slot" id="img-hero">
-        <div class="placeholder-content">
-          <span class="placeholder-icon">⬚</span>
-          <span class="placeholder-text">[ IMG: hero — bolsa CodeBrew 250 g sobre superficie negra | 4:5 ]</span>
-          <span class="placeholder-subtext">(1:1 en desktop)</span>
-        </div>
+      <div class="img-slot hero-img-slot has-image" id="img-hero">
+        <Image
+          src={heroBag}
+          alt="Bolsa de café de especialidad CodeBrew sobre superficie oscura"
+          width={720}
+          height={900}
+          priority
+        />
       </div>
     </div>
   </div>
@@ -116,7 +120,7 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     color: var(--muted);
   }
 
-  /* Placeholder de Imagen Hero */
+  /* Imagen Hero */
   .hero-media {
     width: 100%;
   }
@@ -127,21 +131,16 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   }
 
-  .placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+  .hero-img-slot.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: var(--line);
   }
 
-  .placeholder-icon {
-    font-size: 1.6rem;
-    opacity: 0.6;
-  }
-
-  .placeholder-subtext {
-    font-size: 0.72rem;
-    opacity: 0.7;
+  .hero-img-slot.has-image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   @media (min-width: 640px) {

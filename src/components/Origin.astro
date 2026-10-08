@@ -1,4 +1,5 @@
 ---
+import OriginIllustration from './OriginIllustration.astro';
 ---
 
 <section class="origin-section" id="origen">
@@ -41,13 +42,10 @@
         </div>
       </div>
 
-      <!-- Placeholder de Imagen Origen -->
+      <!-- Ilustración Origen -->
       <div class="origin-media">
-        <div class="img-slot origin-img-slot" id="img-origen">
-          <div class="placeholder-content">
-            <span class="placeholder-icon">⬚</span>
-            <span class="placeholder-text">[ IMG: origen — cafetales de altura en Rodríguez de Mendoza, Amazonas | 16:9 ]</span>
-          </div>
+        <div class="img-slot origin-img-slot has-image" id="img-origen">
+          <OriginIllustration />
         </div>
       </div>
     </div>
@@ -154,16 +152,10 @@
     height: 100%;
   }
 
-  .placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .placeholder-icon {
-    font-size: 1.5rem;
-    opacity: 0.6;
+  .origin-img-slot.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: var(--line);
   }
 
   @media (min-width: 1024px) {
