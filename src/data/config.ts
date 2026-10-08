@@ -1,3 +1,7 @@
+import type { ImageMetadata } from 'astro';
+import bagLight from '../assets/products/bag-light.png';
+import bagDark from '../assets/products/bag-dark.png';
+
 export const SITE_CONFIG = {
   name: 'CodeBrew',
   tagline: 'Café que despierta ideas.',
@@ -24,6 +28,9 @@ export interface ProductItem {
   highlightTag?: string;
   imgSlotId: string;
   imgSlotLabel: string;
+  image: ImageMetadata;
+  /** Segunda imagen opcional, para productos que combinan dos presentaciones (ej. packs dúo). */
+  image2?: ImageMetadata;
 }
 
 export const PRODUCTS: ProductItem[] = [
@@ -35,7 +42,8 @@ export const PRODUCTS: ProductItem[] = [
     roast: 'Tueste medio',
     price: 34,
     imgSlotId: 'img-producto-monteverde-250',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]'
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]',
+    image: bagLight
   },
   {
     id: 'monteverde-500',
@@ -45,7 +53,8 @@ export const PRODUCTS: ProductItem[] = [
     roast: 'Tueste medio',
     price: 60,
     imgSlotId: 'img-producto-monteverde-500',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]'
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]',
+    image: bagLight
   },
   {
     id: 'espresso-250',
@@ -55,7 +64,8 @@ export const PRODUCTS: ProductItem[] = [
     roast: 'Tueste medio-oscuro',
     price: 34,
     imgSlotId: 'img-producto-espresso-250',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 250 g | 1:1 ]'
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 250 g | 1:1 ]',
+    image: bagDark
   },
   {
     id: 'espresso-500',
@@ -65,7 +75,8 @@ export const PRODUCTS: ProductItem[] = [
     roast: 'Tueste medio-oscuro',
     price: 60,
     imgSlotId: 'img-producto-espresso-500',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 500 g | 1:1 ]'
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 500 g | 1:1 ]',
+    image: bagDark
   },
   {
     id: 'pack-developer',
@@ -77,7 +88,9 @@ export const PRODUCTS: ProductItem[] = [
     highlighted: true,
     highlightTag: 'const favorito = true;',
     imgSlotId: 'img-producto-pack-developer',
-    imgSlotLabel: '[ IMG: Pack Developer Dúo 2x250 g con packaging exclusivo | 1:1 ]'
+    imgSlotLabel: '[ IMG: Pack Developer Dúo 2x250 g con packaging exclusivo | 1:1 ]',
+    image: bagLight,
+    image2: bagDark
   },
   {
     id: 'microlote-temporada',
@@ -87,7 +100,8 @@ export const PRODUCTS: ProductItem[] = [
     roast: 'Tueste claro',
     price: 45,
     imgSlotId: 'img-producto-microlote',
-    imgSlotLabel: '[ IMG: bolsa Microlote Selección Especial 250 g | 1:1 ]'
+    imgSlotLabel: '[ IMG: bolsa Microlote Selección Especial 250 g | 1:1 ]',
+    image: bagLight
   }
 ];
 

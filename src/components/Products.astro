@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 ---
 
@@ -32,13 +33,26 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
               </div>
             )}
 
-            <!-- Placeholder de Imagen Producto (1:1) -->
+            <!-- Imagen Producto (1:1) -->
             <div class="product-media">
-              <div class="img-slot product-img-slot" id={product.imgSlotId}>
-                <div class="placeholder-content">
-                  <span class="placeholder-icon">⬚</span>
-                  <span class="placeholder-text">{product.imgSlotLabel}</span>
-                </div>
+              <div
+                class={`img-slot product-img-slot has-image ${product.image2 ? 'is-duo' : ''}`}
+                id={product.imgSlotId}
+              >
+                <Image
+                  src={product.image}
+                  alt={`${product.name} ${product.format} — ${product.roast}`}
+                  width={480}
+                  height={480}
+                />
+                {product.image2 && (
+                  <Image
+                    src={product.image2}
+                    alt={`${product.name} ${product.format} — segunda presentación`}
+                    width={480}
+                    height={480}
+                  />
+                )}
               </div>
             </div>
 
@@ -178,21 +192,25 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     min-height: 200px;
   }
 
-  .placeholder-content {
+  .product-img-slot.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: var(--line);
+  }
+
+  .product-img-slot.has-image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-img-slot.is-duo {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
+    gap: 2px;
   }
 
-  .placeholder-icon {
-    font-size: 1.4rem;
-    opacity: 0.6;
-  }
-
-  .placeholder-text {
-    font-size: 0.75rem;
-    padding: 0 8px;
+  .product-img-slot.is-duo :global(img) {
+    width: 50%;
   }
 
   .product-info {
