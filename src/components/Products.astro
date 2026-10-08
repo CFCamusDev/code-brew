@@ -1,0 +1,277 @@
+---
+import { PRODUCTS, getWhatsAppUrl } from '../data/config';
+---
+
+<section class="products-section" id="productos">
+  <div class="container">
+    <div class="section-header">
+      <div class="header-tags">
+        <span class="section-label">// 02 — productos</span>
+        <span class="code-badge font-mono">&lt;Productos /&gt;</span>
+      </div>
+      <h2 class="section-title">Nuestra selección para desarrolladores</h2>
+      <p class="section-subtitle">
+        Tostado en pequeños batches para preservar las notas de cata. Elige tu formato preferido en grano entero o con molienda exacta para tu cafetera.
+      </p>
+    </div>
+
+    <!-- Grilla / Carrusel de Productos -->
+    <div class="products-grid" role="list">
+      {PRODUCTS.map((product) => {
+        const orderMessage = `¡Hola CodeBrew! Quiero pedir ${product.name} (${product.format}) por S/ ${product.price}.`;
+        const productUrl = getWhatsAppUrl(orderMessage);
+
+        return (
+          <article
+            class={`product-card ${product.highlighted ? 'is-highlighted' : ''}`}
+            role="listitem"
+          >
+            {product.highlighted && (
+              <div class="product-badge">
+                <span class="badge-code font-mono">{product.highlightTag}</span>
+              </div>
+            )}
+
+            <!-- Placeholder de Imagen Producto (1:1) -->
+            <div class="product-media">
+              <div class="img-slot product-img-slot" id={product.imgSlotId}>
+                <div class="placeholder-content">
+                  <span class="placeholder-icon">⬚</span>
+                  <span class="placeholder-text">{product.imgSlotLabel}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalles del Producto -->
+            <div class="product-info">
+              <div class="product-meta">
+                <span class="product-format font-mono">{product.format}</span>
+                <span class="product-grind font-mono">{product.grind}</span>
+              </div>
+
+              <h3 class="product-name">{product.name}</h3>
+              <p class="product-roast font-mono">// {product.roast}</p>
+
+              <div class="product-footer">
+                <div class="price-container">
+                  <span class="currency font-mono">S/</span>
+                  <span class="price-amount font-mono">{product.price}</span>
+                </div>
+
+                <a
+                  href={productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class={`btn ${product.highlighted ? 'btn-primary' : 'btn-metal'} product-btn`}
+                  data-event="whatsapp_click"
+                  aria-label={`Pedir ${product.name} ${product.format} por WhatsApp`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                  Pedir
+                </a>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<style>
+  .products-section {
+    padding: 72px 0;
+    background-color: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-header {
+    max-width: 720px;
+    margin-bottom: 40px;
+  }
+
+  .header-tags {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .code-badge {
+    font-size: 0.75rem;
+    color: var(--muted);
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin-bottom: 14px;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  /* Grilla de Productos con soporte de scroll horizontal snap en pantallas pequeñas si se desea, o apilado elegante */
+  .products-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  /* Tarjeta de Producto */
+  .product-card {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .product-card:hover {
+    border-color: #3C3C44;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Destacado con borde metálico */
+  .product-card.is-highlighted {
+    border: 1px solid transparent;
+    background-image: linear-gradient(var(--surface), var(--surface)), var(--metal);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 8px 30px rgba(200, 137, 74, 0.12);
+  }
+
+  .product-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+    background-color: rgba(11, 11, 12, 0.9);
+    border: 1px solid var(--accent);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .badge-code {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .product-media {
+    padding: 16px 16px 0 16px;
+  }
+
+  .product-img-slot {
+    aspect-ratio: 1 / 1;
+    min-height: 200px;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .placeholder-icon {
+    font-size: 1.4rem;
+    opacity: 0.6;
+  }
+
+  .placeholder-text {
+    font-size: 0.75rem;
+    padding: 0 8px;
+  }
+
+  .product-info {
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .product-name {
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .product-roast {
+    font-size: 0.8rem;
+    color: var(--accent-2);
+    margin-bottom: 20px;
+  }
+
+  .product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .price-container {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .currency {
+    font-size: 0.95rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .price-amount {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .product-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    min-height: 40px;
+  }
+
+  @media (min-width: 640px) {
+    .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .products-section {
+      padding: 96px 0;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+  }
+</style>

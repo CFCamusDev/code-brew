@@ -1,0 +1,180 @@
+---
+---
+
+<section class="origin-section" id="origen">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">// 01 — origen</span>
+      <h2 class="section-title">Café de altura con trazabilidad directa</h2>
+      <p class="section-subtitle">
+        Producido en el valle de Rodríguez de Mendoza, en el corazón de la selva alta de Amazonas.
+        Trabajamos mano a mano con pequeños caficultores que seleccionan cada cereza a mano, garantizando un perfil limpio, balanceado y libre de mezclas comerciales.
+      </p>
+    </div>
+
+    <div class="origin-grid">
+      <!-- Tarjeta estilo ventana de editor de código -->
+      <div class="editor-window" role="region" aria-label="Ficha técnica origen.json">
+        <div class="editor-titlebar">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot min"></span>
+            <span class="control-dot expand"></span>
+          </div>
+          <span class="editor-filename">origen.json</span>
+          <span class="editor-status font-mono">readonly</span>
+        </div>
+
+        <div class="editor-body">
+          <pre><code><span class="syn-brace">&#123;</span>
+  <span class="syn-key">"region"</span><span class="syn-colon">:</span> <span class="syn-str">"Amazonas, Perú"</span><span class="syn-comma">,</span>
+  <span class="syn-key">"provincia"</span><span class="syn-colon">:</span> <span class="syn-str">"Rodríguez de Mendoza"</span><span class="syn-comma">,</span>
+  <span class="syn-key">"altitud"</span><span class="syn-colon">:</span> <span class="syn-str">"1 400 – 1 800 msnm"</span><span class="syn-comma">,</span>
+  <span class="syn-key">"variedades"</span><span class="syn-colon">:</span> <span class="syn-brace">[</span>
+    <span class="syn-str">"Bourbon"</span><span class="syn-comma">,</span>
+    <span class="syn-str">"Typica"</span><span class="syn-comma">,</span>
+    <span class="syn-str">"Caturra"</span>
+  <span class="syn-brace">]</span><span class="syn-comma">,</span>
+  <span class="syn-key">"puntaje_SCA"</span><span class="syn-colon">:</span> <span class="syn-val">"84+"</span><span class="syn-comma">,</span>
+  <span class="syn-key">"tueste"</span><span class="syn-colon">:</span> <span class="syn-str">"artesanal"</span>
+<span class="syn-brace">&#125;</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Placeholder de Imagen Origen -->
+      <div class="origin-media">
+        <div class="img-slot origin-img-slot" id="img-origen">
+          <div class="placeholder-content">
+            <span class="placeholder-icon">⬚</span>
+            <span class="placeholder-text">[ IMG: origen — cafetales de altura en Rodríguez de Mendoza, Amazonas | 16:9 ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .origin-section {
+    padding: 72px 0;
+    border-bottom: 1px solid var(--line);
+    background-color: var(--bg);
+  }
+
+  .section-header {
+    max-width: 720px;
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin-bottom: 14px;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .origin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  /* Ventana de Editor de Código */
+  .editor-window {
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editor-titlebar {
+    background-color: #111113;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .window-controls {
+    display: flex;
+    gap: 7px;
+  }
+
+  .control-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .control-dot.close { background-color: #E05F55; }
+  .control-dot.min { background-color: #E2B340; }
+  .control-dot.expand { background-color: #57C769; }
+
+  .editor-filename {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .editor-status {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .editor-body {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+  /* Resaltado de sintaxis */
+  .syn-brace { color: #A0A0A6; }
+  .syn-colon { color: #A0A0A6; margin-right: 6px; }
+  .syn-comma { color: #707076; }
+  .syn-key { color: #82AAFF; } /* Azul suave dev */
+  .syn-str { color: var(--accent-2); } /* Verde terminal */
+  .syn-val { color: var(--accent); font-weight: 600; } /* Cobre */
+
+  /* Placeholder de Imagen */
+  .origin-img-slot {
+    aspect-ratio: 16 / 9;
+    min-height: 240px;
+    height: 100%;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .placeholder-icon {
+    font-size: 1.5rem;
+    opacity: 0.6;
+  }
+
+  @media (min-width: 1024px) {
+    .origin-section {
+      padding: 96px 0;
+    }
+
+    .origin-grid {
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      gap: 36px;
+    }
+  }
+</style>

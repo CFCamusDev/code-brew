@@ -1,0 +1,134 @@
+---
+const steps = [
+  {
+    step: '01',
+    command: 'select --blend',
+    title: 'Elige tu café',
+    desc: 'Escoge entre Origen Monteverde, Espresso Amazonas o el Pack Developer. Indícanos si lo prefieres en grano entero o con molienda específica.'
+  },
+  {
+    step: '02',
+    command: 'git push --whatsapp',
+    title: 'Escríbenos por WhatsApp',
+    desc: 'Al pulsar el botón se abrirá una conversación con tu pedido prellenado. Confirmamos stock, coordinamos el medio de pago y resolvemos cualquier duda técnica.'
+  },
+  {
+    step: '03',
+    command: 'status: 200 OK',
+    title: 'Recíbelo en casa',
+    desc: 'Empacamos tu café con válvula desgasificadora para conservar todos los aromas y te enviamos el tracking hasta la puerta de tu casa u oficina.'
+  }
+];
+---
+
+<section class="order-section" id="como-pedir">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">// 04 — deploy</span>
+      <h2 class="section-title">Cómo pedir en 3 simples pasos</h2>
+      <p class="section-subtitle">
+        Sin pasarelas engorrosas ni registros infinitos. Trato directo y café fresco en tu mesa.
+      </p>
+    </div>
+
+    <div class="steps-grid">
+      {steps.map((item) => (
+        <div class="step-card">
+          <div class="step-top">
+            <span class="step-number font-mono">{item.step}</span>
+            <span class="step-command font-mono">// {item.command}</span>
+          </div>
+          <h3 class="step-title">{item.title}</h3>
+          <p class="step-desc">{item.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .order-section {
+    padding: 72px 0;
+    border-bottom: 1px solid var(--line);
+    background-color: var(--bg);
+  }
+
+  .section-header {
+    max-width: 720px;
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin-bottom: 14px;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .step-card {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px 24px;
+    position: relative;
+    transition: border-color var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .step-card:hover {
+    border-color: #3C3C44;
+    transform: translateY(-2px);
+  }
+
+  .step-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+  }
+
+  .step-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .step-command {
+    font-size: 0.78rem;
+    color: var(--accent-2);
+  }
+
+  .step-title {
+    font-size: 1.25rem;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  @media (min-width: 768px) {
+    .steps-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .order-section {
+      padding: 96px 0;
+    }
+  }
+</style>

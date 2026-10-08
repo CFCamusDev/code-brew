@@ -1,0 +1,115 @@
+---
+import { getWhatsAppUrl } from '../data/config';
+
+const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café para nuestra empresa / equipo de desarrollo.');
+---
+
+<section class="corporate-section" id="empresas">
+  <div class="container">
+    <div class="corporate-card">
+      <div class="corporate-content">
+        <span class="section-label">// empresas & onboarding</span>
+        <h2 class="corporate-title">Café de especialidad para tu equipo tech</h2>
+        <p class="corporate-desc">
+          Abastece la barra de café de tu oficina o sorprende a tus ingenieros con packs de bienvenida y regalos corporativos personalizados. Envíos programados mensuales con facturación y soporte directo.
+        </p>
+
+        <div class="corporate-cta">
+          <a
+            href={corporateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-metal"
+            data-event="whatsapp_click"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            Cotizar plan corporativo
+          </a>
+        </div>
+      </div>
+
+      <!-- Placeholder de Imagen Corporativo (16:9) -->
+      <div class="corporate-media">
+        <div class="img-slot corporate-img-slot" id="img-corporativo">
+          <div class="placeholder-content">
+            <span class="placeholder-icon">⬚</span>
+            <span class="placeholder-text">[ IMG: corporativo — packs de café para equipos de desarrollo y eventos tech | 16:9 ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .corporate-section {
+    padding: 72px 0;
+    background-color: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .corporate-card {
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .corporate-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .corporate-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+    color: var(--text);
+  }
+
+  .corporate-desc {
+    font-size: 1rem;
+    line-height: 1.65;
+    max-width: 650px;
+  }
+
+  .corporate-cta {
+    margin-top: 8px;
+  }
+
+  .corporate-img-slot {
+    aspect-ratio: 16 / 9;
+    min-height: 220px;
+  }
+
+  .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .placeholder-icon {
+    font-size: 1.5rem;
+    opacity: 0.6;
+  }
+
+  @media (min-width: 1024px) {
+    .corporate-section {
+      padding: 96px 0;
+    }
+
+    .corporate-card {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      padding: 48px 40px;
+      gap: 40px;
+    }
+  }
+</style>

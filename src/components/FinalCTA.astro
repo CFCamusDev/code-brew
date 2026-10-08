@@ -1,0 +1,123 @@
+---
+import { getWhatsAppUrl } from '../data/config';
+
+const finalOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Estoy listo para pedir mi café de especialidad.');
+---
+
+<section class="final-cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <div class="code-tag cta-tag">
+        <span>// git commit -m "refuel complete"</span>
+      </div>
+
+      <h2 class="cta-title">¿Listo para tu próximo commit?</h2>
+
+      <p class="cta-subtitle">
+        Despierta tus ideas con el café de especialidad más fresco de Rodríguez de Mendoza. Pídelo en segundos por WhatsApp y recíbelo en tu puerta.
+      </p>
+
+      <div class="cta-action">
+        <a
+          href={finalOrderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-primary cta-btn"
+          data-event="whatsapp_click"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          Pedir por WhatsApp ahora
+        </a>
+      </div>
+
+      <div class="cta-terminal-line font-mono">
+        <span class="prompt">$</span> ping codebrew.pe -c 1 <span class="status-ok">-- 0% packet loss</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .final-cta-section {
+    padding: 80px 0;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cta-box {
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Borde superior metálico sutil */
+  .cta-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--metal);
+  }
+
+  .cta-tag {
+    font-size: 0.85rem;
+  }
+
+  .cta-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--text);
+  }
+
+  .cta-subtitle {
+    font-size: 1.05rem;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  .cta-action {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .cta-btn {
+    width: 100%;
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+
+  .cta-terminal-line {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .prompt {
+    color: var(--accent-2);
+    margin-right: 4px;
+  }
+
+  .status-ok {
+    color: var(--accent-2);
+  }
+
+  @media (min-width: 768px) {
+    .cta-box {
+      padding: 64px 48px;
+    }
+  }
+</style>

@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'CodeBrew | Café de especialidad de Amazonas',
+  description = 'Café de especialidad peruano con identidad de desarrollo de software. Granos de Rodríguez de Mendoza, Amazonas. Tueste artesanal fresco y pedidos directos por WhatsApp.'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO Básico -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="CodeBrew" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0B0B0C" />
+
+    <!-- Open Graph / Redes Sociales -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="CodeBrew" />
+    <meta property="og:locale" content="es_PE" />
+
+    <!-- Tipografías de Google Fonts: Space Grotesk, Inter y JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ========================================== -->
+    <!-- GA4 / Google Ads tag aquí                  -->
+    <!-- Inserte aquí los scripts de seguimiento:   -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
+    <!-- ========================================== -->
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

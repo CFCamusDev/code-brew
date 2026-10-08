@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import TrustBar from '../components/TrustBar.astro';
+import Origin from '../components/Origin.astro';
+import Products from '../components/Products.astro';
+import Features from '../components/Features.astro';
+import Offers from '../components/Offers.astro';
+import HowToOrder from '../components/HowToOrder.astro';
+import Corporate from '../components/Corporate.astro';
+import FinalCTA from '../components/FinalCTA.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppFloat from '../components/WhatsAppFloat.astro';
+import MobileStickyBar from '../components/MobileStickyBar.astro';
+---
+
+<Layout
+  title="CodeBrew | Café que despierta ideas · Café de especialidad de Amazonas"
+  description="Café de especialidad peruano de Rodríguez de Mendoza, Amazonas (84+ SCA). Tostado artesanal para programadores y mentes analíticas. Pide directo por WhatsApp."
+>
+  <Header />
+
+  <main id="main-content">
+    <!-- 2. Hero Section -->
+    <Hero />
+
+    <!-- 3. Barra de confianza (Métricas) -->
+    <TrustBar />
+
+    <!-- 4. Origen (01 — origen) -->
+    <Origin />
+
+    <!-- 5. Productos (02 — productos) -->
+    <Products />
+
+    <!-- 6. Por qué CodeBrew (03 — features) -->
+    <Features />
+
+    <!-- 7. Ofertas (> oferta --activa) -->
+    <Offers />
+
+    <!-- 8. Cómo pedir (04 — deploy) -->
+    <HowToOrder />
+
+    <!-- 9. Para empresas -->
+    <Corporate />
+
+    <!-- 10. CTA final -->
+    <FinalCTA />
+  </main>
+
+  <!-- 11. Footer -->
+  <Footer />
+
+  <!-- Elementos Flotantes Móviles -->
+  <WhatsAppFloat />
+  <MobileStickyBar />
+</Layout>

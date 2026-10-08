@@ -1,0 +1,302 @@
+---
+import { getWhatsAppUrl } from '../data/config';
+
+const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de café de especialidad.');
+---
+
+<header class="site-header" id="header">
+  <div class="container header-container">
+    <!-- Logo -->
+    <a href="#" class="brand-logo" aria-label="CodeBrew inicio">
+      <span class="logo-code">Code</span><span class="logo-brew">Brew</span>
+    </a>
+
+    <!-- Navegación Desktop -->
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <ul class="nav-links">
+        <li><a href="#origen" class="nav-link"><span class="code-comment">//</span> Origen</a></li>
+        <li><a href="#productos" class="nav-link"><span class="code-comment">//</span> Productos</a></li>
+        <li><a href="#como-pedir" class="nav-link"><span class="code-comment">//</span> Cómo pedir</a></li>
+      </ul>
+      <a
+        href={orderUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-primary nav-cta"
+        data-event="whatsapp_click"
+        aria-label="Pedir café por WhatsApp"
+      >
+        Pedir
+      </a>
+    </nav>
+
+    <!-- Botón Hamburguesa Móvil -->
+    <button
+      class="mobile-menu-btn"
+      id="mobileMenuToggle"
+      aria-label="Abrir menú de navegación"
+      aria-expanded="false"
+      aria-controls="mobileMenu"
+    >
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
+  </div>
+
+  <!-- Menú Móvil Pantalla Completa -->
+  <div class="mobile-menu-overlay" id="mobileMenu" aria-hidden="true">
+    <div class="mobile-menu-content">
+      <div class="mobile-menu-top">
+        <a href="#" class="brand-logo">
+          <span class="logo-code">Code</span><span class="logo-brew">Brew</span>
+        </a>
+        <button class="mobile-close-btn" id="mobileMenuClose" aria-label="Cerrar menú">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="mobile-nav-links">
+        <a href="#origen" class="mobile-link"><span class="code-comment">// 01</span> Origen</a>
+        <a href="#productos" class="mobile-link"><span class="code-comment">// 02</span> Productos</a>
+        <a href="#como-pedir" class="mobile-link"><span class="code-comment">// 03</span> Cómo pedir</a>
+        <a href="#empresas" class="mobile-link"><span class="code-comment">// 04</span> Para empresas</a>
+      </nav>
+
+      <div class="mobile-menu-footer">
+        <a
+          href={orderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-primary btn-block"
+          data-event="whatsapp_click"
+        >
+          Pedir por WhatsApp
+        </a>
+        <p class="mobile-menu-subtext">// tu código necesita café</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: rgba(11, 11, 12, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    transition: border-color var(--transition-fast);
+  }
+
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+  }
+
+  .brand-logo {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .logo-code {
+    color: var(--text);
+  }
+
+  .logo-brew {
+    color: var(--accent);
+  }
+
+  .desktop-nav {
+    display: none;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .nav-links {
+    display: flex;
+    list-style: none;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--muted);
+    transition: color var(--transition-fast);
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+  }
+
+  .code-comment {
+    color: var(--accent-2);
+    margin-right: 2px;
+  }
+
+  .nav-cta {
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    min-height: 38px;
+  }
+
+  /* Hamburguesa Móvil */
+  .mobile-menu-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .hamburger-bar {
+    width: 22px;
+    height: 2px;
+    background-color: var(--text);
+    border-radius: 2px;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+  }
+
+  /* Menú desplegable a pantalla completa */
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg);
+    z-index: 200;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .mobile-menu-overlay.is-active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .mobile-menu-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    padding: 24px 20px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .mobile-menu-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  .mobile-link {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+
+  .mobile-link span {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+  }
+
+  .mobile-menu-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  .mobile-menu-subtext {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-nav {
+      display: flex;
+    }
+    .mobile-menu-btn {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const toggleBtn = document.getElementById('mobileMenuToggle');
+  const closeBtn = document.getElementById('mobileMenuClose');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+
+  function openMenu() {
+    if (!mobileMenu) return;
+    mobileMenu.classList.add('is-active');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    toggleBtn?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    if (!mobileMenu) return;
+    mobileMenu.classList.remove('is-active');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    toggleBtn?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  toggleBtn?.addEventListener('click', openMenu);
+  closeBtn?.addEventListener('click', closeMenu);
+  mobileLinks.forEach((link) => link.addEventListener('click', closeMenu));
+</script>
