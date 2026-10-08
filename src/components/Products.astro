@@ -43,12 +43,8 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
                   <Image
                     class={index === 0 ? 'is-active' : ''}
                     data-gallery-img
-                    src={image}
-                    alt={
-                      product.galleryMode === 'duo'
-                        ? `${product.name} ${product.format} — presentación ${index + 1}`
-                        : `${product.name} ${product.format} — ${product.roast}${index > 0 ? ', vista lateral' : ''}`
-                    }
+                    src={image.src}
+                    alt={image.alt}
                     width={480}
                     height={480}
                   />
