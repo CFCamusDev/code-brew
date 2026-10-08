@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { getWhatsAppUrl } from '../data/config';
+import corporateImage from '../assets/brand/workspace-hero.webp';
 
 const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café para nuestra empresa / equipo de desarrollo.');
 ---
@@ -31,13 +33,15 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
         </div>
       </div>
 
-      <!-- Placeholder de Imagen Corporativo (16:9) -->
+      <!-- Imagen Corporativo (16:9) -->
       <div class="corporate-media">
-        <div class="img-slot corporate-img-slot" id="img-corporativo">
-          <div class="placeholder-content">
-            <span class="placeholder-icon">⬚</span>
-            <span class="placeholder-text">[ IMG: corporativo — packs de café para equipos de desarrollo y eventos tech | 16:9 ]</span>
-          </div>
+        <div class="img-slot corporate-img-slot has-image" id="img-corporativo">
+          <Image
+            src={corporateImage}
+            alt="Espacio de trabajo de desarrollador con laptop y café de especialidad CodeBrew"
+            width={960}
+            height={540}
+          />
         </div>
       </div>
     </div>
@@ -87,16 +91,16 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
     min-height: 220px;
   }
 
-  .placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+  .corporate-img-slot.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: var(--line);
   }
 
-  .placeholder-icon {
-    font-size: 1.5rem;
-    opacity: 0.6;
+  .corporate-img-slot.has-image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   @media (min-width: 1024px) {

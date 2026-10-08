@@ -1,0 +1,123 @@
+---
+---
+
+<svg
+  class="origin-illustration"
+  viewBox="0 0 640 360"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-label="Ilustración de cafetales en terrazas de altura en Rodríguez de Mendoza, Amazonas"
+>
+  <!-- Fondo -->
+  <rect width="640" height="360" class="oi-bg" />
+
+  <!-- Sol / altitud -->
+  <circle cx="512" cy="96" r="46" class="oi-sun" />
+  <circle cx="512" cy="96" r="66" class="oi-sun-ring" />
+
+  <!-- Niebla / capas de montaña lejanas -->
+  <path d="M0 150 L80 118 L160 140 L240 112 L320 136 L400 108 L480 132 L560 110 L640 128 L640 200 L0 200 Z" class="oi-ridge oi-ridge-far" />
+  <path d="M0 190 L70 160 L150 182 L230 152 L310 178 L390 150 L470 176 L550 154 L640 172 L640 240 L0 240 Z" class="oi-ridge oi-ridge-mid" />
+
+  <!-- Terrazas de cafetales -->
+  <path d="M0 232 L640 232 L640 258 L0 258 Z" class="oi-terrace oi-terrace-1" />
+  <path d="M0 258 L640 258 L640 288 L0 288 Z" class="oi-terrace oi-terrace-2" />
+  <path d="M0 288 L640 288 L640 322 L0 322 Z" class="oi-terrace oi-terrace-3" />
+  <path d="M0 322 L640 322 L640 360 L0 360 Z" class="oi-terrace oi-terrace-4" />
+
+  <!-- Líneas de contorno de terraza -->
+  <path d="M0 232 Q160 220 320 232 T640 232" class="oi-contour" />
+  <path d="M0 258 Q160 246 320 258 T640 258" class="oi-contour" />
+  <path d="M0 288 Q160 276 320 288 T640 288" class="oi-contour" />
+  <path d="M0 322 Q160 310 320 322 T640 322" class="oi-contour" />
+
+  <!-- Hileras de arbustos de café (puntos) -->
+  <g class="oi-shrubs">
+    {Array.from({ length: 14 }).map((_, i) => (
+      <circle cx={28 + i * 46} cy={246} r="5" />
+    ))}
+    {Array.from({ length: 14 }).map((_, i) => (
+      <circle cx={50 + i * 46} cy={273} r="5.5" />
+    ))}
+    {Array.from({ length: 14 }).map((_, i) => (
+      <circle cx={30 + i * 46} cy={305} r="6" />
+    ))}
+    {Array.from({ length: 14 }).map((_, i) => (
+      <circle cx={52 + i * 46} cy={340} r="6.5" />
+    ))}
+  </g>
+
+  <!-- Marcador de altitud estilo terminal -->
+  <g class="oi-marker" transform="translate(432, 150)">
+    <line x1="0" y1="0" x2="0" y2="36" />
+    <circle cx="0" cy="0" r="4" />
+    <text x="10" y="4" class="oi-marker-text">1 800 msnm</text>
+  </g>
+</svg>
+
+<style>
+  .origin-illustration {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .oi-bg {
+    fill: var(--surface);
+  }
+
+  .oi-sun {
+    fill: var(--accent);
+    opacity: 0.9;
+  }
+
+  .oi-sun-ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1;
+    opacity: 0.25;
+  }
+
+  .oi-ridge-far {
+    fill: var(--bg-2);
+  }
+
+  .oi-ridge-mid {
+    fill: #15151A;
+  }
+
+  .oi-terrace-1 { fill: #1A2420; }
+  .oi-terrace-2 { fill: #182420; }
+  .oi-terrace-3 { fill: #162220; }
+  .oi-terrace-4 { fill: #141F1D; }
+
+  .oi-contour {
+    fill: none;
+    stroke: var(--accent-2);
+    stroke-width: 1;
+    opacity: 0.35;
+  }
+
+  .oi-shrubs circle {
+    fill: var(--accent-2);
+    opacity: 0.55;
+  }
+
+  .oi-marker line {
+    stroke: var(--text);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: 0.6;
+  }
+
+  .oi-marker circle {
+    fill: var(--accent);
+  }
+
+  .oi-marker-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--muted);
+  }
+</style>
