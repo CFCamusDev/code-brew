@@ -1,6 +1,8 @@
 import type { ImageMetadata } from 'astro';
 import bagLight from '../assets/products/bag-light.png';
+import bagLightAngle from '../assets/products/bag-light-angle.png';
 import bagDark from '../assets/products/bag-dark.png';
+import bagDarkAngle from '../assets/products/bag-dark-angle.png';
 
 export const SITE_CONFIG = {
   name: 'CodeBrew',
@@ -17,6 +19,9 @@ export function getWhatsAppUrl(message?: string): string {
   return `https://wa.me/${SITE_CONFIG.phone}?text=${text}`;
 }
 
+const lightGallery = [bagLight, bagLightAngle];
+const darkGallery = [bagDark, bagDarkAngle];
+
 export interface ProductItem {
   id: string;
   name: string;
@@ -28,9 +33,10 @@ export interface ProductItem {
   highlightTag?: string;
   imgSlotId: string;
   imgSlotLabel: string;
-  image: ImageMetadata;
-  /** Segunda imagen opcional, para productos que combinan dos presentaciones (ej. packs dúo). */
-  image2?: ImageMetadata;
+  /** Imágenes del producto. Varios productos comparten la misma presentación de bolsa (clara u oscura, según tueste), mostrada en una mini-galería con distintos ángulos. */
+  images: ImageMetadata[];
+  /** Cuando es 'duo' se muestran las dos imágenes lado a lado (ej. packs con dos presentaciones) en vez de alternarlas en galería. */
+  galleryMode?: 'duo';
 }
 
 export const PRODUCTS: ProductItem[] = [
@@ -43,7 +49,7 @@ export const PRODUCTS: ProductItem[] = [
     price: 34,
     imgSlotId: 'img-producto-monteverde-250',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]',
-    image: bagLight
+    images: lightGallery
   },
   {
     id: 'monteverde-500',
@@ -54,7 +60,7 @@ export const PRODUCTS: ProductItem[] = [
     price: 60,
     imgSlotId: 'img-producto-monteverde-500',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]',
-    image: bagLight
+    images: lightGallery
   },
   {
     id: 'espresso-250',
@@ -65,7 +71,7 @@ export const PRODUCTS: ProductItem[] = [
     price: 34,
     imgSlotId: 'img-producto-espresso-250',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 250 g | 1:1 ]',
-    image: bagDark
+    images: darkGallery
   },
   {
     id: 'espresso-500',
@@ -76,7 +82,7 @@ export const PRODUCTS: ProductItem[] = [
     price: 60,
     imgSlotId: 'img-producto-espresso-500',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 500 g | 1:1 ]',
-    image: bagDark
+    images: darkGallery
   },
   {
     id: 'pack-developer',
@@ -89,8 +95,8 @@ export const PRODUCTS: ProductItem[] = [
     highlightTag: 'const favorito = true;',
     imgSlotId: 'img-producto-pack-developer',
     imgSlotLabel: '[ IMG: Pack Developer Dúo 2x250 g con packaging exclusivo | 1:1 ]',
-    image: bagLight,
-    image2: bagDark
+    images: [bagLight, bagDark],
+    galleryMode: 'duo'
   },
   {
     id: 'microlote-temporada',
@@ -101,7 +107,7 @@ export const PRODUCTS: ProductItem[] = [
     price: 45,
     imgSlotId: 'img-producto-microlote',
     imgSlotLabel: '[ IMG: bolsa Microlote Selección Especial 250 g | 1:1 ]',
-    image: bagLight
+    images: lightGallery
   }
 ];
 

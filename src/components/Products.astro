@@ -36,22 +36,35 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
             <!-- Imagen Producto (1:1) -->
             <div class="product-media">
               <div
-                class={`img-slot product-img-slot has-image ${product.image2 ? 'is-duo' : ''}`}
+                class={`img-slot product-img-slot has-image ${product.galleryMode === 'duo' ? 'is-duo' : ''} ${product.images.length > 1 && product.galleryMode !== 'duo' ? 'is-gallery' : ''}`}
                 id={product.imgSlotId}
               >
-                <Image
-                  src={product.image}
-                  alt={`${product.name} ${product.format} — ${product.roast}`}
-                  width={480}
-                  height={480}
-                />
-                {product.image2 && (
+                {product.images.map((image, index) => (
                   <Image
-                    src={product.image2}
-                    alt={`${product.name} ${product.format} — segunda presentación`}
+                    class={index === 0 ? 'is-active' : ''}
+                    data-gallery-img
+                    src={image}
+                    alt={
+                      product.galleryMode === 'duo'
+                        ? `${product.name} ${product.format} — presentación ${index + 1}`
+                        : `${product.name} ${product.format} — ${product.roast}${index > 0 ? ', vista lateral' : ''}`
+                    }
                     width={480}
                     height={480}
                   />
+                ))}
+
+                {product.images.length > 1 && product.galleryMode !== 'duo' && (
+                  <div class="gallery-dots" role="tablist" aria-label={`Vistas de ${product.name}`}>
+                    {product.images.map((_, index) => (
+                      <button
+                        type="button"
+                        class={`gallery-dot ${index === 0 ? 'is-active' : ''}`}
+                        data-gallery-dot
+                        aria-label={`Ver vista ${index + 1} de ${product.name}`}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -213,6 +226,43 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     width: 50%;
   }
 
+  /* Galería de imágenes (varios ángulos de la misma bolsa) */
+  .product-img-slot.is-gallery :global(img) {
+    display: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .product-img-slot.is-gallery :global(img.is-active) {
+    display: block;
+  }
+
+  .gallery-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    z-index: 5;
+  }
+
+  .gallery-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background-color: rgba(11, 11, 12, 0.5);
+    padding: 0;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .gallery-dot.is-active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+  }
+
   .product-info {
     padding: 20px 18px;
     display: flex;
@@ -293,3 +343,17 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     }
   }
 </style>
+
+<script>
+  document.querySelectorAll('.product-img-slot.is-gallery').forEach((slot) => {
+    const images = Array.from(slot.querySelectorAll('[data-gallery-img]'));
+    const dots = Array.from(slot.querySelectorAll('[data-gallery-dot]'));
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        images.forEach((img, i) => img.classList.toggle('is-active', i === index));
+        dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
+      });
+    });
+  });
+</script>
