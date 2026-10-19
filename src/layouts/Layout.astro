@@ -15,6 +15,15 @@ const {
 <!doctype html>
 <html lang="es">
   <head>
+    <!-- Google tag (gtag.js) - GA4 CodeBrew (G-YMMJ7V30SZ) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-YMMJ7V30SZ"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-YMMJ7V30SZ');
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
@@ -41,14 +50,20 @@ const {
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- ========================================== -->
-    <!-- GA4 / Google Ads tag aquí                  -->
-    <!-- Inserte aquí los scripts de seguimiento:   -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
-    <!-- ========================================== -->
   </head>
   <body>
     <slot />
+    <!-- GA4: evento personalizado whatsapp_click (clics en enlaces de WhatsApp) -->
+    <script is:inline>
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"], a[href^="whatsapp:"]');
+        if (a && typeof gtag === 'function') {
+          gtag('event', 'whatsapp_click', {
+            link_url: a.href,
+            link_text: (a.textContent || '').trim().slice(0, 100)
+          });
+        }
+      });
+    </script>
   </body>
 </html>
