@@ -42,6 +42,8 @@ html {
   color: var(--text);
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
@@ -51,6 +53,7 @@ body {
   line-height: 1.6;
   font-size: 1rem;
   overflow-x: hidden;
+  max-width: 100%;
   position: relative;
 }
 
@@ -98,8 +101,9 @@ code, pre, .font-mono {
   max-width: var(--container-max);
   margin-left: auto;
   margin-right: auto;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: clamp(16px, 4vw, 20px);
+  padding-right: clamp(16px, 4vw, 20px);
+  box-sizing: border-box;
 }
 
 /* Botones con estilo metálico y acentos */

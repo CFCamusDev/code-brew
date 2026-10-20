@@ -14,7 +14,7 @@ import OriginIllustration from './OriginIllustration.astro';
     </div>
 
     <div class="origin-grid">
-      <!-- Tarjeta estilo ventana de editor de código -->
+      <!-- Tarjeta estilo ventana de editor de código (Glassmorphism Dark) -->
       <div class="editor-window" role="region" aria-label="Ficha técnica origen.json">
         <div class="editor-titlebar">
           <div class="window-controls">
@@ -22,8 +22,11 @@ import OriginIllustration from './OriginIllustration.astro';
             <span class="control-dot min"></span>
             <span class="control-dot expand"></span>
           </div>
-          <span class="editor-filename">origen.json</span>
-          <span class="editor-status font-mono">readonly</span>
+          <span class="editor-filename font-mono">origen.json</span>
+          <div class="editor-meta">
+            <span class="editor-pulse-dot"></span>
+            <span class="editor-status font-mono">readonly · UTF-8</span>
+          </div>
         </div>
 
         <div class="editor-body">
@@ -42,11 +45,9 @@ import OriginIllustration from './OriginIllustration.astro';
         </div>
       </div>
 
-      <!-- Ilustración Origen -->
+      <!-- Tarjeta Glassmorphic 3D y Topografía del Sol de Altitud -->
       <div class="origin-media">
-        <div class="img-slot origin-img-slot has-image" id="img-origen">
-          <OriginIllustration />
-        </div>
+        <OriginIllustration />
       </div>
     </div>
   </div>
@@ -54,55 +55,81 @@ import OriginIllustration from './OriginIllustration.astro';
 
 <style>
   .origin-section {
-    padding: 72px 0;
+    padding: clamp(56px, 8vw, 96px) 0;
     border-bottom: 1px solid var(--line);
     background-color: var(--bg);
+    position: relative;
+    overflow: hidden;
   }
 
   .section-header {
     max-width: 720px;
-    margin-bottom: 40px;
+    margin-bottom: clamp(28px, 5vw, 44px);
   }
 
   .section-title {
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-size: clamp(1.75rem, 4.5vw, 2.6rem);
     margin-bottom: 14px;
+    line-height: 1.16;
   }
 
   .section-subtitle {
-    font-size: 1rem;
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
     line-height: 1.65;
   }
 
+  /* Grilla completamente blindada contra scroll horizontal en mobile */
   .origin-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
-  /* Ventana de Editor de Código */
+  /* Ventana de Editor de Código Glassmorphism Dark */
   .editor-window {
-    background-color: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
+    background: rgba(20, 20, 24, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    box-shadow:
+      0 18px 42px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .editor-window:hover {
+    border-color: rgba(200, 137, 74, 0.35);
+    box-shadow:
+      0 22px 50px rgba(0, 0, 0, 0.7),
+      0 0 28px rgba(200, 137, 74, 0.08);
   }
 
   .editor-titlebar {
-    background-color: #111113;
-    padding: 10px 16px;
+    background: rgba(14, 15, 18, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    min-width: 0;
   }
 
   .window-controls {
     display: flex;
     gap: 7px;
+    flex-shrink: 0;
   }
 
   .control-dot {
@@ -117,24 +144,63 @@ import OriginIllustration from './OriginIllustration.astro';
   .control-dot.expand { background-color: #57C769; }
 
   .editor-filename {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: clamp(0.75rem, 2vw, 0.82rem);
     color: var(--text);
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
+  }
+
+  .editor-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .editor-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-2);
+    box-shadow: 0 0 6px var(--accent-2);
   }
 
   .editor-status {
     font-size: 0.7rem;
     color: var(--muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
   }
 
   .editor-body {
-    padding: 20px;
+    padding: clamp(16px, 3.5vw, 22px);
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     font-family: var(--font-mono);
-    font-size: 0.88rem;
-    line-height: 1.65;
+    font-size: clamp(0.74rem, 2.7vw, 0.88rem);
+    line-height: 1.62;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Scrollbar horizontal ultra fina estilizada para código */
+  .editor-body::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .editor-body::-webkit-scrollbar-track {
+    background: rgba(11, 11, 12, 0.6);
+  }
+
+  .editor-body::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 4px;
+  }
+
+  .editor-body::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
   }
 
   /* Resaltado de sintaxis */
@@ -145,28 +211,20 @@ import OriginIllustration from './OriginIllustration.astro';
   .syn-str { color: var(--accent-2); } /* Verde terminal */
   .syn-val { color: var(--accent); font-weight: 600; } /* Cobre */
 
-  /* Placeholder de Imagen */
-  .origin-img-slot {
-    aspect-ratio: 16 / 9;
-    min-height: 240px;
-    height: 100%;
-  }
-
-  .origin-img-slot.has-image {
-    padding: 0;
-    border-style: solid;
-    border-color: var(--line);
+  /* Contenedor de la ilustración */
+  .origin-media {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    align-items: stretch;
   }
 
   @media (min-width: 1024px) {
-    .origin-section {
-      padding: 96px 0;
-    }
-
     .origin-grid {
       grid-template-columns: 1fr 1fr;
       align-items: stretch;
-      gap: 36px;
+      gap: 32px;
     }
   }
 </style>
