@@ -1,0 +1,568 @@
+---
+---
+
+<div class="three-hero-viewport" id="threeHeroViewport">
+  <!-- Canvas WebGL donde Three.js renderiza la bolsa y los granos -->
+  <canvas id="coffeeCanvas3D" class="coffee-canvas-3d"></canvas>
+
+  <!-- Overlay Glassmorphic Superior con Telemetría 3D -->
+  <div class="canvas-hud-top">
+    <div class="hud-chip">
+      <span class="hud-live-dot"></span>
+      <span class="font-mono hud-chip-text">3D VIEW · ARRASTRA PARA GIRAR</span>
+    </div>
+    <div class="hud-badge font-mono">
+      <span class="badge-cobre">SCA</span> 84+
+    </div>
+  </div>
+
+  <!-- Overlay Glassmorphic Inferior con Datos del Lote -->
+  <div class="canvas-hud-bottom">
+    <div class="hud-metric-box">
+      <span class="metric-title font-mono">// perfil_tueste</span>
+      <span class="metric-desc font-mono">Arábica · Typica & Bourbon</span>
+    </div>
+    <div class="hud-compass font-mono">
+      <span>1 800 msnm</span>
+    </div>
+  </div>
+
+  <!-- Indicador táctil móvil de arrastre -->
+  <div class="drag-hint font-mono">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="5 9 2 12 5 15"></polyline>
+      <polyline points="19 9 22 12 19 15"></polyline>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+    </svg>
+    <span>Girar 360°</span>
+  </div>
+</div>
+
+<style>
+  .three-hero-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 4 / 5;
+    border-radius: 20px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #15161D 0%, #0D0E12 80%, #07080A 100%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.75),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 40px rgba(200, 137, 74, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    user-select: none;
+    touch-action: none; /* Permite arrastrar el objeto 3D sin desplazar la pantalla involuntariamente */
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .three-hero-viewport:active {
+    cursor: grabbing;
+  }
+
+  .three-hero-viewport:hover {
+    border-color: rgba(200, 137, 74, 0.45);
+    box-shadow:
+      0 30px 68px rgba(0, 0, 0, 0.85),
+      0 0 48px rgba(200, 137, 74, 0.2),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .coffee-canvas-3d {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    outline: none;
+  }
+
+  /* HUD Superior */
+  .canvas-hud-top {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .hud-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(14, 15, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .hud-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-2);
+    box-shadow: 0 0 6px var(--accent-2);
+    animation: pulseDot3D 1.8s infinite;
+  }
+
+  @keyframes pulseDot3D {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .hud-chip-text {
+    font-size: 0.68rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .hud-badge {
+    font-size: 0.72rem;
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(14, 15, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .badge-cobre {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* HUD Inferior */
+  .canvas-hud-bottom {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    background: rgba(14, 15, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 14px;
+  }
+
+  .hud-metric-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .metric-title {
+    font-size: 0.68rem;
+    color: var(--accent-2);
+  }
+
+  .metric-desc {
+    font-size: 0.74rem;
+    color: var(--text);
+  }
+
+  .hud-compass {
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: rgba(200, 137, 74, 0.12);
+    border: 1px solid rgba(200, 137, 74, 0.25);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  /* Hint de arrastre */
+  .drag-hint {
+    position: absolute;
+    bottom: 58px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(11, 11, 12, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    font-size: 0.68rem;
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+  }
+
+  @media (min-width: 1024px) {
+    .three-hero-viewport {
+      aspect-ratio: 1 / 1;
+      max-width: 480px;
+    }
+  }
+</style>
+
+<script>
+  import * as THREE from 'three';
+
+  function initThreeScene() {
+    const container = document.getElementById('threeHeroViewport');
+    const canvas = document.getElementById('coffeeCanvas3D') as HTMLCanvasElement;
+    if (!container || !canvas) return;
+
+    // Dimensiones iniciales
+    let width = container.clientWidth || 400;
+    let height = container.clientHeight || 500;
+
+    // 1. Scene
+    const scene = new THREE.Scene();
+
+    // 2. Camera
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(0, 0, 7.8);
+
+    // 3. Renderer con configuración de estudio
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+
+    // 4. Luces de Estudio Tech (Key, Fill, Rim Cobre y Rim Verde Terminal)
+    const ambientLight = new THREE.AmbientLight(0x181822, 1.6);
+    scene.add(ambientLight);
+
+    // Luz principal suave
+    const keyLight = new THREE.DirectionalLight(0xfff4e6, 2.8);
+    keyLight.position.set(3.5, 4.0, 5.0);
+    scene.add(keyLight);
+
+    // Luz de relleno suave
+    const fillLight = new THREE.DirectionalLight(0x2a3040, 1.2);
+    fillLight.position.set(-4.0, 1.0, 3.0);
+    scene.add(fillLight);
+
+    // Rim Light Cobre (Icono de CodeBrew)
+    const copperRimLight = new THREE.DirectionalLight(0xC8894A, 4.5);
+    copperRimLight.position.set(-3.5, -2.5, -2.5);
+    scene.add(copperRimLight);
+
+    // Rim Light Verde Terminal (Detalles de sintaxis)
+    const terminalLight = new THREE.PointLight(0x7FD69B, 3.0, 12);
+    terminalLight.position.set(2.5, 3.5, -2.0);
+    scene.add(terminalLight);
+
+    // 5. Carga de Texturas
+    const textureLoader = new THREE.TextureLoader();
+    const pouchTexture = textureLoader.load('/assets/3d/pouch-texture.png');
+    pouchTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const roughnessTexture = textureLoader.load('/assets/3d/roughness-surface.png');
+    roughnessTexture.wrapS = THREE.RepeatWrapping;
+    roughnessTexture.wrapT = THREE.RepeatWrapping;
+    roughnessTexture.repeat.set(1.5, 1.5);
+
+    const beanTexture = textureLoader.load('/assets/3d/coffee-bean.png');
+    beanTexture.colorSpace = THREE.SRGBColorSpace;
+
+    // 6. Geometría Procedural de la Bolsa de Café (Stand-Up Pouch)
+    // Se crea una caja densa y se deforma geométricamente
+    const bagWidth = 2.4;
+    const bagHeight = 3.6;
+    const bagDepth = 0.95;
+    const bagGeom = new THREE.BoxGeometry(bagWidth, bagHeight, bagDepth, 36, 48, 16);
+
+    const pos = bagGeom.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      let y = pos.getY(i);
+      let z = pos.getZ(i);
+
+      const ny = y / (bagHeight / 2); // de -1 a 1
+
+      // 1. Sellado térmico superior (heat-seal): el grosor en Z se aplana casi a 0
+      if (ny > 0.7) {
+        const t = (ny - 0.7) / 0.3;
+        z = z * (1.0 - t * 0.88);
+        x = x * (1.0 - t * 0.08);
+
+        // Pequeño relieve dentado de sellado en la parte más alta
+        if (ny > 0.88) {
+          y += Math.sin(x * 35) * 0.015;
+        }
+      }
+
+      // 2. Volumen del café (inflado orgánico en el centro)
+      if (ny > -0.75 && ny <= 0.7) {
+        const belly = Math.cos((ny + 0.1) * Math.PI * 0.65);
+        z *= 1.0 + Math.max(0, belly) * 0.42;
+      }
+
+      // 3. Pliegues / fuelles laterales (gussets)
+      const absX = Math.abs(x);
+      if (absX > bagWidth * 0.38) {
+        const inward = (absX - bagWidth * 0.38) / (bagWidth * 0.12);
+        const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / (bagDepth * 0.5));
+        x -= Math.sign(x) * inward * centerZ * 0.08;
+      }
+
+      // 4. Base plana firme (stand-up)
+      if (ny < -0.8) {
+        const b = (ny + 0.8) / -0.2;
+        z *= 1.0 + b * 0.15;
+      }
+
+      pos.setXYZ(i, x, y, z);
+    }
+
+    bagGeom.computeVertexNormals();
+
+    // Materiales PBR para las caras de la bolsa
+    // Cara frontal: con la etiqueta y mapa de textura
+    const frontMaterial = new THREE.MeshPhysicalMaterial({
+      map: pouchTexture,
+      roughnessMap: roughnessTexture,
+      roughness: 0.38,
+      metalness: 0.12,
+      clearcoat: 0.2,
+      clearcoatRoughness: 0.3,
+      reflectivity: 0.5
+    });
+
+    // Caras laterales y trasera: negro mate profundo con textura kraft/metal
+    const sideMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x111215,
+      roughnessMap: roughnessTexture,
+      roughness: 0.45,
+      metalness: 0.18,
+      clearcoat: 0.15
+    });
+
+    // BoxGeometry tiene 6 grupos de caras: [right, left, top, bottom, front, back]
+    const bagMaterials = [
+      sideMaterial,   // right
+      sideMaterial,   // left
+      sideMaterial,   // top (sello)
+      sideMaterial,   // bottom
+      frontMaterial,  // FRONT (Etiqueta CodeBrew)
+      sideMaterial    // back
+    ];
+
+    const bagMesh = new THREE.Mesh(bagGeom, bagMaterials);
+    scene.add(bagMesh);
+
+    // 7. Geometría Procedural del Grano de Café (Coffee Bean)
+    function createCoffeeBeanGeometry(): THREE.BufferGeometry {
+      const beanGeom = new THREE.SphereGeometry(0.32, 32, 32);
+      const bPos = beanGeom.attributes.position;
+
+      for (let i = 0; i < bPos.count; i++) {
+        let bx = bPos.getX(i);
+        let by = bPos.getY(i);
+        let bz = bPos.getZ(i);
+
+        // Proporciones de grano (largo en Y, plano en Z)
+        bx *= 0.8;
+        by *= 1.35;
+        bz *= 0.65;
+
+        // Hendidura central (crack) en la cara frontal (bz > 0)
+        if (bz > 0) {
+          const distToCrack = Math.abs(bx);
+          const depth = Math.exp(-Math.pow(distToCrack / 0.09, 2));
+          bz -= depth * 0.16;
+        }
+
+        bPos.setXYZ(i, bx, by, bz);
+      }
+
+      beanGeom.computeVertexNormals();
+      return beanGeom;
+    }
+
+    const beanGeom = createCoffeeBeanGeometry();
+    const beanMaterial = new THREE.MeshPhysicalMaterial({
+      map: beanTexture,
+      color: 0x6E4423,
+      roughness: 0.55,
+      metalness: 0.08,
+      clearcoat: 0.15
+    });
+
+    // Crear 4 granos de café flotando alrededor
+    interface FloatingBean {
+      mesh: THREE.Mesh;
+      baseX: number;
+      baseY: number;
+      baseZ: number;
+      rotSpeedX: number;
+      rotSpeedY: number;
+      phase: number;
+    }
+
+    const floatingBeans: FloatingBean[] = [];
+    const beanConfigs = [
+      { pos: [-1.8, 1.2, 0.8], scale: 0.85, rot: [0.01, 0.015], phase: 0 },
+      { pos: [1.9, 0.8, -0.6], scale: 0.72, rot: [-0.012, 0.018], phase: 1.5 },
+      { pos: [-1.6, -1.3, 0.5], scale: 0.65, rot: [0.015, -0.01], phase: 3.0 },
+      { pos: [1.7, -1.1, 0.9], scale: 0.9, rot: [-0.01, -0.014], phase: 4.5 }
+    ];
+
+    beanConfigs.forEach((cfg) => {
+      const bMesh = new THREE.Mesh(beanGeom, beanMaterial);
+      bMesh.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
+      bMesh.scale.setScalar(cfg.scale);
+      scene.add(bMesh);
+
+      floatingBeans.push({
+        mesh: bMesh,
+        baseX: cfg.pos[0],
+        baseY: cfg.pos[1],
+        baseZ: cfg.pos[2],
+        rotSpeedX: cfg.rot[0],
+        rotSpeedY: cfg.rot[1],
+        phase: cfg.phase
+      });
+    });
+
+    // 8. Control de Órbita / Arrastre Táctil e Inercia
+    let isDragging = false;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+
+    let targetRotX = 0.05;
+    let targetRotY = 0;
+    let currentRotX = 0.05;
+    let currentRotY = 0;
+
+    const dragHint = container.querySelector('.drag-hint') as HTMLElement;
+
+    function onPointerDown(e: PointerEvent) {
+      isDragging = true;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+      if (dragHint) dragHint.style.opacity = '0';
+    }
+
+    function onPointerMove(e: PointerEvent) {
+      if (isDragging) {
+        const deltaX = e.clientX - prevMouseX;
+        const deltaY = e.clientY - prevMouseY;
+        prevMouseX = e.clientX;
+        prevMouseY = e.clientY;
+
+        targetRotY += deltaX * 0.009;
+        targetRotX += deltaY * 0.009;
+
+        // Limitar rotación vertical para que no se voltee del revés
+        targetRotX = Math.max(-0.5, Math.min(0.5, targetRotX));
+      } else {
+        // Movimiento sutil con el cursor cuando no se arrastra
+        const rect = container.getBoundingClientRect();
+        const normX = (e.clientX - rect.left) / rect.width - 0.5;
+        const normY = (e.clientY - rect.top) / rect.height - 0.5;
+        targetRotY = normX * 0.65;
+        targetRotX = -normY * 0.45;
+      }
+    }
+
+    function onPointerUp() {
+      isDragging = false;
+    }
+
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+
+    // 9. Bucle de Animación y Renderizado
+    let animationFrameId: number;
+    let clock = new THREE.Clock();
+
+    function animate() {
+      animationFrameId = requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      // Suavizado inercial lerp
+      currentRotX += (targetRotX - currentRotX) * 0.06;
+      currentRotY += (targetRotY - currentRotY) * 0.06;
+
+      // Levitación suave senoidal en la bolsa
+      const levitation = Math.sin(elapsedTime * 1.4) * 0.09;
+      bagMesh.position.y = levitation;
+      bagMesh.rotation.x = currentRotX + Math.sin(elapsedTime * 0.9) * 0.02;
+      bagMesh.rotation.y = currentRotY + Math.cos(elapsedTime * 0.7) * 0.02;
+      bagMesh.rotation.z = Math.sin(elapsedTime * 1.1) * 0.015;
+
+      // Animación de los granos flotantes
+      floatingBeans.forEach((b) => {
+        b.mesh.rotation.x += b.rotSpeedX;
+        b.mesh.rotation.y += b.rotSpeedY;
+        b.mesh.position.y = b.baseY + Math.sin(elapsedTime * 1.6 + b.phase) * 0.12;
+        b.mesh.position.x = b.baseX + Math.cos(elapsedTime * 1.2 + b.phase) * 0.06;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // 10. Responsive Resize Observer
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newWidth = entry.contentRect.width;
+        const newHeight = entry.contentRect.height;
+        if (newWidth > 0 && newHeight > 0) {
+          camera.aspect = newWidth / newHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(newWidth, newHeight);
+        }
+      }
+    });
+
+    resizeObserver.observe(container);
+
+    // Pausar animación cuando la pestaña o sección no esté visible
+    const intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (!animationFrameId) animate();
+        } else {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = 0;
+        }
+      });
+    }, { threshold: 0.1 });
+
+    intersectionObserver.observe(container);
+  }
+
+  // Inicializar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initThreeScene);
+  } else {
+    initThreeScene();
+  }
+</script>
