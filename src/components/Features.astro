@@ -37,7 +37,7 @@ const cuppingProfile = [
 
 <section class="features-section" id="por-que-codebrew">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" data-reveal="up">
       <span class="section-label">// 03 — features</span>
       <h2 class="section-title">Por qué elegir CodeBrew</h2>
       <p class="section-subtitle">
@@ -46,8 +46,8 @@ const cuppingProfile = [
     </div>
 
     <div class="features-grid">
-      {features.map((item) => (
-        <div class="feature-glass-card">
+      {features.map((item, idx) => (
+        <div class="feature-glass-card" data-reveal="up" data-reveal-delay={(idx * 90).toString()}>
           <div class="feature-card-shine"></div>
           <div class="feature-top">
             <div class="feature-icon-badge" set:html={item.icon} />
@@ -60,7 +60,7 @@ const cuppingProfile = [
     </div>
 
     <!-- Panel Novedoso: Telemetría de Cata Sensorial SCA 84+ -->
-    <div class="cupping-telemetry-panel">
+    <div class="cupping-telemetry-panel" data-reveal="scale" data-reveal-delay="100">
       <div class="telemetry-header">
         <div class="telemetry-title-group">
           <span class="telemetry-tag font-mono">// sca_cupping_protocol</span>
@@ -80,7 +80,7 @@ const cuppingProfile = [
               <span class="telemetry-score font-mono">{item.score}%</span>
             </div>
             <div class="telemetry-track">
-              <div class="telemetry-fill" style={`width: ${item.score}%`}>
+              <div class="telemetry-fill" data-progress-bar={item.score.toString()} style="width: 0%;">
                 <span class="telemetry-glow-lead"></span>
               </div>
             </div>

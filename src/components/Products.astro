@@ -5,7 +5,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
 <section class="products-section" id="productos">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" data-reveal="up">
       <div class="header-tags">
         <span class="section-label">// 02 — productos</span>
         <span class="code-badge font-mono">&lt;Productos /&gt;</span>
@@ -34,7 +34,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
     <!-- Grilla / Carrusel de Productos -->
     <div class="products-grid" role="list">
-      {PRODUCTS.map((product) => {
+      {PRODUCTS.map((product, idx) => {
         const defaultOrderMessage = `¡Hola CodeBrew! Quiero pedir ${product.name} (${product.format}) en grano entero por S/ ${product.price}.`;
         const productUrl = getWhatsAppUrl(defaultOrderMessage);
 
@@ -47,6 +47,8 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
             data-product-name={product.name}
             data-product-format={product.format}
             data-product-price={product.price}
+            data-reveal="up"
+            data-reveal-delay={(idx * 80).toString()}
             role="listitem"
           >
             <!-- Línea de reflejo metálico superior -->

@@ -4,7 +4,7 @@ import OriginIllustration from './OriginIllustration.astro';
 
 <section class="origin-section" id="origen">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" data-reveal="up">
       <span class="section-label">// 01 — origen</span>
       <h2 class="section-title">Café de altura con trazabilidad directa</h2>
       <p class="section-subtitle">
@@ -16,7 +16,7 @@ import OriginIllustration from './OriginIllustration.astro';
     <div class="origin-grid">
       <!-- Columna Izquierda: Ficha técnica origen.json + Metadatos de Trazabilidad -->
       <div class="origin-info-col">
-        <div class="editor-window" role="region" aria-label="Ficha técnica origen.json">
+        <div class="editor-window" role="region" aria-label="Ficha técnica origen.json" data-reveal="left">
           <div class="editor-titlebar">
             <div class="window-controls">
               <span class="control-dot close"></span>
@@ -52,17 +52,17 @@ import OriginIllustration from './OriginIllustration.astro';
 
         <!-- Badges de Trazabilidad Técnica (Diferenciadores Clave) -->
         <div class="origin-specs-grid">
-          <div class="origin-spec-card">
+          <div class="origin-spec-card" data-reveal="up" data-reveal-delay="80">
             <span class="spec-code font-mono">// 01_microclima</span>
             <span class="spec-heading font-mono">1 800 msnm</span>
             <p class="spec-desc">Maduración lenta de cerezas bajo sombra de selva alta que concentra azúcares naturales.</p>
           </div>
-          <div class="origin-spec-card">
+          <div class="origin-spec-card" data-reveal="up" data-reveal-delay="160">
             <span class="spec-code font-mono">// 02_beneficio</span>
             <span class="spec-heading font-mono">Lavado & Camas Africanas</span>
             <p class="spec-desc">Fermentación aeróbica controlada y secado solar uniforme libre de impurezas.</p>
           </div>
-          <div class="origin-spec-card">
+          <div class="origin-spec-card" data-reveal="up" data-reveal-delay="240">
             <span class="spec-code font-mono">// 03_frescura</span>
             <span class="spec-heading font-mono">Batch Tostado Semanal</span>
             <p class="spec-desc">Sellado inmediato con válvula desgasificadora unidireccional y zipper de conservación.</p>
@@ -71,7 +71,7 @@ import OriginIllustration from './OriginIllustration.astro';
       </div>
 
       <!-- Columna Derecha: Tarjeta Glassmorphic 3D y Topografía de Selva Alta (Stage 3D) -->
-      <div class="origin-media">
+      <div class="origin-media" data-reveal="right" data-reveal-delay="150">
         <OriginIllustration />
       </div>
     </div>
