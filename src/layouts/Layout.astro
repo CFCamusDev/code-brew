@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import GlobalScene3D from '../components/GlobalScene3D.astro';
 
 interface Props {
   title?: string;
@@ -52,7 +53,11 @@ const {
     />
   </head>
   <body>
+    <!-- Escena 3D Global de Fondo (WebGL Three.js) -->
+    <GlobalScene3D />
+
     <slot />
+
     <!-- GA4: evento personalizado whatsapp_click (clics en enlaces de WhatsApp) -->
     <script is:inline>
       document.addEventListener('click', function (e) {

@@ -24,8 +24,12 @@ import OriginIllustration from './OriginIllustration.astro';
           </div>
           <span class="editor-filename font-mono">origen.json</span>
           <div class="editor-meta">
+            <button class="editor-copy-btn font-mono" id="copyOriginBtn" type="button" aria-label="Copiar datos de origen.json">
+              <span id="copyOriginIcon">📋</span>
+              <span id="copyOriginText">copiar</span>
+            </button>
             <span class="editor-pulse-dot"></span>
-            <span class="editor-status font-mono">readonly · UTF-8</span>
+            <span class="editor-status font-mono">readonly</span>
           </div>
         </div>
 
@@ -220,6 +224,32 @@ import OriginIllustration from './OriginIllustration.astro';
     align-items: stretch;
   }
 
+  .editor-copy-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all var(--transition-fast);
+  }
+
+  .editor-copy-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(200, 137, 74, 0.12);
+  }
+
+  .editor-copy-btn.is-copied {
+    color: var(--accent-2);
+    border-color: var(--accent-2);
+    background: rgba(127, 214, 155, 0.15);
+  }
+
   @media (min-width: 1024px) {
     .origin-grid {
       grid-template-columns: 1fr 1fr;
@@ -228,3 +258,31 @@ import OriginIllustration from './OriginIllustration.astro';
     }
   }
 </style>
+
+<script>
+  const copyBtn = document.getElementById('copyOriginBtn');
+  const copyText = document.getElementById('copyOriginText');
+
+  const originData = {
+    region: "Amazonas, Perú",
+    provincia: "Rodríguez de Mendoza",
+    altitud: "1 400 – 1 800 msnm",
+    variedades: ["Bourbon", "Typica", "Caturra"],
+    puntaje_SCA: "84+",
+    tueste: "artesanal"
+  };
+
+  copyBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(originData, null, 2));
+      if (copyText) copyText.textContent = '✓ copiado!';
+      copyBtn.classList.add('is-copied');
+      setTimeout(() => {
+        if (copyText) copyText.textContent = 'copiar';
+        copyBtn.classList.remove('is-copied');
+      }, 2500);
+    } catch (err) {
+      console.error('Error al copiar:', err);
+    }
+  });
+</script>

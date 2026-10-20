@@ -12,19 +12,41 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
       </div>
       <h2 class="section-title">Nuestra selección para desarrolladores</h2>
       <p class="section-subtitle">
-        Tostado en pequeños batches para preservar las notas de cata. Elige tu formato preferido en grano entero o con molienda exacta para tu cafetera.
+        Tostado en pequeños batches para preservar las notas de cata. Elige tu formato preferido y personaliza la molienda al instante.
       </p>
+
+      <!-- Barra de Filtros Interactiva estilo CLI -->
+      <div class="filter-cli-bar font-mono" role="tablist" aria-label="Filtrar por formato">
+        <button class="cli-filter-btn is-active" data-filter="all">
+          <span class="cli-prompt">></span> todos <span class="cli-count">(6)</span>
+        </button>
+        <button class="cli-filter-btn" data-filter="250g">
+          <span class="cli-prompt">></span> 250 g
+        </button>
+        <button class="cli-filter-btn" data-filter="500g">
+          <span class="cli-prompt">></span> 500 g
+        </button>
+        <button class="cli-filter-btn" data-filter="pack">
+          <span class="cli-prompt">></span> packs dúo
+        </button>
+      </div>
     </div>
 
     <!-- Grilla / Carrusel de Productos -->
     <div class="products-grid" role="list">
       {PRODUCTS.map((product) => {
-        const orderMessage = `¡Hola CodeBrew! Quiero pedir ${product.name} (${product.format}) por S/ ${product.price}.`;
-        const productUrl = getWhatsAppUrl(orderMessage);
+        const defaultOrderMessage = `¡Hola CodeBrew! Quiero pedir ${product.name} (${product.format}) en grano entero por S/ ${product.price}.`;
+        const productUrl = getWhatsAppUrl(defaultOrderMessage);
+
+        const categoryTag = product.format.includes('2 ×') ? 'pack' : product.format.includes('500') ? '500g' : '250g';
 
         return (
           <article
             class={`product-card ${product.highlighted ? 'is-highlighted' : ''}`}
+            data-category={categoryTag}
+            data-product-name={product.name}
+            data-product-format={product.format}
+            data-product-price={product.price}
             role="listitem"
           >
             <!-- Línea de reflejo metálico superior -->
@@ -73,11 +95,21 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
             <div class="product-info">
               <div class="product-meta">
                 <span class="meta-pill font-mono">{product.format}</span>
-                <span class="meta-grind font-mono">{product.grind}</span>
+                <span class="meta-grind font-mono" data-selected-grind-label>Grano entero</span>
               </div>
 
               <h3 class="product-name">{product.name}</h3>
               <p class="product-roast font-mono">// {product.roast}</p>
+
+              <!-- Selector Interactivo de Molienda -->
+              <div class="grind-selector-box">
+                <span class="selector-title font-mono">Selecciona tu molienda:</span>
+                <div class="grind-chips font-mono">
+                  <button type="button" class="grind-chip is-active" data-grind="Grano entero">Grano</button>
+                  <button type="button" class="grind-chip" data-grind="Molido Filtrado">Filtrado</button>
+                  <button type="button" class="grind-chip" data-grind="Molido Espresso">Espresso</button>
+                </div>
+              </div>
 
               <div class="product-footer">
                 <div class="price-container">
@@ -90,6 +122,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
                   target="_blank"
                   rel="noopener noreferrer"
                   class={`btn ${product.highlighted ? 'btn-primary' : 'btn-metal'} product-btn`}
+                  data-whatsapp-btn
                   data-event="whatsapp_click"
                   aria-label={`Pedir ${product.name} ${product.format} por WhatsApp`}
                 >
@@ -117,7 +150,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
   }
 
   .section-header {
-    max-width: 720px;
+    max-width: 780px;
     margin-bottom: clamp(32px, 5vw, 48px);
   }
 
@@ -146,6 +179,56 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
   .section-subtitle {
     font-size: 1rem;
     line-height: 1.65;
+    margin-bottom: 24px;
+  }
+
+  /* Filtros CLI */
+  .filter-cli-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(14, 15, 18, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 10px;
+    border-radius: 12px;
+    width: fit-content;
+  }
+
+  .cli-filter-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all var(--transition-fast);
+  }
+
+  .cli-filter-btn:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .cli-filter-btn.is-active {
+    background: rgba(200, 137, 74, 0.16);
+    border-color: rgba(200, 137, 74, 0.35);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .cli-prompt {
+    color: var(--accent-2);
+  }
+
+  .cli-count {
+    font-size: 0.7rem;
+    opacity: 0.7;
   }
 
   /* Grilla de Productos */
@@ -167,18 +250,21 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal), opacity 0.3s ease;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     min-width: 0;
   }
 
-  .product-card:hover {
-    border-color: rgba(200, 137, 74, 0.4);
-    transform: translateY(-4px);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(200, 137, 74, 0.12);
+  .product-card.is-hidden {
+    display: none;
   }
 
-  /* Reflejo metálico sutil */
+  .product-card:hover {
+    border-color: rgba(200, 137, 74, 0.45);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(200, 137, 74, 0.14);
+  }
+
   .card-reflection {
     position: absolute;
     top: 0;
@@ -190,7 +276,6 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     z-index: 6;
   }
 
-  /* Destacado con marco vibrante de cobre */
   .product-card.is-highlighted {
     border-color: rgba(200, 137, 74, 0.45);
     background: linear-gradient(180deg, rgba(28, 25, 22, 0.85) 0%, rgba(18, 19, 23, 0.82) 100%);
@@ -265,17 +350,6 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     width: 50%;
   }
 
-  /* Galería de imágenes */
-  .product-img-slot.is-gallery :global(img) {
-    display: none;
-    position: absolute;
-    inset: 0;
-  }
-
-  .product-img-slot.is-gallery :global(img.is-active) {
-    display: block;
-  }
-
   .gallery-dots {
     position: absolute;
     left: 50%;
@@ -320,7 +394,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     min-width: 0;
   }
 
@@ -336,7 +410,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
   .meta-grind {
     font-size: 0.72rem;
-    color: var(--muted);
+    color: var(--accent-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -344,14 +418,59 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
   .product-name {
     font-size: 1.25rem;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     color: var(--text);
   }
 
   .product-roast {
     font-size: 0.8rem;
-    color: var(--accent-2);
-    margin-bottom: 20px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* Selector de molienda interactivo */
+  .grind-selector-box {
+    margin-bottom: 16px;
+    background: rgba(14, 15, 18, 0.6);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .selector-title {
+    font-size: 0.68rem;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .grind-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .grind-chip {
+    background: rgba(22, 23, 28, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .grind-chip:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .grind-chip.is-active {
+    background: rgba(200, 137, 74, 0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
   }
 
   .product-footer {
@@ -407,6 +526,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 </style>
 
 <script>
+  // 1. Galería de imágenes (vistas múltiples)
   document.querySelectorAll('.product-img-slot.is-gallery').forEach((slot) => {
     const images = Array.from(slot.querySelectorAll('[data-gallery-img]'));
     const dots = Array.from(slot.querySelectorAll('[data-gallery-dot]'));
@@ -415,6 +535,54 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
       dot.addEventListener('click', () => {
         images.forEach((img, i) => img.classList.toggle('is-active', i === index));
         dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
+      });
+    });
+  });
+
+  // 2. Filtro interactivo CLI de productos
+  const filterBtns = document.querySelectorAll('.cli-filter-btn');
+  const productCards = document.querySelectorAll('.product-card') as NodeListOf<HTMLElement>;
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+
+      const filter = btn.getAttribute('data-filter');
+
+      productCards.forEach((card) => {
+        const category = card.getAttribute('data-category');
+        if (filter === 'all' || category === filter) {
+          card.classList.remove('is-hidden');
+        } else {
+          card.classList.add('is-hidden');
+        }
+      });
+    });
+  });
+
+  // 3. Selector de molienda en tiempo real y actualización dinámica de WhatsApp
+  productCards.forEach((card) => {
+    const name = card.getAttribute('data-product-name');
+    const format = card.getAttribute('data-product-format');
+    const price = card.getAttribute('data-product-price');
+    const grindLabel = card.querySelector('[data-selected-grind-label]');
+    const grindChips = card.querySelectorAll('.grind-chip');
+    const whatsappBtn = card.querySelector('[data-whatsapp-btn]') as HTMLAnchorElement;
+
+    grindChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        grindChips.forEach((c) => c.classList.remove('is-active'));
+        chip.classList.add('is-active');
+
+        const selectedGrind = chip.getAttribute('data-grind') || 'Grano entero';
+        if (grindLabel) grindLabel.textContent = selectedGrind;
+
+        if (whatsappBtn) {
+          const message = `¡Hola CodeBrew! Quiero pedir ${name} (${format}) con ${selectedGrind} por S/ ${price}.`;
+          const encoded = encodeURIComponent(message);
+          whatsappBtn.href = `https://wa.me/51917712438?text=${encoded}`;
+        }
       });
     });
   });
