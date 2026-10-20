@@ -47,7 +47,7 @@ const finalOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Estoy listo para pedir mi
 
 <style>
   .final-cta-section {
-    padding: clamp(72px, 9vw, 110px) 0;
+    padding: clamp(96px, 12vw, 150px) 0 clamp(64px, 8vw, 96px);
     background-color: var(--bg);
     border-bottom: 1px solid var(--line);
     position: relative;
@@ -55,19 +55,19 @@ const finalOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Estoy listo para pedir mi
   }
 
   .cta-glow {
-    top: 50%;
+    top: 35%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 520px;
-    height: 520px;
-    opacity: 0.16;
+    width: 620px;
+    height: 620px;
+    opacity: 0.2;
   }
 
   .cta-glass-box {
-    background: rgba(18, 19, 24, 0.82);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(18, 19, 24, 0.85);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: clamp(36px, 6vw, 64px) clamp(20px, 4vw, 48px);
     text-align: center;
@@ -76,13 +76,14 @@ const finalOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Estoy listo para pedir mi
     align-items: center;
     gap: 22px;
     max-width: 860px;
-    margin: 0 auto;
+    margin: clamp(40px, 8vw, 80px) auto 0;
     position: relative;
     overflow: hidden;
     box-shadow:
       0 24px 60px rgba(0, 0, 0, 0.7),
-      0 0 40px rgba(200, 137, 74, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      0 0 40px rgba(200, 137, 74, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 2;
   }
 
   .cta-reflection {

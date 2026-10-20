@@ -14,27 +14,28 @@ import OriginIllustration from './OriginIllustration.astro';
     </div>
 
     <div class="origin-grid">
-      <!-- Tarjeta estilo ventana de editor de código (Glassmorphism Dark) -->
-      <div class="editor-window" role="region" aria-label="Ficha técnica origen.json">
-        <div class="editor-titlebar">
-          <div class="window-controls">
-            <span class="control-dot close"></span>
-            <span class="control-dot min"></span>
-            <span class="control-dot expand"></span>
+      <!-- Columna Izquierda: Ficha técnica origen.json + Metadatos de Trazabilidad -->
+      <div class="origin-info-col">
+        <div class="editor-window" role="region" aria-label="Ficha técnica origen.json">
+          <div class="editor-titlebar">
+            <div class="window-controls">
+              <span class="control-dot close"></span>
+              <span class="control-dot min"></span>
+              <span class="control-dot expand"></span>
+            </div>
+            <span class="editor-filename font-mono">origen.json</span>
+            <div class="editor-meta">
+              <button class="editor-copy-btn font-mono" id="copyOriginBtn" type="button" aria-label="Copiar datos de origen.json">
+                <span id="copyOriginIcon">📋</span>
+                <span id="copyOriginText">copiar</span>
+              </button>
+              <span class="editor-pulse-dot"></span>
+              <span class="editor-status font-mono">readonly</span>
+            </div>
           </div>
-          <span class="editor-filename font-mono">origen.json</span>
-          <div class="editor-meta">
-            <button class="editor-copy-btn font-mono" id="copyOriginBtn" type="button" aria-label="Copiar datos de origen.json">
-              <span id="copyOriginIcon">📋</span>
-              <span id="copyOriginText">copiar</span>
-            </button>
-            <span class="editor-pulse-dot"></span>
-            <span class="editor-status font-mono">readonly</span>
-          </div>
-        </div>
 
-        <div class="editor-body">
-          <pre><code><span class="syn-brace">&#123;</span>
+          <div class="editor-body">
+            <pre><code><span class="syn-brace">&#123;</span>
   <span class="syn-key">"region"</span><span class="syn-colon">:</span> <span class="syn-str">"Amazonas, Perú"</span><span class="syn-comma">,</span>
   <span class="syn-key">"provincia"</span><span class="syn-colon">:</span> <span class="syn-str">"Rodríguez de Mendoza"</span><span class="syn-comma">,</span>
   <span class="syn-key">"altitud"</span><span class="syn-colon">:</span> <span class="syn-str">"1 400 – 1 800 msnm"</span><span class="syn-comma">,</span>
@@ -46,10 +47,30 @@ import OriginIllustration from './OriginIllustration.astro';
   <span class="syn-key">"puntaje_SCA"</span><span class="syn-colon">:</span> <span class="syn-val">"84+"</span><span class="syn-comma">,</span>
   <span class="syn-key">"tueste"</span><span class="syn-colon">:</span> <span class="syn-str">"artesanal"</span>
 <span class="syn-brace">&#125;</span></code></pre>
+          </div>
+        </div>
+
+        <!-- Badges de Trazabilidad Técnica (Diferenciadores Clave) -->
+        <div class="origin-specs-grid">
+          <div class="origin-spec-card">
+            <span class="spec-code font-mono">// 01_microclima</span>
+            <span class="spec-heading font-mono">1 800 msnm</span>
+            <p class="spec-desc">Maduración lenta de cerezas bajo sombra de selva alta que concentra azúcares naturales.</p>
+          </div>
+          <div class="origin-spec-card">
+            <span class="spec-code font-mono">// 02_beneficio</span>
+            <span class="spec-heading font-mono">Lavado & Camas Africanas</span>
+            <p class="spec-desc">Fermentación aeróbica controlada y secado solar uniforme libre de impurezas.</p>
+          </div>
+          <div class="origin-spec-card">
+            <span class="spec-code font-mono">// 03_frescura</span>
+            <span class="spec-heading font-mono">Batch Tostado Semanal</span>
+            <p class="spec-desc">Sellado inmediato con válvula desgasificadora unidireccional y zipper de conservación.</p>
+          </div>
         </div>
       </div>
 
-      <!-- Tarjeta Glassmorphic 3D y Topografía del Sol de Altitud -->
+      <!-- Columna Derecha: Tarjeta Glassmorphic 3D y Topografía de Selva Alta (Stage 3D) -->
       <div class="origin-media">
         <OriginIllustration />
       </div>
@@ -69,6 +90,8 @@ import OriginIllustration from './OriginIllustration.astro';
   .section-header {
     max-width: 720px;
     margin-bottom: clamp(28px, 5vw, 44px);
+    position: relative;
+    z-index: 2;
   }
 
   .section-title {
@@ -90,6 +113,8 @@ import OriginIllustration from './OriginIllustration.astro';
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    position: relative;
+    z-index: 2;
   }
 
   /* Ventana de Editor de Código Glassmorphism Dark */
@@ -250,11 +275,70 @@ import OriginIllustration from './OriginIllustration.astro';
     background: rgba(127, 214, 155, 0.15);
   }
 
+  .origin-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    max-width: 100%;
+    position: relative;
+    z-index: 2;
+  }
+
+  .origin-specs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  @media (min-width: 640px) {
+    .origin-specs-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .origin-spec-card {
+    background: rgba(18, 19, 24, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .origin-spec-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(200, 137, 74, 0.35);
+  }
+
+  .spec-code {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .spec-heading {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .spec-desc {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--muted);
+    margin: 0;
+  }
+
   @media (min-width: 1024px) {
     .origin-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.05fr 0.95fr;
       align-items: stretch;
-      gap: 32px;
+      gap: 36px;
     }
   }
 </style>
