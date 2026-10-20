@@ -1,12 +1,11 @@
 ---
 import { getWhatsAppUrl } from '../data/config';
-import CoffeeBag3D from './CoffeeBag3D.astro';
 
 const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quiero pedir café de especialidad.');
 ---
 
 <section class="hero-section" id="hero">
-  <!-- Auras ambientales de fondo (negro mate vibrante) -->
+  <!-- Auras ambientales de fondo -->
   <div class="ambient-glow ambient-glow-copper hero-glow-1"></div>
   <div class="ambient-glow ambient-glow-terminal hero-glow-2"></div>
 
@@ -64,9 +63,42 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
       </div>
     </div>
 
-    <!-- Columna Multimedia 3D Interactiva con Three.js -->
+    <!-- Columna Marco 3D Holográfico -->
     <div class="hero-media">
-      <CoffeeBag3D />
+      <div class="hero-hologram-frame">
+        <div class="holo-shine"></div>
+
+        <div class="holo-hud-top">
+          <div class="holo-chip">
+            <span class="holo-pulse"></span>
+            <span class="font-mono holo-text">THREE.JS CINEMATIC · SCROLL DRIVEN</span>
+          </div>
+          <span class="holo-badge font-mono">SCA 84.5</span>
+        </div>
+
+        <!-- Área transparente donde la gran bolsa 3D se ubica -->
+        <div class="holo-portal-view">
+          <div class="portal-crosshair cross-tl"></div>
+          <div class="portal-crosshair cross-tr"></div>
+          <div class="portal-crosshair cross-bl"></div>
+          <div class="portal-crosshair cross-br"></div>
+          
+          <div class="portal-hint font-mono">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+            <span>Desplaza hacia abajo para navegar en 3D</span>
+          </div>
+        </div>
+
+        <div class="holo-hud-bottom">
+          <div class="holo-origin-meta font-mono">
+            <span class="origin-label">// lote_origen</span>
+            <span class="origin-name">Rodríguez de Mendoza · 1 800 msnm</span>
+          </div>
+          <span class="holo-tag font-mono">ARÁBICA PURO</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -78,10 +110,9 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     border-bottom: 1px solid var(--line);
     position: relative;
     overflow: hidden;
-    background-color: var(--bg);
+    background-color: transparent;
   }
 
-  /* Auras ambientales de fondo */
   .hero-glow-1 {
     top: -120px;
     left: 20%;
@@ -101,7 +132,7 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     flex-direction: column;
     gap: 36px;
     position: relative;
-    z-index: 1;
+    z-index: 2;
   }
 
   .hero-content {
@@ -110,7 +141,6 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     gap: 20px;
   }
 
-  /* Pill badge superior estilo glass */
   .hero-pill-badge {
     align-self: flex-start;
     display: inline-flex;
@@ -222,11 +252,157 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
     background: var(--line-strong);
   }
 
+  /* Marco Holográfico 3D */
   .hero-media {
     width: 100%;
     min-width: 0;
     display: flex;
     justify-content: center;
+  }
+
+  .hero-hologram-frame {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 4 / 5;
+    background: rgba(15, 16, 21, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .holo-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--metal-shine);
+    pointer-events: none;
+  }
+
+  .holo-hud-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+
+  .holo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(12, 13, 16, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .holo-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-2);
+    box-shadow: 0 0 6px var(--accent-2);
+  }
+
+  .holo-text {
+    font-size: 0.68rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .holo-badge {
+    font-size: 0.72rem;
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(200, 137, 74, 0.14);
+    border: 1px solid rgba(200, 137, 74, 0.3);
+    font-weight: 700;
+  }
+
+  .holo-portal-view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 12px;
+  }
+
+  .portal-crosshair {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: rgba(200, 137, 74, 0.4);
+    border-style: solid;
+  }
+
+  .cross-tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+  .cross-tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+  .cross-bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+  .cross-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+  .portal-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--accent-2);
+    background: rgba(14, 15, 18, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(127, 214, 155, 0.25);
+    padding: 6px 14px;
+    border-radius: 20px;
+    animation: hintBounce 2.5s infinite;
+  }
+
+  @keyframes hintBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .holo-hud-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+    background: rgba(12, 13, 16, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 14px;
+  }
+
+  .holo-origin-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .origin-label {
+    font-size: 0.65rem;
+    color: var(--accent-2);
+  }
+
+  .origin-name {
+    font-size: 0.74rem;
+    color: var(--text);
+  }
+
+  .holo-tag {
+    font-size: 0.68rem;
+    color: var(--accent);
+    font-weight: 700;
   }
 
   @media (min-width: 640px) {
@@ -242,6 +418,11 @@ const heroOrderUrl = getWhatsAppUrl('¡Hola CodeBrew! Vengo desde su web y quier
       grid-template-columns: 1.1fr 0.9fr;
       align-items: center;
       gap: 48px;
+    }
+
+    .hero-hologram-frame {
+      aspect-ratio: 1 / 1;
+      max-width: 480px;
     }
   }
 </style>

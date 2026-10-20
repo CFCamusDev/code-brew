@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import GlobalScene3D from '../components/GlobalScene3D.astro';
+import CoffeeExperience3D from '../components/CoffeeExperience3D.astro';
 
 interface Props {
   title?: string;
@@ -53,8 +53,8 @@ const {
     />
   </head>
   <body>
-    <!-- Escena 3D Global de Fondo (WebGL Three.js) -->
-    <GlobalScene3D />
+    <!-- Escena 3D Cinemática Scrollytelling (Three.js WebGL) -->
+    <CoffeeExperience3D />
 
     <slot />
 
