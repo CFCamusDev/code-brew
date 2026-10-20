@@ -5,10 +5,14 @@ import { TRUST_METRICS } from '../data/config';
 <section class="trust-bar" aria-label="Métricas de calidad y origen">
   <div class="container">
     <div class="trust-grid">
-      {TRUST_METRICS.map((metric) => (
-        <div class="trust-item">
-          <span class="trust-value">{metric.value}</span>
-          <span class="trust-label">{metric.label}</span>
+      {TRUST_METRICS.map((metric, idx) => (
+        <div class="trust-glass-card">
+          <div class="trust-card-header">
+            <span class="trust-step font-mono">0{idx + 1}</span>
+            <span class="trust-pulse-dot"></span>
+          </div>
+          <span class="trust-value font-mono">{metric.value}</span>
+          <span class="trust-label font-mono">{metric.label}</span>
         </div>
       ))}
     </div>
@@ -19,47 +23,84 @@ import { TRUST_METRICS } from '../data/config';
   .trust-bar {
     background-color: var(--bg-2);
     border-bottom: 1px solid var(--line);
-    padding: 24px 0;
+    padding: clamp(24px, 4vw, 36px) 0;
+    position: relative;
   }
 
   .trust-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
   }
 
-  .trust-item {
+  .trust-glass-card {
+    background: rgba(22, 23, 28, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-left: 12px;
-    border-left: 2px solid var(--line-strong);
-    transition: border-color var(--transition-fast);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   }
 
-  .trust-item:hover {
-    border-left-color: var(--accent);
+  .trust-glass-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(200, 137, 74, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(200, 137, 74, 0.1);
+  }
+
+  .trust-card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .trust-step {
+    font-size: 0.68rem;
+    color: var(--accent-2);
+    background: rgba(127, 214, 155, 0.1);
+    border: 1px solid rgba(127, 214, 155, 0.2);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .trust-pulse-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
   }
 
   .trust-value {
-    font-family: var(--font-mono);
-    font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+    font-size: clamp(1.05rem, 3.2vw, 1.45rem);
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
   .trust-label {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: clamp(0.72rem, 2vw, 0.78rem);
     color: var(--muted);
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
   @media (min-width: 768px) {
     .trust-grid {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .trust-glass-card {
+      padding: 18px 16px;
     }
   }
 </style>

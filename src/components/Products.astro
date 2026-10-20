@@ -27,8 +27,12 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
             class={`product-card ${product.highlighted ? 'is-highlighted' : ''}`}
             role="listitem"
           >
+            <!-- Línea de reflejo metálico superior -->
+            <div class="card-reflection"></div>
+
             {product.highlighted && (
               <div class="product-badge">
+                <span class="badge-dot-fav"></span>
                 <span class="badge-code font-mono">{product.highlightTag}</span>
               </div>
             )}
@@ -68,8 +72,8 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
             <!-- Detalles del Producto -->
             <div class="product-info">
               <div class="product-meta">
-                <span class="product-format font-mono">{product.format}</span>
-                <span class="product-grind font-mono">{product.grind}</span>
+                <span class="meta-pill font-mono">{product.format}</span>
+                <span class="meta-grind font-mono">{product.grind}</span>
               </div>
 
               <h3 class="product-name">{product.name}</h3>
@@ -105,14 +109,16 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
 <style>
   .products-section {
-    padding: 72px 0;
+    padding: clamp(64px, 8vw, 96px) 0;
     background-color: var(--bg-2);
     border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
   }
 
   .section-header {
     max-width: 720px;
-    margin-bottom: 40px;
+    margin-bottom: clamp(32px, 5vw, 48px);
   }
 
   .header-tags {
@@ -125,8 +131,9 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
   .code-badge {
     font-size: 0.75rem;
     color: var(--muted);
-    background-color: var(--surface);
-    border: 1px solid var(--line);
+    background-color: rgba(22, 23, 28, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 2px 8px;
     border-radius: 4px;
   }
@@ -141,55 +148,83 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     line-height: 1.65;
   }
 
-  /* Grilla de Productos con soporte de scroll horizontal snap en pantallas pequeñas si se desea, o apilado elegante */
+  /* Grilla de Productos */
   .products-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
+    width: 100%;
   }
 
-  /* Tarjeta de Producto */
+  /* Tarjeta de Producto Glassmorphic Dark */
   .product-card {
-    background-color: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    background: rgba(20, 21, 26, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    min-width: 0;
   }
 
   .product-card:hover {
-    border-color: #3C3C44;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    border-color: rgba(200, 137, 74, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(200, 137, 74, 0.12);
   }
 
-  /* Destacado con borde metálico */
+  /* Reflejo metálico sutil */
+  .card-reflection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--metal-shine);
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  /* Destacado con marco vibrante de cobre */
   .product-card.is-highlighted {
-    border: 1px solid transparent;
-    background-image: linear-gradient(var(--surface), var(--surface)), var(--metal);
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    box-shadow: 0 8px 30px rgba(200, 137, 74, 0.12);
+    border-color: rgba(200, 137, 74, 0.45);
+    background: linear-gradient(180deg, rgba(28, 25, 22, 0.85) 0%, rgba(18, 19, 23, 0.82) 100%);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), 0 0 32px rgba(200, 137, 74, 0.15);
   }
 
   .product-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 5;
-    background-color: rgba(11, 11, 12, 0.9);
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(14, 15, 18, 0.88);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--accent);
     padding: 3px 10px;
     border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .badge-dot-fav {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
   }
 
   .badge-code {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .product-media {
@@ -199,18 +234,26 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
   .product-img-slot {
     aspect-ratio: 1 / 1;
     min-height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
   }
 
   .product-img-slot.has-image {
     padding: 0;
     border-style: solid;
-    border-color: var(--line);
+    border-color: rgba(255, 255, 255, 0.06);
+    background: #0E0F12;
   }
 
   .product-img-slot.has-image :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .product-card:hover .product-img-slot.has-image :global(img) {
+    transform: scale(1.03);
   }
 
   .product-img-slot.is-duo {
@@ -222,7 +265,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     width: 50%;
   }
 
-  /* Galería de imágenes (varios ángulos de la misma bolsa) */
+  /* Galería de imágenes */
   .product-img-slot.is-gallery :global(img) {
     display: none;
     position: absolute;
@@ -241,22 +284,28 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     display: flex;
     gap: 7px;
     z-index: 5;
+    background: rgba(11, 11, 12, 0.6);
+    backdrop-filter: blur(6px);
+    padding: 4px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .gallery-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.5);
-    background-color: rgba(11, 11, 12, 0.5);
+    background-color: transparent;
     padding: 0;
     cursor: pointer;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   }
 
   .gallery-dot.is-active {
     background-color: var(--accent);
     border-color: var(--accent);
+    transform: scale(1.25);
   }
 
   .product-info {
@@ -271,9 +320,26 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    font-size: 0.75rem;
+    margin-bottom: 10px;
+    min-width: 0;
+  }
+
+  .meta-pill {
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: rgba(200, 137, 74, 0.12);
+    border: 1px solid rgba(200, 137, 74, 0.25);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  .meta-grind {
+    font-size: 0.72rem;
     color: var(--muted);
-    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .product-name {
@@ -294,7 +360,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     justify-content: space-between;
     margin-top: auto;
     padding-top: 14px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .price-container {
@@ -324,7 +390,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 
   @media (min-width: 640px) {
     .products-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
@@ -334,7 +400,7 @@ import { PRODUCTS, getWhatsAppUrl } from '../data/config';
     }
 
     .products-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 28px;
     }
   }

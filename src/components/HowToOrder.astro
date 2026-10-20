@@ -4,19 +4,22 @@ const steps = [
     step: '01',
     command: 'select --blend',
     title: 'Elige tu café',
-    desc: 'Escoge entre Origen Monteverde, Espresso Amazonas o el Pack Developer. Indícanos si lo prefieres en grano entero o con molienda específica.'
+    desc: 'Escoge entre Origen Monteverde, Espresso Amazonas o el Pack Developer. Indícanos si lo prefieres en grano entero o con molienda específica.',
+    badge: 'STAGE 1'
   },
   {
     step: '02',
     command: 'git push --whatsapp',
     title: 'Escríbenos por WhatsApp',
-    desc: 'Al pulsar el botón se abrirá una conversación con tu pedido prellenado. Confirmamos stock, coordinamos el medio de pago y resolvemos cualquier duda técnica.'
+    desc: 'Al pulsar el botón se abrirá una conversación con tu pedido prellenado. Confirmamos stock, coordinamos el medio de pago y resolvemos cualquier duda técnica.',
+    badge: 'STAGE 2'
   },
   {
     step: '03',
     command: 'status: 200 OK',
     title: 'Recíbelo en casa',
-    desc: 'Empacamos tu café con válvula desgasificadora para conservar todos los aromas y te enviamos el tracking hasta la puerta de tu casa u oficina.'
+    desc: 'Empacamos tu café con válvula desgasificadora para conservar todos los aromas y te enviamos el tracking hasta la puerta de tu casa u oficina.',
+    badge: 'DEPLOYED'
   }
 ];
 ---
@@ -33,10 +36,14 @@ const steps = [
 
     <div class="steps-grid">
       {steps.map((item) => (
-        <div class="step-card">
+        <div class="step-glass-card">
+          <div class="step-shine"></div>
           <div class="step-top">
             <span class="step-number font-mono">{item.step}</span>
-            <span class="step-command font-mono">// {item.command}</span>
+            <div class="step-badge-group">
+              <span class="step-badge font-mono">{item.badge}</span>
+              <span class="step-command font-mono">// {item.command}</span>
+            </div>
           </div>
           <h3 class="step-title">{item.title}</h3>
           <p class="step-desc">{item.desc}</p>
@@ -48,14 +55,16 @@ const steps = [
 
 <style>
   .order-section {
-    padding: 72px 0;
+    padding: clamp(64px, 8vw, 96px) 0;
     border-bottom: 1px solid var(--line);
     background-color: var(--bg);
+    position: relative;
+    overflow: hidden;
   }
 
   .section-header {
     max-width: 720px;
-    margin-bottom: 40px;
+    margin-bottom: clamp(32px, 5vw, 48px);
   }
 
   .section-title {
@@ -70,41 +79,77 @@ const steps = [
 
   .steps-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    width: 100%;
   }
 
-  .step-card {
-    background-color: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 32px 24px;
+  .step-glass-card {
+    background: rgba(20, 21, 26, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 30px 24px;
     position: relative;
-    transition: border-color var(--transition-fast), transform var(--transition-fast);
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    transition: border-color var(--transition-normal), transform var(--transition-normal), box-shadow var(--transition-normal);
+    min-width: 0;
   }
 
-  .step-card:hover {
-    border-color: #3C3C44;
-    transform: translateY(-2px);
+  .step-glass-card:hover {
+    border-color: rgba(200, 137, 74, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(200, 137, 74, 0.1);
+  }
+
+  .step-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--metal-shine);
+    pointer-events: none;
   }
 
   .step-top {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-start;
     margin-bottom: 16px;
+    gap: 12px;
   }
 
   .step-number {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--accent);
     line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .step-badge-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .step-badge {
+    font-size: 0.65rem;
+    color: var(--accent-2);
+    background: rgba(127, 214, 155, 0.1);
+    border: 1px solid rgba(127, 214, 155, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
   }
 
   .step-command {
-    font-size: 0.78rem;
-    color: var(--accent-2);
+    font-size: 0.74rem;
+    color: var(--muted);
   }
 
   .step-title {
@@ -121,7 +166,7 @@ const steps = [
 
   @media (min-width: 768px) {
     .steps-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 24px;
     }
   }

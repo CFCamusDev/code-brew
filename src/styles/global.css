@@ -19,6 +19,16 @@
   --accent-2: #7FD69B;     /* Sintaxis / Terminal verde */
   --accent-2-dim: #284432;
 
+  /* Glassmorphism y Acabados Mates Vibrantes */
+  --glass-surface: rgba(20, 20, 24, 0.74);
+  --glass-surface-elevated: rgba(26, 26, 32, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(200, 137, 74, 0.38);
+  --glass-blur: blur(16px);
+  --glow-copper: rgba(200, 137, 74, 0.25);
+  --glow-terminal: rgba(127, 214, 155, 0.2);
+  --metal-shine: linear-gradient(90deg, transparent, rgba(200, 137, 74, 0.6) 35%, rgba(255, 255, 255, 0.75) 50%, rgba(127, 214, 155, 0.5) 65%, transparent);
+
   /* Tipografías */
   --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -133,26 +143,74 @@ code, pre, .font-mono {
   color: #0B0B0C;
   font-weight: 700;
   border-color: #B4773B;
-  box-shadow: 0 4px 14px rgba(200, 137, 74, 0.22);
+  box-shadow: 0 4px 16px rgba(200, 137, 74, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(200, 137, 74, 0.32);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200, 137, 74, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .btn-metal {
-  background: #141416;
-  background-image: var(--metal-subtle);
+  background: rgba(22, 22, 26, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--text);
-  border: 1px solid #36363B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .btn-metal:hover {
-  border-color: #52525A;
+  border-color: rgba(200, 137, 74, 0.4);
   color: #FFFFFF;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(200, 137, 74, 0.12);
+}
+
+/* Chips y Badges con Tecnología Glass */
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(18, 19, 23, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.glass-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent-2);
+  box-shadow: 0 0 6px var(--accent-2);
+}
+
+/* Efecto ambiental de luz sutil en fondo de sección */
+.ambient-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  z-index: 0;
+}
+
+.ambient-glow-copper {
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+}
+
+.ambient-glow-terminal {
+  background: radial-gradient(circle, var(--accent-2) 0%, transparent 70%);
 }
 
 .btn-outline {

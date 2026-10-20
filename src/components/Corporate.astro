@@ -8,13 +8,27 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
 
 <section class="corporate-section" id="empresas">
   <div class="container">
-    <div class="corporate-card">
+    <div class="corporate-glass-card">
+      <div class="corporate-shine"></div>
+
       <div class="corporate-content">
-        <span class="section-label">// empresas & onboarding</span>
+        <div class="corporate-tag font-mono">// empresas & onboarding</div>
         <h2 class="corporate-title">Café de especialidad para tu equipo tech</h2>
         <p class="corporate-desc">
           Abastece la barra de café de tu oficina o sorprende a tus ingenieros con packs de bienvenida y regalos corporativos personalizados. Envíos programados mensuales con facturación y soporte directo.
         </p>
+
+        <div class="corporate-perks">
+          <div class="perk-pill font-mono">
+            <span class="perk-dot"></span> Facturación B2B
+          </div>
+          <div class="perk-pill font-mono">
+            <span class="perk-dot"></span> Despacho Mensual Programado
+          </div>
+          <div class="perk-pill font-mono">
+            <span class="perk-dot"></span> Merchandising Personalizado
+          </div>
+        </div>
 
         <div class="corporate-cta">
           <a
@@ -33,7 +47,7 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
         </div>
       </div>
 
-      <!-- Imagen Corporativo (16:9) -->
+      <!-- Imagen Corporativo (16:9) con marco Glass -->
       <div class="corporate-media">
         <div class="img-slot corporate-img-slot has-image" id="img-corporativo">
           <Image
@@ -50,51 +64,110 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
 
 <style>
   .corporate-section {
-    padding: 72px 0;
+    padding: clamp(64px, 8vw, 96px) 0;
     background-color: var(--bg-2);
     border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
   }
 
-  .corporate-card {
-    background-color: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    padding: 32px 24px;
+  .corporate-glass-card {
+    background: rgba(20, 21, 26, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 20px;
+    padding: clamp(24px, 5vw, 44px);
     display: flex;
     flex-direction: column;
     gap: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+  }
+
+  .corporate-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--metal-shine);
+    pointer-events: none;
   }
 
   .corporate-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
+  }
+
+  .corporate-tag {
+    font-size: 0.82rem;
+    color: var(--accent-2);
   }
 
   .corporate-title {
     font-size: clamp(1.6rem, 3.5vw, 2.3rem);
     color: var(--text);
+    line-height: 1.2;
   }
 
   .corporate-desc {
     font-size: 1rem;
     line-height: 1.65;
     max-width: 650px;
+    color: var(--muted);
+  }
+
+  .corporate-perks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .perk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: var(--text);
+    background: rgba(14, 15, 18, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .perk-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--accent);
   }
 
   .corporate-cta {
     margin-top: 8px;
   }
 
+  .corporate-media {
+    width: 100%;
+    min-width: 0;
+  }
+
   .corporate-img-slot {
     aspect-ratio: 16 / 9;
     min-height: 220px;
+    border-radius: 14px;
+    overflow: hidden;
   }
 
   .corporate-img-slot.has-image {
     padding: 0;
     border-style: solid;
-    border-color: var(--line);
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #0E0F12;
   }
 
   .corporate-img-slot.has-image :global(img) {
@@ -104,15 +177,10 @@ const corporateUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera cotizar café par
   }
 
   @media (min-width: 1024px) {
-    .corporate-section {
-      padding: 96px 0;
-    }
-
-    .corporate-card {
+    .corporate-glass-card {
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
       align-items: center;
-      padding: 48px 40px;
       gap: 40px;
     }
   }

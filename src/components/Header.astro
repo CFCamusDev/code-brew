@@ -90,10 +90,11 @@ const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de ca
     position: sticky;
     top: 0;
     z-index: 100;
-    background-color: rgba(11, 11, 12, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--line);
+    background-color: rgba(11, 11, 12, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     transition: border-color var(--transition-fast);
   }
 
@@ -304,3 +305,5 @@ const orderUrl = getWhatsAppUrl('¡Hola CodeBrew! Quisiera hacer un pedido de ca
   closeBtn?.addEventListener('click', closeMenu);
   mobileLinks.forEach((link) => link.addEventListener('click', closeMenu));
 </script>
+
+
