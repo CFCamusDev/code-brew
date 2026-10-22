@@ -48,17 +48,20 @@ export const productVariants = pgTable(
     format: text('format').notNull(),
     priceCents: integer('price_cents').notNull(),
     stock: integer('stock').notNull().default(0),
+    /** Bolsas que contiene la presentación (el Pack Developer trae 2). Cuenta para el envío gratis. */
+    bags: integer('bags').notNull().default(1),
     active: boolean('active').notNull().default(true),
     ...timestamps
   },
   t => [
     index('product_variants_product_idx').on(t.productId),
+    check('product_variants_bags_check', sql`${t.bags} > 0`),
     check('product_variants_price_check', sql`${t.priceCents} >= 0`),
     check('product_variants_stock_check', sql`${t.stock} >= 0`)
   ]
 );
 
-/** Zona de envío con su tarifa. `freeFromCents` activa envío gratis desde ese subtotal. */
+/** Zona de envío con su tarifa. Envío gratis desde `freeFromCents` de subtotal o desde `freeFromBags` bolsas. */
 export const shippingZones = pgTable(
   'shipping_zones',
   {
@@ -69,6 +72,7 @@ export const shippingZones = pgTable(
     eta: text('eta').notNull(),
     priceCents: integer('price_cents').notNull(),
     freeFromCents: integer('free_from_cents'),
+    freeFromBags: integer('free_from_bags'),
     active: boolean('active').notNull().default(true),
     sortOrder: integer('sort_order').notNull().default(0),
     ...timestamps
@@ -111,6 +115,8 @@ export const orders = pgTable(
     totalCents: integer('total_cents').notNull(),
     currency: text('currency').notNull().default('PEN'),
     paidAt: timestamp('paid_at', { withTimezone: true }),
+    /** Se pagó pero no alcanzó el stock al confirmar: requiere revisión manual. */
+    stockShortage: boolean('stock_shortage').notNull().default(false),
     ...timestamps
   },
   t => [
@@ -161,6 +167,8 @@ export const payments = pgTable(
     method: text('method'),
     status: paymentStatus('status').notNull().default('pending'),
     amountCents: integer('amount_cents').notNull(),
+    /** Vencimiento de una orden de Culqi (PagoEfectivo, billeteras, agentes). */
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
     /** Respuesta de Culqi tal cual, para auditoría y conciliación. */
     raw: jsonb('raw'),
     ...timestamps

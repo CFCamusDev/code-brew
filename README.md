@@ -31,6 +31,18 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 - `POST /api/cart/quote` recalcula precios, stock y envío con la base de datos; `POST /api/orders` crea el pedido pendiente de pago. El servidor nunca usa precios enviados por el navegador.
 - `/pedido/[id]`: resumen del pedido; el UUID funciona como enlace privado para compras como invitado.
 - Una presentación con stock 0 no se puede comprar: carga el stock real antes de abrir la tienda.
+- Envío gratis: por subtotal (`free_from_cents`) o por bolsas (`free_from_bags`; el Pack Developer cuenta 2). Hoy: desde 3 bolsas en Lima y Callao.
+
+## Pagos (Culqi)
+
+- Variables: `CULQI_PUBLIC_KEY`, `CULQI_SECRET_KEY` y `CULQI_WEBHOOK_SECRET` (ver `.env.example`). Sin llaves, la página del pedido ofrece coordinar el pago por WhatsApp.
+- `/pedido/[id]` muestra **Pagar ahora** (isla `PayButton`): abre Culqi Checkout con tarjeta, Yape, billeteras, banca móvil y agentes.
+- Tarjeta y Yape: `POST /api/payments/charge` cobra el total guardado del pedido. Si el banco exige 3DS (`action_code: REVIEW`), Culqi3DS autentica y se reintenta el cargo.
+- PagoEfectivo, billeteras y agentes usan una orden de Culqi (`POST /api/payments/session`) y se confirman por webhook.
+- Webhook: en CulqiPanel > Eventos > Webhook registra `order.status.changed` con la URL `https://<dominio>/api/webhooks/culqi?key=<CULQI_WEBHOOK_SECRET>`. El servidor no confía en el cuerpo: vuelve a consultar la orden a Culqi.
+- Al confirmarse un pago se descuenta el stock en la misma transacción; si no alcanza, el pedido queda con `stock_shortage` y se avisa al administrador. Confirmar dos veces el mismo pago no tiene efecto.
+- Correos con Resend (`RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `SITE_URL`); sin API key solo se registran en los logs.
+- Pruebas: tarjetas en https://docs.culqi.com/es/documentacion/pagos-online/tarjetas-de-prueba (Visa 4111 1111 1111 1111, 09/30, CVV 123).
 
 ## Producción (Docker / Portainer)
 

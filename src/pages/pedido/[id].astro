@@ -1,9 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import ShopHeader from '../../components/shop/ShopHeader.astro';
-import { getOrder } from '../../lib/server/shop';
+import { getOrder, isOrderId } from '../../lib/server/shop';
 import { formatOrderNumber, formatPEN } from '../../lib/shop/format';
 import { getWhatsAppUrl } from '../../data/config';
+import { culqiEnabled } from '../../lib/server/culqi';
+import PayButton from '../../components/shop/PayButton';
 import '../../styles/shop.css';
 
 export const prerender = false;
@@ -18,9 +20,8 @@ const STATUS_LABEL = {
   refunded: 'Reembolsado'
 } as const;
 
-const { id = '' } = Astro.params;
-// El id (UUID aleatorio) funciona como enlace privado del pedido para compras como invitado.
-const order = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? await getOrder(id) : undefined;
+const { id } = Astro.params;
+const order = isOrderId(id) ? await getOrder(id) : undefined;
 if (!order) return new Response('Pedido no encontrado', { status: 404 });
 
 Astro.response.headers.set('Cache-Control', 'no-store');
@@ -31,16 +32,29 @@ const whatsapp = getWhatsAppUrl(`¡Hola CodeBrew! Acabo de registrar el pedido $
   <ShopHeader />
   <main id="main-content" class="shop-main order-page">
     <p class="eyebrow">PEDIDO {number}</p>
-    <h1>{order.status === 'pending' ? '¡Pedido registrado!' : `Pedido ${number}`}</h1>
+    <h1>{order.status === 'pending' ? '¡Pedido registrado!' : order.status === 'paid' ? '¡Gracias por tu compra!' : `Pedido ${number}`}</h1>
     <span class="order-status" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
 
     {order.status === 'pending' && (
       <section class="order-card">
         <h2>Siguiente paso: el pago</h2>
-        <p>Guardamos tu pedido y reservaremos tu café en cuanto se confirme el pago. Escríbenos por WhatsApp con tu número de pedido y te indicamos cómo pagar.</p>
-        <div class="order-actions">
-          <a class="button primary" href={whatsapp} target="_blank" rel="noopener noreferrer">Coordinar pago por WhatsApp <span aria-hidden="true">↗</span></a>
-        </div>
+        <p>Guardamos tu pedido; reservamos tu café en cuanto se confirme el pago.</p>
+        {culqiEnabled() ? (
+          <PayButton client:load orderId={order.id} whatsappUrl={whatsapp} />
+        ) : (
+          <>
+            <p>Escríbenos por WhatsApp con tu número de pedido y te indicamos cómo pagar.</p>
+            <div class="order-actions">
+              <a class="button primary" href={whatsapp} target="_blank" rel="noopener noreferrer">Coordinar pago por WhatsApp <span aria-hidden="true">↗</span></a>
+            </div>
+          </>
+        )}
+      </section>
+    )}
+    {order.status === 'paid' && (
+      <section class="order-card">
+        <h2>¡Pago confirmado!</h2>
+        <p>Ya estamos preparando tu café. Te enviamos el detalle a <strong>{order.customerEmail}</strong> y te avisaremos cuando salga tu pedido.</p>
       </section>
     )}
 

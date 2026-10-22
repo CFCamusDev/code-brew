@@ -389,3 +389,15 @@
 @media(max-width:560px){
   .order-card{padding:20px 16px}
 }
+
+/* ---------- Pago ---------- */
+.pay-box .order-actions{margin-top:6px}
+.pay-box .button:disabled{opacity:.6;cursor:wait;transform:none}
+.pay-status{
+  margin-top:14px;
+  padding:14px 16px;
+  background:#203c320d;
+  border-left:3px solid var(--ink);
+  font-size:14px
+}
+.order-status[data-status="paid"]{background:#2f6b4f}

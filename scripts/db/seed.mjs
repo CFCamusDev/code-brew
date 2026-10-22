@@ -26,8 +26,8 @@ try {
 
       for (const variant of product.variants) {
         const insertedVariant = await tx`
-          insert into product_variants (product_id, sku, format, price_cents)
-          values (${productId}, ${variant.sku}, ${variant.format}, ${Math.round(variant.price * 100)})
+          insert into product_variants (product_id, sku, format, price_cents, bags)
+          values (${productId}, ${variant.sku}, ${variant.format}, ${Math.round(variant.price * 100)}, ${variant.bags ?? 1})
           on conflict (sku) do nothing
           returning id`;
         insertedVariants += insertedVariant.length;
@@ -36,8 +36,8 @@ try {
 
     for (const [index, zone] of shipping.zones.entries()) {
       const inserted = await tx`
-        insert into shipping_zones (slug, name, eta, price_cents, sort_order)
-        values (${zone.slug}, ${zone.name}, ${zone.eta}, ${Math.round(zone.price * 100)}, ${index})
+        insert into shipping_zones (slug, name, eta, price_cents, free_from_bags, sort_order)
+        values (${zone.slug}, ${zone.name}, ${zone.eta}, ${Math.round(zone.price * 100)}, ${zone.freeBags ?? null}, ${index})
         on conflict (slug) do nothing
         returning id`;
       insertedZones += inserted.length;

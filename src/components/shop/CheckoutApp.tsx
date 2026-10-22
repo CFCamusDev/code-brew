@@ -9,6 +9,11 @@ import '../../styles/shop.css';
 
 const ZONE_REGION: Record<string, string> = { lima: 'Lima', callao: 'Callao' };
 
+// Misma regla que isFreeShipping en el servidor; el total que se cobra siempre lo recalcula el servidor.
+const isFree = (zone: Quote['zones'][number], quote: Quote) =>
+  (zone.freeFromCents !== null && quote.subtotalCents >= zone.freeFromCents) ||
+  (zone.freeFromBags !== null && quote.bags >= zone.freeFromBags);
+
 export default function CheckoutApp() {
   const lines = useStore(cartLines);
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -121,11 +126,15 @@ export default function CheckoutApp() {
               <input type="radio" value={z.slug} {...register('zone')} />
               <span>
                 <strong>{z.name}</strong>
-                <small>{z.eta}</small>
+                <small>
+                  {z.eta}
+                  {z.freeFromBags !== null &&
+                    (quote.bags >= z.freeFromBags
+                      ? ' · Envío gratis aplicado'
+                      : ` · Gratis desde ${z.freeFromBags} bolsas (te ${z.freeFromBags - quote.bags === 1 ? 'falta 1' : `faltan ${z.freeFromBags - quote.bags}`})`)}
+                </small>
               </span>
-              <b>
-                {z.freeFromCents !== null && quote.subtotalCents >= z.freeFromCents ? 'Gratis' : formatPEN(z.priceCents)}
-              </b>
+              <b>{isFree(z, quote) ? 'Gratis' : formatPEN(z.priceCents)}</b>
             </label>
           ))}
           {errors.zone && <p className="field-error">{errors.zone.message}</p>}

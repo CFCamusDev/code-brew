@@ -22,6 +22,13 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgres://codebrew:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}@codebrew-db:5432/codebrew
+      - CULQI_PUBLIC_KEY=${CULQI_PUBLIC_KEY:-}
+      - CULQI_SECRET_KEY=${CULQI_SECRET_KEY:-}
+      - CULQI_WEBHOOK_SECRET=${CULQI_WEBHOOK_SECRET:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - SITE_URL=${SITE_URL:-}
     depends_on:
       codebrew-db:
         condition: service_healthy

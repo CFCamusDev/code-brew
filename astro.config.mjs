@@ -11,7 +11,17 @@ export default defineConfig({
   integrations: [react()],
   env: {
     schema: {
-      DATABASE_URL: envField.string({ context: 'server', access: 'secret' })
+      DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+      // Culqi: sin llaves la web funciona, pero el botón de pago queda desactivado.
+      CULQI_PUBLIC_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      CULQI_SECRET_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Clave que va en la URL del webhook registrada en CulqiPanel (?key=...).
+      CULQI_WEBHOOK_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Correo (Resend): sin API key los correos solo se registran en los logs.
+      RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      EMAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
+      ADMIN_EMAIL: envField.string({ context: 'server', access: 'secret', optional: true }),
+      SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true })
     }
   },
   server: {

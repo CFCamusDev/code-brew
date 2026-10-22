@@ -68,7 +68,16 @@ export interface Quote {
     lineTotalCents: number;
   }[];
   issues: { sku: string; message: string }[];
-  zones: { slug: string; name: string; eta: string; priceCents: number; freeFromCents: number | null }[];
+  zones: {
+    slug: string;
+    name: string;
+    eta: string;
+    priceCents: number;
+    freeFromCents: number | null;
+    freeFromBags: number | null;
+  }[];
+  /** Bolsas en el pedido (el Pack Developer cuenta 2). */
+  bags: number;
   subtotalCents: number;
   shippingCents: number | null;
   totalCents: number | null;

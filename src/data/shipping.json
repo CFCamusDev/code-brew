@@ -1,8 +1,25 @@
 {
-  "_nota": "Tarifas PROVISIONALES para desarrollo. Reemplazar por las reales antes de producción (luego se editan desde el admin).",
+  "_nota": "Tarifas PROVISIONALES para desarrollo. Reemplazar por las reales antes de producción (luego se editan desde el admin). freeBags: envío gratis desde esa cantidad de bolsas.",
   "zones": [
-    { "slug": "lima", "name": "Lima Metropolitana", "eta": "1 a 2 días hábiles", "price": 10 },
-    { "slug": "callao", "name": "Callao", "eta": "1 a 2 días hábiles", "price": 10 },
-    { "slug": "provincias", "name": "Provincias (envío por agencia)", "eta": "3 a 5 días hábiles", "price": 18 }
+    {
+      "slug": "lima",
+      "name": "Lima Metropolitana",
+      "eta": "1 a 2 días hábiles",
+      "price": 10,
+      "freeBags": 3
+    },
+    {
+      "slug": "callao",
+      "name": "Callao",
+      "eta": "1 a 2 días hábiles",
+      "price": 10,
+      "freeBags": 3
+    },
+    {
+      "slug": "provincias",
+      "name": "Provincias (envío por agencia)",
+      "eta": "3 a 5 días hábiles",
+      "price": 18
+    }
   ]
 }

@@ -27,6 +27,7 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
             format: productVariants.format,
             priceCents: productVariants.priceCents,
             stock: productVariants.stock,
+            bags: productVariants.bags,
             variantActive: productVariants.active,
             productName: products.name,
             grinds: products.grinds,
@@ -42,7 +43,8 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
         name: shippingZones.name,
         eta: shippingZones.eta,
         priceCents: shippingZones.priceCents,
-        freeFromCents: shippingZones.freeFromCents
+        freeFromCents: shippingZones.freeFromCents,
+        freeFromBags: shippingZones.freeFromBags
       })
       .from(shippingZones)
       .where(eq(shippingZones.active, true))
@@ -54,6 +56,7 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
   for (const item of items) requestedBySku.set(item.sku, (requestedBySku.get(item.sku) ?? 0) + item.quantity);
 
   const lines: Quote['lines'] = [];
+  let bags = 0;
   const issues: Quote['issues'] = [];
   const reportedStock = new Set<string>();
 
@@ -83,6 +86,7 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
       }
       continue;
     }
+    bags += row.bags * item.quantity;
     lines.push({
       sku: item.sku,
       grind: item.grind,
@@ -96,20 +100,24 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
 
   const subtotalCents = lines.reduce((sum, line) => sum + line.lineTotalCents, 0);
   const zone = zones.find(z => z.slug === zoneSlug);
-  const shippingCents = zone
-    ? zone.freeFromCents !== null && subtotalCents >= zone.freeFromCents
-      ? 0
-      : zone.priceCents
-    : null;
+  const shippingCents = zone ? (isFreeShipping(zone, subtotalCents, bags) ? 0 : zone.priceCents) : null;
 
   return {
     lines,
     issues,
     zones,
+    bags,
     subtotalCents,
     shippingCents,
     totalCents: shippingCents === null ? null : subtotalCents + shippingCents
   };
+}
+
+export function isFreeShipping(zone: Quote['zones'][number], subtotalCents: number, bags: number) {
+  return (
+    (zone.freeFromCents !== null && subtotalCents >= zone.freeFromCents) ||
+    (zone.freeFromBags !== null && bags >= zone.freeFromBags)
+  );
 }
 
 /** Crea un pedido pendiente de pago con precios y envío recalculados en el servidor. */
@@ -170,6 +178,11 @@ export async function createOrder(items: CartLine[], customer: Customer) {
 
     return order;
   });
+}
+
+/** Los ids de pedido son UUID aleatorios: funcionan como enlace privado para compras como invitado. */
+export function isOrderId(id: string | undefined): id is string {
+  return !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
 /** Pedido con sus líneas, para la página de confirmación. */

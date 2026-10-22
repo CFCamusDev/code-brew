@@ -4,38 +4,78 @@
       "slug": "monteverde",
       "name": "Origen Monteverde",
       "roast": "Tueste medio",
-      "grinds": ["Grano entero", "Molido para filtro", "Molido para prensa francesa", "Molido para moka"],
+      "grinds": [
+        "Grano entero",
+        "Molido para filtro",
+        "Molido para prensa francesa",
+        "Molido para moka"
+      ],
       "variants": [
-        { "sku": "monteverde-250", "format": "250 g", "price": 34 },
-        { "sku": "monteverde-500", "format": "500 g", "price": 60 }
+        {
+          "sku": "monteverde-250",
+          "format": "250 g",
+          "price": 34
+        },
+        {
+          "sku": "monteverde-500",
+          "format": "500 g",
+          "price": 60
+        }
       ]
     },
     {
       "slug": "espresso",
       "name": "Espresso Amazonas",
       "roast": "Tueste medio-oscuro",
-      "grinds": ["Grano entero", "Molido para espresso"],
+      "grinds": [
+        "Grano entero",
+        "Molido para espresso"
+      ],
       "variants": [
-        { "sku": "espresso-250", "format": "250 g", "price": 34 },
-        { "sku": "espresso-500", "format": "500 g", "price": 60 }
+        {
+          "sku": "espresso-250",
+          "format": "250 g",
+          "price": 34
+        },
+        {
+          "sku": "espresso-500",
+          "format": "500 g",
+          "price": 60
+        }
       ]
     },
     {
       "slug": "developer",
       "name": "Pack Developer",
       "roast": "Dos perfiles de tueste",
-      "grinds": ["Combinación por coordinar", "Ambos en grano", "Ambos molidos"],
+      "grinds": [
+        "Combinación por coordinar",
+        "Ambos en grano",
+        "Ambos molidos"
+      ],
       "variants": [
-        { "sku": "pack-developer", "format": "2 × 250 g", "price": 62 }
+        {
+          "sku": "pack-developer",
+          "format": "2 × 250 g",
+          "price": 62,
+          "bags": 2
+        }
       ]
     },
     {
       "slug": "microlote",
       "name": "Microlote de Temporada",
       "roast": "Tueste claro",
-      "grinds": ["Grano entero", "Molido para filtrado"],
+      "grinds": [
+        "Grano entero",
+        "Molido para filtrado"
+      ],
       "variants": [
-        { "sku": "microlote-temporada", "format": "250 g", "price": 45 }
+        {
+          "sku": "microlote-temporada",
+          "format": "250 g",
+          "price": 45
+        }
       ]
     }
   ]
