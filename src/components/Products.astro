@@ -1,591 +1,71 @@
 ---
 import { Image } from 'astro:assets';
+import monteverde from '../assets/demo/monteverde.png';
+import espresso from '../assets/demo/espresso.png';
+import microlote from '../assets/demo/microlote.png';
+const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote};
 import { PRODUCTS, getWhatsAppUrl } from '../data/config';
+const profiles = [
+ {id:'monteverde',name:'Origen Monteverde',tag:'01 / EL DAILY DRIVER',description:'Tu punto de partida. Tueste medio para acompañar el primer commit del día y esa pausa que siempre viene bien.',roast:'Tueste medio',color:'#436952',image:'monteverde',ids:['monteverde-250','monteverde-500'],grinds:['Grano entero','Molido para filtro','Molido para prensa francesa','Molido para moka']},
+ {id:'espresso',name:'Espresso Amazonas',tag:'02 / MODO INTENSO',description:'Un perfil de tueste medio-oscuro para quienes disfrutan un café con más carácter. Tu siguiente ritual empieza aquí.',roast:'Tueste medio-oscuro',color:'#a65c3d',image:'espresso',ids:['espresso-250','espresso-500'],grinds:['Grano entero','Molido para espresso']},
+ {id:'developer',name:'Pack Developer',tag:'03 / MEJOR EN PAREJA',description:'Monteverde + Espresso Amazonas. Dos bolsas, dos perfiles y una buena excusa para descubrir tu favorito o compartir con tu pair.',roast:'Dos perfiles de tueste',color:'#b89350',image:'monteverde',ids:['pack-developer'],grinds:['Combinación por coordinar','Ambos en grano','Ambos molidos']},
+ {id:'microlote',name:'Microlote de Temporada',tag:'04 / EXPLORA ALGO NUEVO',description:'Un tueste claro para salir de la rutina y acercarte al origen desde otra perspectiva. Consulta el lote disponible.',roast:'Tueste claro',color:'#727d9b',image:'microlote',ids:['microlote-temporada'],grinds:['Grano entero','Molido para filtrado']}
+];
 ---
-
-<section class="products-section" id="productos">
-  <div class="container">
-    <div class="section-header" data-reveal="up">
-      <div class="header-tags">
-        <span class="section-label">// 02 — productos</span>
-        <span class="code-badge font-mono">&lt;Productos /&gt;</span>
-      </div>
-      <h2 class="section-title">Nuestra selección para desarrolladores</h2>
-      <p class="section-subtitle">
-        Tostado en pequeños batches para preservar las notas de cata. Elige tu formato preferido y personaliza la molienda al instante.
-      </p>
-
-      <!-- Barra de Filtros Interactiva estilo CLI -->
-      <div class="filter-cli-bar font-mono" role="tablist" aria-label="Filtrar por formato">
-        <button class="cli-filter-btn is-active" data-filter="all">
-          <span class="cli-prompt">></span> todos <span class="cli-count">(6)</span>
-        </button>
-        <button class="cli-filter-btn" data-filter="250g">
-          <span class="cli-prompt">></span> 250 g
-        </button>
-        <button class="cli-filter-btn" data-filter="500g">
-          <span class="cli-prompt">></span> 500 g
-        </button>
-        <button class="cli-filter-btn" data-filter="pack">
-          <span class="cli-prompt">></span> packs dúo
-        </button>
-      </div>
-    </div>
-
-    <!-- Grilla / Carrusel de Productos -->
-    <div class="products-grid" role="list">
-      {PRODUCTS.map((product, idx) => {
-        const defaultOrderMessage = `¡Hola CodeBrew! Quiero pedir ${product.name} (${product.format}) en grano entero por S/ ${product.price}.`;
-        const productUrl = getWhatsAppUrl(defaultOrderMessage);
-
-        const categoryTag = product.format.includes('2 ×') ? 'pack' : product.format.includes('500') ? '500g' : '250g';
-
-        return (
-          <article
-            class={`product-card ${product.highlighted ? 'is-highlighted' : ''}`}
-            data-category={categoryTag}
-            data-product-name={product.name}
-            data-product-format={product.format}
-            data-product-price={product.price}
-            data-reveal="up"
-            data-reveal-delay={(idx * 80).toString()}
-            role="listitem"
-          >
-            <!-- Línea de reflejo metálico superior -->
-            <div class="card-reflection"></div>
-
-            {product.highlighted && (
-              <div class="product-badge">
-                <span class="badge-dot-fav"></span>
-                <span class="badge-code font-mono">{product.highlightTag}</span>
-              </div>
-            )}
-
-            <!-- Imagen Producto (1:1) -->
-            <div class="product-media">
-              <div
-                class={`img-slot product-img-slot has-image ${product.galleryMode === 'duo' ? 'is-duo' : ''} ${product.images.length > 1 && product.galleryMode !== 'duo' ? 'is-gallery' : ''}`}
-                id={product.imgSlotId}
-              >
-                {product.images.map((image, index) => (
-                  <Image
-                    class={index === 0 ? 'is-active' : ''}
-                    data-gallery-img
-                    src={image.src}
-                    alt={image.alt}
-                    width={480}
-                    height={480}
-                  />
-                ))}
-
-                {product.images.length > 1 && product.galleryMode !== 'duo' && (
-                  <div class="gallery-dots" role="tablist" aria-label={`Vistas de ${product.name}`}>
-                    {product.images.map((_, index) => (
-                      <button
-                        type="button"
-                        class={`gallery-dot ${index === 0 ? 'is-active' : ''}`}
-                        data-gallery-dot
-                        aria-label={`Ver vista ${index + 1} de ${product.name}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <!-- Detalles del Producto -->
-            <div class="product-info">
-              <div class="product-meta">
-                <span class="meta-pill font-mono">{product.format}</span>
-                <span class="meta-grind font-mono" data-selected-grind-label>Grano entero</span>
-              </div>
-
-              <h3 class="product-name">{product.name}</h3>
-              <p class="product-roast font-mono">// {product.roast}</p>
-
-              <!-- Selector Interactivo de Molienda -->
-              <div class="grind-selector-box">
-                <span class="selector-title font-mono">Selecciona tu molienda:</span>
-                <div class="grind-chips font-mono">
-                  <button type="button" class="grind-chip is-active" data-grind="Grano entero">Grano</button>
-                  <button type="button" class="grind-chip" data-grind="Molido Filtrado">Filtrado</button>
-                  <button type="button" class="grind-chip" data-grind="Molido Espresso">Espresso</button>
-                </div>
-              </div>
-
-              <div class="product-footer">
-                <div class="price-container">
-                  <span class="currency font-mono">S/</span>
-                  <span class="price-amount font-mono">{product.price}</span>
-                </div>
-
-                <a
-                  href={productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`btn ${product.highlighted ? 'btn-primary' : 'btn-metal'} product-btn`}
-                  data-whatsapp-btn
-                  data-event="whatsapp_click"
-                  aria-label={`Pedir ${product.name} ${product.format} por WhatsApp`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                  </svg>
-                  Pedir
-                </a>
-              </div>
-            </div>
-          </article>
-        );
+<section id="productos" class="blend-section section">
+  <div class="section-heading" data-reveal><div><p class="eyebrow">01 / CHOOSE YOUR DAILY DRIVER</p><h2>Encuentra tu<br /><span class="serif-word">match perfecto.</span></h2></div><p>Un origen. Distintas formas de disfrutarlo.<br />El siguiente movimiento lo eliges tú.</p></div>
+  <div class="blend-experience">
+    <div class="blend-panels">
+      {profiles.map((profile,index)=>{
+        const variants=profile.ids.map(id=>PRODUCTS.find(p=>p.id===id)!);
+        return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
+          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {variants[0].price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><a class="button primary order-link" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${variants[0].format}), ${profile.grinds[0]}, por S/ ${variants[0].price}. ¿Me confirman disponibilidad y envío?`)}>Este es mi café <span aria-hidden="true">↗</span></a></div>
+          <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={`Empaque conceptual de ${profile.name}`} width={768} height={1152} format="webp" loading="lazy" />{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
+        </article>;
       })}
     </div>
+    <div class="blend-selector" role="group" aria-label="Elige tu perfil de café">
+      {profiles.map((profile,index)=><button class:list={['blend-choice',{'is-active':index===0}]} data-select={profile.id} aria-pressed={index===0?'true':'false'} aria-controls={`blend-${profile.id}`} style={`--blend-color:${profile.color}`}><span class="choice-image"><Image src={demoImages[profile.image]} alt="" width={120} height={180} format="webp" loading="lazy" /></span><span><small>0{index+1}</small>{profile.id==='developer'?'Developer Dúo':profile.id==='microlote'?'Microlote':profile.id==='espresso'?'Espresso':'Monteverde'}</span><b aria-hidden="true">↗</b></button>)}
+    </div>
   </div>
+  <p class="catalog-note">Empaques conceptuales de muestra. Confirmamos disponibilidad, pago y envío por WhatsApp.</p>
+  <noscript><p>También puedes <a href={getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
 </section>
-
-<style>
-  .products-section {
-    padding: clamp(64px, 8vw, 96px) 0;
-    background-color: var(--bg-2);
-    border-bottom: 1px solid var(--line);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .section-header {
-    max-width: 780px;
-    margin-bottom: clamp(32px, 5vw, 48px);
-  }
-
-  .header-tags {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  .code-badge {
-    font-size: 0.75rem;
-    color: var(--muted);
-    background-color: rgba(22, 23, 28, 0.8);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-
-  .section-title {
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
-    margin-bottom: 14px;
-  }
-
-  .section-subtitle {
-    font-size: 1rem;
-    line-height: 1.65;
-    margin-bottom: 24px;
-  }
-
-  /* Filtros CLI */
-  .filter-cli-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    background: rgba(14, 15, 18, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 6px 10px;
-    border-radius: 12px;
-    width: fit-content;
-  }
-
-  .cli-filter-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--muted);
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all var(--transition-fast);
-  }
-
-  .cli-filter-btn:hover {
-    color: var(--text);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .cli-filter-btn.is-active {
-    background: rgba(200, 137, 74, 0.16);
-    border-color: rgba(200, 137, 74, 0.35);
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  .cli-prompt {
-    color: var(--accent-2);
-  }
-
-  .cli-count {
-    font-size: 0.7rem;
-    opacity: 0.7;
-  }
-
-  /* Grilla de Productos */
-  .products-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    width: 100%;
-  }
-
-  /* Tarjeta de Producto Glassmorphic Dark */
-  .product-card {
-    background: rgba(20, 21, 26, 0.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal), opacity 0.3s ease;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-    min-width: 0;
-  }
-
-  .product-card.is-hidden {
-    display: none;
-  }
-
-  .product-card:hover {
-    border-color: rgba(200, 137, 74, 0.45);
-    transform: translateY(-4px);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(200, 137, 74, 0.14);
-  }
-
-  .card-reflection {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--metal-shine);
-    pointer-events: none;
-    z-index: 6;
-  }
-
-  .product-card.is-highlighted {
-    border-color: rgba(200, 137, 74, 0.45);
-    background: linear-gradient(180deg, rgba(28, 25, 22, 0.85) 0%, rgba(18, 19, 23, 0.82) 100%);
-    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), 0 0 32px rgba(200, 137, 74, 0.15);
-  }
-
-  .product-badge {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    z-index: 10;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(14, 15, 18, 0.88);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--accent);
-    padding: 3px 10px;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  }
-
-  .badge-dot-fav {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-  }
-
-  .badge-code {
-    font-size: 0.72rem;
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  .product-media {
-    padding: 16px 16px 0 16px;
-  }
-
-  .product-img-slot {
-    aspect-ratio: 1 / 1;
-    min-height: 200px;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .product-img-slot.has-image {
-    padding: 0;
-    border-style: solid;
-    border-color: rgba(255, 255, 255, 0.06);
-    background: #0E0F12;
-  }
-
-  .product-img-slot.has-image :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-  }
-
-  .product-card:hover .product-img-slot.has-image :global(img) {
-    transform: scale(1.03);
-  }
-
-  .product-img-slot.is-duo {
-    display: flex;
-    gap: 2px;
-  }
-
-  .product-img-slot.is-duo :global(img) {
-    width: 50%;
-  }
-
-  .gallery-dots {
-    position: absolute;
-    left: 50%;
-    bottom: 12px;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 7px;
-    z-index: 5;
-    background: rgba(11, 11, 12, 0.6);
-    backdrop-filter: blur(6px);
-    padding: 4px 8px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .gallery-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background-color: transparent;
-    padding: 0;
-    cursor: pointer;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-  }
-
-  .gallery-dot.is-active {
-    background-color: var(--accent);
-    border-color: var(--accent);
-    transform: scale(1.25);
-  }
-
-  .product-info {
-    padding: 20px 18px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-  }
-
-  .product-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    min-width: 0;
-  }
-
-  .meta-pill {
-    font-size: 0.72rem;
-    color: var(--accent);
-    background: rgba(200, 137, 74, 0.12);
-    border: 1px solid rgba(200, 137, 74, 0.25);
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-
-  .meta-grind {
-    font-size: 0.72rem;
-    color: var(--accent-2);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .product-name {
-    font-size: 1.25rem;
-    margin-bottom: 4px;
-    color: var(--text);
-  }
-
-  .product-roast {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-
-  /* Selector de molienda interactivo */
-  .grind-selector-box {
-    margin-bottom: 16px;
-    background: rgba(14, 15, 18, 0.6);
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  .selector-title {
-    font-size: 0.68rem;
-    color: var(--muted);
-    display: block;
-    margin-bottom: 6px;
-  }
-
-  .grind-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .grind-chip {
-    background: rgba(22, 23, 28, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--muted);
-    font-size: 0.68rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-
-  .grind-chip:hover {
-    color: var(--text);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .grind-chip.is-active {
-    background: rgba(200, 137, 74, 0.2);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  .product-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .price-container {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-  }
-
-  .currency {
-    font-size: 0.95rem;
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .price-amount {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: -0.02em;
-  }
-
-  .product-btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    min-height: 40px;
-  }
-
-  @media (min-width: 640px) {
-    .products-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .products-section {
-      padding: 96px 0;
-    }
-
-    .products-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 28px;
-    }
-  }
-</style>
-
 <script>
-  // 1. Galería de imágenes (vistas múltiples)
-  document.querySelectorAll('.product-img-slot.is-gallery').forEach((slot) => {
-    const images = Array.from(slot.querySelectorAll('[data-gallery-img]'));
-    const dots = Array.from(slot.querySelectorAll('[data-gallery-dot]'));
-
-    dots.forEach((dot, index) => {
-      dot.addEventListener('click', () => {
-        images.forEach((img, i) => img.classList.toggle('is-active', i === index));
-        dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
-      });
-    });
-  });
-
-  // 2. Filtro interactivo CLI de productos
-  const filterBtns = document.querySelectorAll('.cli-filter-btn');
-  const productCards = document.querySelectorAll('.product-card') as NodeListOf<HTMLElement>;
-
-  filterBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach((b) => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-
-      const filter = btn.getAttribute('data-filter');
-
-      productCards.forEach((card) => {
-        const category = card.getAttribute('data-category');
-        if (filter === 'all' || category === filter) {
-          card.classList.remove('is-hidden');
-        } else {
-          card.classList.add('is-hidden');
-        }
-      });
-    });
-  });
-
-  // 3. Selector de molienda en tiempo real y actualización dinámica de WhatsApp
-  productCards.forEach((card) => {
-    const name = card.getAttribute('data-product-name');
-    const format = card.getAttribute('data-product-format');
-    const price = card.getAttribute('data-product-price');
-    const grindLabel = card.querySelector('[data-selected-grind-label]');
-    const grindChips = card.querySelectorAll('.grind-chip');
-    const whatsappBtn = card.querySelector('[data-whatsapp-btn]') as HTMLAnchorElement;
-
-    grindChips.forEach((chip) => {
-      chip.addEventListener('click', () => {
-        grindChips.forEach((c) => c.classList.remove('is-active'));
-        chip.classList.add('is-active');
-
-        const selectedGrind = chip.getAttribute('data-grind') || 'Grano entero';
-        if (grindLabel) grindLabel.textContent = selectedGrind;
-
-        if (whatsappBtn) {
-          const message = `¡Hola CodeBrew! Quiero pedir ${name} (${format}) con ${selectedGrind} por S/ ${price}.`;
-          const encoded = encodeURIComponent(message);
-          whatsappBtn.href = `https://wa.me/51917712438?text=${encoded}`;
-        }
-      });
-    });
+  import { gsap } from 'gsap';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const choices = document.querySelectorAll<HTMLButtonElement>('.blend-choice');
+  const panels = document.querySelectorAll<HTMLElement>('.blend-panel');
+  let swap: gsap.core.Timeline | null = null;
+  // 3D swap: the current bag turns away on its Y axis, the next one turns in from the opposite side.
+  choices.forEach((choice, index) => choice.addEventListener('click', () => {
+    const panel = document.getElementById(`blend-${choice.dataset.select}`);
+    if(!panel || choice.getAttribute('aria-pressed') === 'true') return;
+    const current = [...panels].find(p => !p.hidden);
+    const from = [...choices].findIndex(c => c.getAttribute('aria-pressed') === 'true');
+    const dir = index > from ? 1 : -1;
+    choices.forEach(button => { const active = button === choice; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); });
+    swap?.progress(1).kill();
+    const show = () => panels.forEach(p => { p.hidden = p !== panel; });
+    if(reduced.matches || document.documentElement.classList.contains('motion-paused') || !current) { show(); return; }
+    const parts = (p: HTMLElement) => ({ cut: p.querySelectorAll('.blend-cutout'), info: p.querySelector('.blend-info'), disc: p.querySelector('.blend-disc') });
+    const out = parts(current), inn = parts(panel);
+    // Developer Dúo bags rest tilted via CSS (±10deg); tween into that tilt so clearing props doesn't jump.
+    const tilt = (_: number, el: Element) => !el.closest('.is-pair') ? 0 : el.classList.contains('second-cutout') ? 10 : -10;
+    swap = gsap.timeline({ defaults: { overwrite: 'auto' } })
+      .fromTo(out.cut, { rotation: tilt }, { rotation: 0, rotationY: -75 * dir, x: -60 * dir, z: -220, opacity: 0, duration: .38, ease: 'power2.in', stagger: .04 })
+      .to(out.info, { opacity: 0, x: -24 * dir, duration: .3, ease: 'power2.in' }, 0)
+      .to(out.disc, { scale: .8, rotationX: 55, opacity: .4, duration: .38, ease: 'power2.in' }, 0)
+      .add(() => { show(); gsap.set([out.cut, out.info, out.disc], { clearProps: 'all' }); })
+      .fromTo(inn.disc, { scale: .8, rotationX: -55, opacity: .4 }, { scale: 1, rotationX: 0, opacity: 1, duration: .7, ease: 'power3.out' })
+      .fromTo(inn.cut, { rotation: 0, rotationY: 75 * dir, x: 60 * dir, z: -220, opacity: 0 }, { rotation: tilt, rotationY: 0, x: 0, z: 0, opacity: 1, duration: .8, ease: 'power3.out', stagger: .08, clearProps: 'transform' }, '<')
+      .fromTo(inn.info, { opacity: 0, x: 24 * dir }, { opacity: 1, x: 0, duration: .5, ease: 'power2.out', clearProps: 'transform' }, '<.1');
+  }));
+  document.querySelectorAll<HTMLElement>('.blend-panel').forEach(card=>{
+    const variant=card.querySelector<HTMLSelectElement>('.variant-select')!;
+    const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;
+    const link=card.querySelector<HTMLAnchorElement>('.order-link')!;
+    const update=()=>{const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
+    variant.addEventListener('change',update);grind.addEventListener('change',update);
   });
 </script>
