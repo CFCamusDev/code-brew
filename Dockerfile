@@ -37,7 +37,7 @@ COPY --from=builder /app/dist ./dist
 COPY package.json ./
 COPY drizzle ./drizzle
 COPY scripts/db ./scripts/db
-COPY src/data/catalog.json ./src/data/catalog.json
+COPY src/data/catalog.json src/data/shipping.json ./src/data/
 
 USER node
 EXPOSE 4321

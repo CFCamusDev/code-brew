@@ -1,5 +1,6 @@
 ---
 import LogoMark from './LogoMark.astro';
+import CartWidget from './shop/CartWidget';
 ---
 <div class="announcement">De Amazonas, Perú, a tu próxima gran idea. <span>Un origen. Muchas posibilidades.</span>
 </div>
@@ -13,8 +14,11 @@ import LogoMark from './LogoMark.astro';
 <a href="#ritual">Tu ritual</a>
 <a href="#empresas">Para equipos</a>
   </nav>
+  <div class="header-actions">
   <a class="header-cta" href="#productos">Encuentra tu café <span aria-hidden="true">↗</span>
 </a>
+  <CartWidget client:idle />
+  </div>
   <button class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Abrir menú">
 <span>
 </span>

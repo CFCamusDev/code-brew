@@ -21,7 +21,16 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 - Esquema en `src/lib/server/db/schema.ts` (Drizzle ORM). Montos en céntimos de sol.
 - Tras cambiar el esquema: `pnpm db:generate` crea la migración SQL en `drizzle/`; se versiona en git.
 - `src/data/catalog.json` es la fuente del catálogo inicial: la landing toma de ahí precios y moliendas, y el seed lo inserta en la base de datos sin pisar precios ni stock editados después.
-- `pnpm db:studio` abre un explorador de la base de datos.
+- `src/data/shipping.json` define las zonas de envío iniciales (tarifas provisionales hasta confirmarlas).
+- `pnpm db:studio` abre un explorador de la base de datos (útil para ajustar stock mientras no exista el admin).
+
+## Tienda
+
+- Carrito: `src/lib/shop/cart.ts` (nanostores, guardado en `localStorage`) y la isla `CartWidget` del header. Solo guarda sku, molienda y cantidad.
+- `/checkout`: isla `CheckoutApp` con validación zod compartida con la API (`src/lib/shop/checkout.ts`).
+- `POST /api/cart/quote` recalcula precios, stock y envío con la base de datos; `POST /api/orders` crea el pedido pendiente de pago. El servidor nunca usa precios enviados por el navegador.
+- `/pedido/[id]`: resumen del pedido; el UUID funciona como enlace privado para compras como invitado.
+- Una presentación con stock 0 no se puede comprar: carga el stock real antes de abrir la tienda.
 
 ## Producción (Docker / Portainer)
 

@@ -1,8 +1,9 @@
-// Carga el catálogo inicial desde src/data/catalog.json.
-// Solo inserta perfiles y presentaciones que aún no existen: no pisa precios ni stock editados desde el admin.
+// Carga el catálogo y las zonas de envío iniciales desde src/data/catalog.json y src/data/shipping.json.
+// Solo inserta lo que aún no existe: no pisa precios, tarifas ni stock editados desde el admin.
 import { existsSync } from 'node:fs';
 import postgres from 'postgres';
 import catalog from '../../src/data/catalog.json' with { type: 'json' };
+import shipping from '../../src/data/shipping.json' with { type: 'json' };
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 if (!process.env.DATABASE_URL) throw new Error('Falta DATABASE_URL');
@@ -10,6 +11,7 @@ if (!process.env.DATABASE_URL) throw new Error('Falta DATABASE_URL');
 const sql = postgres(process.env.DATABASE_URL, { max: 1 });
 let insertedProducts = 0;
 let insertedVariants = 0;
+let insertedZones = 0;
 
 try {
   await sql.begin(async tx => {
@@ -31,8 +33,17 @@ try {
         insertedVariants += insertedVariant.length;
       }
     }
+
+    for (const [index, zone] of shipping.zones.entries()) {
+      const inserted = await tx`
+        insert into shipping_zones (slug, name, eta, price_cents, sort_order)
+        values (${zone.slug}, ${zone.name}, ${zone.eta}, ${Math.round(zone.price * 100)}, ${index})
+        on conflict (slug) do nothing
+        returning id`;
+      insertedZones += inserted.length;
+    }
   });
-  console.log(`[db] seed: ${insertedProducts} perfiles y ${insertedVariants} presentaciones nuevas`);
+  console.log(`[db] seed: ${insertedProducts} perfiles, ${insertedVariants} presentaciones y ${insertedZones} zonas de envío nuevas`);
 } finally {
   await sql.end();
 }

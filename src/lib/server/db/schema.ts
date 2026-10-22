@@ -58,6 +58,24 @@ export const productVariants = pgTable(
   ]
 );
 
+/** Zona de envío con su tarifa. `freeFromCents` activa envío gratis desde ese subtotal. */
+export const shippingZones = pgTable(
+  'shipping_zones',
+  {
+    id: serial('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    /** Plazo mostrado al cliente, p. ej. "1 a 2 días hábiles". */
+    eta: text('eta').notNull(),
+    priceCents: integer('price_cents').notNull(),
+    freeFromCents: integer('free_from_cents'),
+    active: boolean('active').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    ...timestamps
+  },
+  t => [check('shipping_zones_price_check', sql`${t.priceCents} >= 0`)]
+);
+
 export const orderStatus = pgEnum('order_status', [
   'pending', // creado, esperando pago
   'paid',
@@ -84,6 +102,9 @@ export const orders = pgTable(
     shippingCity: text('shipping_city').notNull(),
     shippingRegion: text('shipping_region').notNull(),
     shippingReference: text('shipping_reference'),
+    shippingZoneId: integer('shipping_zone_id').references(() => shippingZones.id, { onDelete: 'restrict' }),
+    /** Nombre de la zona al momento de la compra. */
+    shippingZoneName: text('shipping_zone_name'),
     notes: text('notes'),
     subtotalCents: integer('subtotal_cents').notNull(),
     shippingCents: integer('shipping_cents').notNull().default(0),

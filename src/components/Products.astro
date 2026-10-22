@@ -21,7 +21,7 @@ const profiles = [
       {profiles.map((profile,index)=>{
         const variants=profile.ids.map(id=>PRODUCTS.find(p=>p.id===id)!);
         return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
-          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {variants[0].price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><a class="button primary order-link" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${variants[0].format}), ${profile.grinds[0]}, por S/ ${variants[0].price}. ¿Me confirman disponibilidad y envío?`)}>Este es mi café <span aria-hidden="true">↗</span></a></div>
+          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {variants[0].price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><button type="button" class="button primary order-link add-to-cart">Este es mi café <span aria-hidden="true">+</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${variants[0].format}), ${profile.grinds[0]}, por S/ ${variants[0].price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
           <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={`Empaque conceptual de ${profile.name}`} width={768} height={1152} format="webp" loading="lazy" />{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
         </article>;
       })}
@@ -30,11 +30,12 @@ const profiles = [
       {profiles.map((profile,index)=><button class:list={['blend-choice',{'is-active':index===0}]} data-select={profile.id} aria-pressed={index===0?'true':'false'} aria-controls={`blend-${profile.id}`} style={`--blend-color:${profile.color}`}><span class="choice-image"><Image src={demoImages[profile.image]} alt="" width={120} height={180} format="webp" loading="lazy" /></span><span><small>0{index+1}</small>{profile.id==='developer'?'Developer Dúo':profile.id==='microlote'?'Microlote':profile.id==='espresso'?'Espresso':'Monteverde'}</span><b aria-hidden="true">↗</b></button>)}
     </div>
   </div>
-  <p class="catalog-note">Empaques conceptuales de muestra. Confirmamos disponibilidad, pago y envío por WhatsApp.</p>
+  <p class="catalog-note">Empaques conceptuales de muestra. Arma tu pedido en línea o, si prefieres, coordínalo por WhatsApp.</p>
   <noscript><p>También puedes <a href={getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
 </section>
 <script>
   import { gsap } from 'gsap';
+  import { addToCart, cartOpen } from '../lib/shop/cart';
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const choices = document.querySelectorAll<HTMLButtonElement>('.blend-choice');
   const panels = document.querySelectorAll<HTMLElement>('.blend-panel');
@@ -66,8 +67,9 @@ const profiles = [
   document.querySelectorAll<HTMLElement>('.blend-panel').forEach(card=>{
     const variant=card.querySelector<HTMLSelectElement>('.variant-select')!;
     const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;
-    const link=card.querySelector<HTMLAnchorElement>('.order-link')!;
+    const link=card.querySelector<HTMLAnchorElement>('.whatsapp-order')!;
     const update=()=>{const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
     variant.addEventListener('change',update);grind.addEventListener('change',update);
+    card.querySelector('.add-to-cart')!.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value);cartOpen.set(true);});
   });
 </script>

@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ShopHeader from '../components/shop/ShopHeader.astro';
+import CheckoutApp from '../components/shop/CheckoutApp';
+import '../styles/shop.css';
+---
+<Layout title="Tu pedido — CodeBrew" description="Confirma tu pedido de café de especialidad CodeBrew." noindex>
+  <ShopHeader />
+  <main id="main-content" class="shop-main">
+    <CheckoutApp client:only="react">
+      <p slot="fallback" class="cart-hint">Cargando tu pedido…</p>
+    </CheckoutApp>
+  </main>
+</Layout>
