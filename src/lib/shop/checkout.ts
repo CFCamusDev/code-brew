@@ -47,7 +47,8 @@ export const createOrderSchema = z.object({
 
 export const quoteSchema = z.object({
   items: z.array(cartLineSchema).max(MAX_LINES),
-  zone: z.string().max(40).optional()
+  zone: z.string().max(40).optional(),
+  region: z.string().max(60).optional()
 });
 
 export const REGIONS = [
@@ -75,6 +76,10 @@ export interface Quote {
     priceCents: number;
     freeFromCents: number | null;
     freeFromBags: number | null;
+    /** Departamentos que atiende; null = todos. */
+    regions: string[] | null;
+    /** Tiene tarifas distintas según el departamento (se muestra "desde"). */
+    hasRegionRates: boolean;
   }[];
   /** Bolsas en el pedido (el Pack Developer cuenta 2). */
   bags: number;

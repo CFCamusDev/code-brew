@@ -9,6 +9,6 @@ export const POST: APIRoute = async ({ request }) => {
   const parsed = quoteSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Carrito inválido.' }, { status: 400 });
 
-  const quote = await quoteCart(getDb(), parsed.data.items, parsed.data.zone);
+  const quote = await quoteCart(getDb(), parsed.data.items, parsed.data.zone, parsed.data.region);
   return Response.json(quote, { headers: { 'Cache-Control': 'no-store' } });
 };

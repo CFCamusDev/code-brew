@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { CartLine, Customer, Quote } from '../shop/checkout';
 import { getDb } from './db';
-import { orderItems, orders, products, productVariants, shippingZones } from './db/schema';
+import { orderItems, orders, products, productVariants, shippingRegionRates, shippingZones } from './db/schema';
 
 type Db = ReturnType<typeof getDb>;
 type Executor = Db | Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -17,9 +17,9 @@ export class CartIssuesError extends Error {
  * Calcula precios, envío y total con los datos vigentes de la base de datos.
  * Nunca usa precios enviados por el navegador.
  */
-export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: string): Promise<Quote> {
+export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: string, region?: string): Promise<Quote> {
   const skus = [...new Set(items.map(item => item.sku))];
-  const [rows, zones] = await Promise.all([
+  const [rows, zoneRows, rates] = await Promise.all([
     skus.length
       ? db
           .select({
@@ -44,12 +44,18 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
         eta: shippingZones.eta,
         priceCents: shippingZones.priceCents,
         freeFromCents: shippingZones.freeFromCents,
-        freeFromBags: shippingZones.freeFromBags
+        freeFromBags: shippingZones.freeFromBags,
+        regions: shippingZones.regions
       })
       .from(shippingZones)
       .where(eq(shippingZones.active, true))
-      .orderBy(asc(shippingZones.sortOrder))
+      .orderBy(asc(shippingZones.sortOrder)),
+    db
+      .select({ zone: shippingZones.slug, region: shippingRegionRates.region, priceCents: shippingRegionRates.priceCents })
+      .from(shippingRegionRates)
+      .innerJoin(shippingZones, eq(shippingZones.id, shippingRegionRates.zoneId))
   ]);
+  const zones: Quote['zones'] = zoneRows.map(zone => ({ ...zone, hasRegionRates: rates.some(rate => rate.zone === zone.slug) }));
 
   const bySku = new Map(rows.map(row => [row.sku, row]));
   const requestedBySku = new Map<string, number>();
@@ -99,8 +105,14 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
   }
 
   const subtotalCents = lines.reduce((sum, line) => sum + line.lineTotalCents, 0);
-  const zone = zones.find(z => z.slug === zoneSlug);
-  const shippingCents = zone ? (isFreeShipping(zone, subtotalCents, bags) ? 0 : zone.priceCents) : null;
+  let zone = zones.find(z => z.slug === zoneSlug);
+  if (zone && region && zone.regions && !zone.regions.includes(region)) {
+    issues.push({ sku: '', message: `${zone.name} no atiende ${region}. Elige otra zona de envío.` });
+    zone = undefined;
+  }
+  // Tarifa del departamento si existe; si no, la base de la zona.
+  const zonePrice = zone && (rates.find(rate => rate.zone === zone.slug && rate.region === region)?.priceCents ?? zone.priceCents);
+  const shippingCents = zone ? (isFreeShipping(zone, subtotalCents, bags) ? 0 : zonePrice!) : null;
 
   return {
     lines,
@@ -123,7 +135,7 @@ export function isFreeShipping(zone: Quote['zones'][number], subtotalCents: numb
 /** Crea un pedido pendiente de pago con precios y envío recalculados en el servidor. */
 export async function createOrder(items: CartLine[], customer: Customer) {
   return getDb().transaction(async tx => {
-    const quote = await quoteCart(tx, items, customer.zone);
+    const quote = await quoteCart(tx, items, customer.zone, customer.region);
     if (quote.issues.length) throw new CartIssuesError(quote.issues);
     if (quote.shippingCents === null || quote.totalCents === null) {
       throw new CartIssuesError([{ sku: '', message: 'La zona de envío elegida no está disponible.' }]);

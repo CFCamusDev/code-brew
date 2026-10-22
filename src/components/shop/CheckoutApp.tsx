@@ -32,6 +32,7 @@ export default function CheckoutApp() {
     defaultValues: { zone: '', region: '' }
   });
   const zone = watch('zone');
+  const region = watch('region');
 
   useEffect(() => {
     if (ZONE_REGION[zone] && !getValues('region')) setValue('region', ZONE_REGION[zone]);
@@ -45,7 +46,7 @@ export default function CheckoutApp() {
         const response = await fetch('/api/cart/quote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: lines, zone: zone || undefined }),
+          body: JSON.stringify({ items: lines, zone: zone || undefined, region: region || undefined }),
           signal: controller.signal
         });
         if (!response.ok) throw new Error(String(response.status));
@@ -59,7 +60,7 @@ export default function CheckoutApp() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [lines, zone]);
+  }, [lines, zone, region]);
 
   const onSubmit = async (customer: Customer) => {
     setSubmitError(null);
@@ -123,7 +124,12 @@ export default function CheckoutApp() {
           <legend>Zona de envío</legend>
           {quote?.zones.map(z => (
             <label key={z.slug} className="zone-option">
-              <input type="radio" value={z.slug} {...register('zone')} />
+              <input
+                type="radio"
+                value={z.slug}
+                {...register('zone')}
+                disabled={Boolean(region && z.regions && !z.regions.includes(region))}
+              />
               <span>
                 <strong>{z.name}</strong>
                 <small>
@@ -134,7 +140,13 @@ export default function CheckoutApp() {
                       : ` · Gratis desde ${z.freeFromBags} bolsas (te ${z.freeFromBags - quote.bags === 1 ? 'falta 1' : `faltan ${z.freeFromBags - quote.bags}`})`)}
                 </small>
               </span>
-              <b>{isFree(z, quote) ? 'Gratis' : formatPEN(z.priceCents)}</b>
+              <b>
+                {isFree(z, quote)
+                  ? 'Gratis'
+                  : z.slug === zone && region && quote.shippingCents !== null
+                    ? formatPEN(quote.shippingCents)
+                    : `${z.hasRegionRates ? 'desde ' : ''}${formatPEN(z.priceCents)}`}
+              </b>
             </label>
           ))}
           {errors.zone && <p className="field-error">{errors.zone.message}</p>}

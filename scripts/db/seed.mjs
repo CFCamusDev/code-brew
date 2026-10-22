@@ -36,11 +36,19 @@ try {
 
     for (const [index, zone] of shipping.zones.entries()) {
       const inserted = await tx`
-        insert into shipping_zones (slug, name, eta, price_cents, free_from_bags, sort_order)
-        values (${zone.slug}, ${zone.name}, ${zone.eta}, ${Math.round(zone.price * 100)}, ${zone.freeBags ?? null}, ${index})
+        insert into shipping_zones (slug, name, eta, price_cents, free_from_bags, regions, sort_order)
+        values (${zone.slug}, ${zone.name}, ${zone.eta}, ${Math.round(zone.price * 100)}, ${zone.freeBags ?? null}, ${zone.regions ? tx.json(zone.regions) : null}, ${index})
         on conflict (slug) do nothing
         returning id`;
       insertedZones += inserted.length;
+      const [{ id: zoneId }] = await tx`select id from shipping_zones where slug = ${zone.slug}`;
+
+      for (const [region, price] of Object.entries(zone.regionRates ?? {})) {
+        await tx`
+          insert into shipping_region_rates (zone_id, region, price_cents)
+          values (${zoneId}, ${region}, ${Math.round(price * 100)})
+          on conflict (zone_id, region) do nothing`;
+      }
     }
   });
   console.log(`[db] seed: ${insertedProducts} perfiles, ${insertedVariants} presentaciones y ${insertedZones} zonas de envío nuevas`);

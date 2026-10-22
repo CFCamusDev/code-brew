@@ -10,6 +10,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid
 } from 'drizzle-orm/pg-core';
 
@@ -73,11 +74,31 @@ export const shippingZones = pgTable(
     priceCents: integer('price_cents').notNull(),
     freeFromCents: integer('free_from_cents'),
     freeFromBags: integer('free_from_bags'),
+    /** Departamentos que atiende la zona; null = todos. */
+    regions: jsonb('regions').$type<string[]>(),
     active: boolean('active').notNull().default(true),
     sortOrder: integer('sort_order').notNull().default(0),
     ...timestamps
   },
   t => [check('shipping_zones_price_check', sql`${t.priceCents} >= 0`)]
+);
+
+/** Tarifa de una zona para un departamento concreto; reemplaza la tarifa base de la zona. */
+export const shippingRegionRates = pgTable(
+  'shipping_region_rates',
+  {
+    id: serial('id').primaryKey(),
+    zoneId: integer('zone_id')
+      .notNull()
+      .references(() => shippingZones.id, { onDelete: 'cascade' }),
+    region: text('region').notNull(),
+    priceCents: integer('price_cents').notNull(),
+    ...timestamps
+  },
+  t => [
+    uniqueIndex('shipping_region_rates_zone_region_idx').on(t.zoneId, t.region),
+    check('shipping_region_rates_price_check', sql`${t.priceCents} >= 0`)
+  ]
 );
 
 export const orderStatus = pgEnum('order_status', [

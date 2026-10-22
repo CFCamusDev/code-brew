@@ -401,3 +401,4 @@
   font-size:14px
 }
 .order-status[data-status="paid"]{background:#2f6b4f}
+.zone-option:has(input:disabled){opacity:.45;cursor:not-allowed}

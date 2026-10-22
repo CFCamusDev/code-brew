@@ -1,25 +1,32 @@
 {
-  "_nota": "Tarifas PROVISIONALES para desarrollo. Reemplazar por las reales antes de producción (luego se editan desde el admin). freeBags: envío gratis desde esa cantidad de bolsas.",
+  "_nota": "Tarifas base confirmadas: Lima y Callao S/ 15, provincias desde S/ 20. regions: departamentos que atiende la zona (sin campo = todos). regionRates: tarifa por departamento que reemplaza la base. freeBags: envío gratis desde esa cantidad de bolsas.",
   "zones": [
     {
       "slug": "lima",
       "name": "Lima Metropolitana",
       "eta": "1 a 2 días hábiles",
-      "price": 10,
-      "freeBags": 3
+      "price": 15,
+      "freeBags": 3,
+      "regions": [
+        "Lima"
+      ]
     },
     {
       "slug": "callao",
       "name": "Callao",
       "eta": "1 a 2 días hábiles",
-      "price": 10,
-      "freeBags": 3
+      "price": 15,
+      "freeBags": 3,
+      "regions": [
+        "Callao"
+      ]
     },
     {
       "slug": "provincias",
       "name": "Provincias (envío por agencia)",
       "eta": "3 a 5 días hábiles",
-      "price": 18
+      "price": 20,
+      "regionRates": {}
     }
   ]
 }
