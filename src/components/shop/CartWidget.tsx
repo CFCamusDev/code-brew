@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cartCount, cartLines, cartOpen, describeSku, removeFromCart, setQuantity } from '../../lib/shop/cart';
 import { MAX_QUANTITY } from '../../lib/shop/limits';
 import { formatPEN } from '../../lib/shop/format';
+import type { Quote } from '../../lib/shop/checkout';
 import '../../styles/shop.css';
 
 export default function CartWidget() {
@@ -23,7 +24,28 @@ export default function CartWidget() {
     if (!open && el.open) el.close();
   }, [open]);
 
-  const subtotal = lines.reduce((sum, line) => sum + Math.round((describeSku(line.sku)?.price ?? 0) * 100) * line.quantity, 0);
+  // Precios y disponibilidad vigentes del servidor; mientras llegan se muestran los del catálogo.
+  const [quote, setQuote] = useState<Quote | null>(null);
+  useEffect(() => {
+    if (!open || !storedLines.length) return setQuote(null);
+    const controller = new AbortController();
+    fetch('/api/cart/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: storedLines }),
+      signal: controller.signal
+    })
+      .then(response => (response.ok ? response.json() : null))
+      .then(setQuote)
+      .catch(() => {});
+    return () => controller.abort();
+  }, [open, storedLines]);
+
+  const quoted = (sku: string, grind: string) => quote?.lines.find(line => line.sku === sku && line.grind === grind);
+  const issueFor = (sku: string) => quote?.issues.find(issue => issue.sku === sku);
+  const subtotal = quote
+    ? quote.subtotalCents
+    : lines.reduce((sum, line) => sum + Math.round((describeSku(line.sku)?.price ?? 0) * 100) * line.quantity, 0);
 
   return (
     <>
@@ -75,6 +97,7 @@ export default function CartWidget() {
                         <p className="cart-line-meta">
                           {info?.format} · {line.grind}
                         </p>
+                        {issueFor(line.sku) && <p className="field-error">{issueFor(line.sku)!.message}</p>}
                         <div className="qty" role="group" aria-label={`Cantidad de ${info?.productName ?? line.sku}`}>
                           <button type="button" onClick={() => setQuantity(line.sku, line.grind, line.quantity - 1)} aria-label="Quitar uno">
                             −
@@ -91,7 +114,15 @@ export default function CartWidget() {
                         </div>
                       </div>
                       <div className="cart-line-side">
-                        <span>{info ? formatPEN(Math.round(info.price * 100) * line.quantity) : '—'}</span>
+                        <span>
+                          {quoted(line.sku, line.grind)
+                            ? formatPEN(quoted(line.sku, line.grind)!.lineTotalCents)
+                            : issueFor(line.sku)
+                              ? '—'
+                              : info
+                                ? formatPEN(Math.round(info.price * 100) * line.quantity)
+                                : '—'}
+                        </span>
                         <button type="button" className="cart-remove" onClick={() => removeFromCart(line.sku, line.grind)}>
                           Quitar
                         </button>

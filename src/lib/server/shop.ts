@@ -205,3 +205,33 @@ export async function getOrder(id: string) {
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id)).orderBy(asc(orderItems.id));
   return { ...order, items };
 }
+
+/**
+ * Precios, moliendas y disponibilidad vigentes para la landing.
+ * Devuelve null si la base de datos no responde: la landing usa entonces catalog.json y no se cae.
+ */
+export async function getLiveCatalog() {
+  try {
+    const rows = await getDb()
+      .select({
+        sku: productVariants.sku,
+        priceCents: productVariants.priceCents,
+        stock: productVariants.stock,
+        variantActive: productVariants.active,
+        slug: products.slug,
+        grinds: products.grinds,
+        productActive: products.active
+      })
+      .from(productVariants)
+      .innerJoin(products, eq(products.id, productVariants.productId));
+    return {
+      variants: new Map(
+        rows.map(row => [row.sku, { price: row.priceCents / 100, available: row.variantActive && row.productActive && row.stock > 0 }])
+      ),
+      grinds: new Map(rows.map(row => [row.slug, row.grinds]))
+    };
+  } catch (error) {
+    console.error('[catalogo] base de datos no disponible; se usa catalog.json', error);
+    return null;
+  }
+}

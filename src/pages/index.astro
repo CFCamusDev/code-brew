@@ -8,6 +8,9 @@ import WorldStage from '../components/WorldStage.astro';
 import Experience from '../components/Experience.astro';
 import OriginMap from '../components/OriginMap.astro';
 import { getWhatsAppUrl } from '../data/config';
+
+// Se renderiza por solicitud para mostrar precios y stock vigentes del panel.
+export const prerender = false;
 const questions = [
   ['¿Cuál elijo si es mi primer café CodeBrew?', 'Origen Monteverde tiene tueste medio y es nuestro punto de partida para tu ritual diario. Si prefieres un tueste medio-oscuro, elige Espresso Amazonas. Con el Pack Developer puedes probar ambos.'],
   ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, dinos qué cafetera usas y coordinamos la molienda. Para el Pack Developer puedes personalizar las dos bolsas por WhatsApp.'],

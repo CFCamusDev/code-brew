@@ -402,3 +402,4 @@
 }
 .order-status[data-status="paid"]{background:#2f6b4f}
 .zone-option:has(input:disabled){opacity:.45;cursor:not-allowed}
+.blend-info button.order-link:disabled{opacity:.55;cursor:not-allowed;transform:none}

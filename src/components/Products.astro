@@ -6,7 +6,12 @@ import microlote from '../assets/demo/microlote.png';
 const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote};
 import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 import catalog from '../data/catalog.json';
-const grindsOf=(slug:string)=>catalog.products.find(p=>p.slug===slug)!.grinds;
+import { getLiveCatalog } from '../lib/server/shop';
+// Precios, moliendas y stock en vivo desde la base de datos (catalog.json si no responde).
+const live = await getLiveCatalog();
+const grindsOf=(slug:string)=>live?.grinds.get(slug) ?? catalog.products.find(p=>p.slug===slug)!.grinds;
+const priceOf=(sku:string,fallback:number)=>live?.variants.get(sku)?.price ?? fallback;
+const availableOf=(sku:string)=>live ? live.variants.get(sku)?.available ?? false : true;
 const profiles = [
  {id:'monteverde',name:'Origen Monteverde',tag:'01 / EL DAILY DRIVER',description:'Tu punto de partida. Tueste medio para acompañar el primer commit del día y esa pausa que siempre viene bien.',roast:'Tueste medio',color:'#436952',image:'monteverde',ids:['monteverde-250','monteverde-500'],grinds:grindsOf('monteverde')},
  {id:'espresso',name:'Espresso Amazonas',tag:'02 / MODO INTENSO',description:'Un perfil de tueste medio-oscuro para quienes disfrutan un café con más carácter. Tu siguiente ritual empieza aquí.',roast:'Tueste medio-oscuro',color:'#a65c3d',image:'espresso',ids:['espresso-250','espresso-500'],grinds:grindsOf('espresso')},
@@ -19,9 +24,10 @@ const profiles = [
   <div class="blend-experience">
     <div class="blend-panels">
       {profiles.map((profile,index)=>{
-        const variants=profile.ids.map(id=>PRODUCTS.find(p=>p.id===id)!);
+        const variants=profile.ids.map(id=>{const p=PRODUCTS.find(p=>p.id===id)!;return {...p,price:priceOf(p.id,p.price),available:availableOf(p.id)};});
+        const first=variants.find(v=>v.available)??variants[0];
         return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
-          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {variants[0].price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><button type="button" class="button primary order-link add-to-cart">Este es mi café <span aria-hidden="true">+</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${variants[0].format}), ${profile.grinds[0]}, por S/ ${variants[0].price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
+          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {first.price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id} data-available={String(v.available)} selected={v===first}>{v.available?v.format:`${v.format} · agotado`}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><button type="button" class="button primary order-link add-to-cart" disabled={!first.available}>{first.available?'Este es mi café ':'Agotado por ahora '}<span aria-hidden="true">{first.available?'+':''}</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${first.format}), ${profile.grinds[0]}, por S/ ${first.price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
           <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={`Empaque conceptual de ${profile.name}`} width={768} height={1152} format="webp" loading="lazy" />{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
         </article>;
       })}
@@ -68,8 +74,9 @@ const profiles = [
     const variant=card.querySelector<HTMLSelectElement>('.variant-select')!;
     const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;
     const link=card.querySelector<HTMLAnchorElement>('.whatsapp-order')!;
-    const update=()=>{const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
+    const add=card.querySelector<HTMLButtonElement>('.add-to-cart')!;
+    const update=()=>{const available=variant.selectedOptions[0].dataset.available!=='false';add.disabled=!available;add.firstChild!.textContent=available?'Este es mi café ':'Agotado por ahora ';add.querySelector('span')!.textContent=available?'+':'';const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
     variant.addEventListener('change',update);grind.addEventListener('change',update);
-    card.querySelector('.add-to-cart')!.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value);cartOpen.set(true);});
+    add.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value);cartOpen.set(true);});
   });
 </script>

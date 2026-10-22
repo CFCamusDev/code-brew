@@ -1,0 +1,51 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ProductsManager from '../../components/admin/ProductsManager';
+import { listProducts, recentStockMovements } from '../../lib/server/admin/products';
+import { formatDateTime, formatOrderNumber } from '../../lib/shop/format';
+
+export const prerender = false;
+
+const [products, movements] = await Promise.all([listProducts(), recentStockMovements()]);
+const canEdit = Astro.locals.admin!.role === 'admin';
+const REASON = { sale: 'Venta', refund: 'Devolución', adjustment: 'Ajuste', purchase: 'Ingreso' } as const;
+const lowStock = products.flatMap(p => p.variants.filter(v => v.active && p.active && v.stock <= 3).map(v => `${p.name} ${v.format} (${v.stock})`));
+---
+<AdminLayout title="Productos y stock">
+  <div class="admin-head">
+    <div>
+      <h1>Productos y stock</h1>
+      <p>Los cambios de precio y disponibilidad se ven al instante en la web.{!canEdit && ' Como operador puedes ajustar stock; precios y productos los edita un administrador.'}</p>
+    </div>
+  </div>
+
+  {lowStock.length > 0 && <p class="alert">Stock bajo o agotado: {lowStock.join(' · ')}</p>}
+
+  <ProductsManager client:load products={products} canEdit={canEdit} />
+
+  <section class="admin-card" style="margin-top:20px">
+    <h2>Últimos movimientos de stock</h2>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Motivo</th><th class="num">Cambio</th><th class="num">Queda</th><th>Detalle</th></tr></thead>
+        <tbody>
+          {movements.length === 0 && <tr><td class="empty-row" colspan="6">Aún no hay movimientos.</td></tr>}
+          {movements.map(movement => (
+            <tr>
+              <td>{formatDateTime(movement.createdAt)}</td>
+              <td>{movement.productName} · {movement.format}</td>
+              <td>{REASON[movement.reason]}</td>
+              <td class="num">{movement.delta > 0 ? `+${movement.delta}` : movement.delta}</td>
+              <td class="num">{movement.stockAfter}</td>
+              <td>
+                {movement.orderId && movement.orderNumber && <a href={`/admin/pedidos/${movement.orderId}`}>{formatOrderNumber(movement.orderNumber)}</a>}
+                {movement.note && <span> {movement.note}</span>}
+                {movement.adminName && <small class="muted"> · {movement.adminName}</small>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</AdminLayout>
