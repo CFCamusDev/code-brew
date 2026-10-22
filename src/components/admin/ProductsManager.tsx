@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatPEN } from '../../lib/shop/format';
+import { adminPost } from './request';
 
 interface Variant {
   id: number;
@@ -19,15 +20,7 @@ interface Product {
   variants: Variant[];
 }
 
-async function post(url: string, body: unknown): Promise<{ error?: string; stock?: number }> {
-  const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(
-    () => null
-  );
-  if (!response) return { error: 'Sin conexión.' };
-  if (response.status === 401) window.location.assign('/admin/login?next=/admin/productos');
-  const data = await response.json().catch(() => ({}));
-  return response.ok ? data : { error: data.error ?? 'No se pudo guardar.' };
-}
+const post = (url: string, body: unknown) => adminPost<{ stock?: number }>(url, body);
 
 function Feedback({ state }: { state: { error?: string; ok?: string } }) {
   if (state.error) return <span className="form-error">{state.error}</span>;

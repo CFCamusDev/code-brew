@@ -121,6 +121,9 @@ export async function getOrderDetail(id: string) {
 
 export class AdminActionError extends Error {}
 
+/** Acción no permitida para el rol del usuario (403). */
+export class ForbiddenError extends AdminActionError {}
+
 export async function changeStatus(
   orderId: string,
   to: OrderStatus,

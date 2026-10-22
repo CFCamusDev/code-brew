@@ -4,14 +4,15 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-  // Las páginas se prerenderizan por defecto (la landing sigue siendo HTML estático).
-  // Las rutas con `export const prerender = false` (API, checkout, admin) se renderizan en el servidor.
+  // Las páginas se prerenderizan por defecto (p. ej. /checkout). Las que llevan `export const prerender = false`
+  // (landing con precios en vivo, pedidos, API y panel) se renderizan en el servidor.
   output: 'static',
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
   env: {
     schema: {
-      DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+      // Opcional en el esquema para que `astro build` no la exija; getDb() falla con un mensaje claro si falta al ejecutar.
+      DATABASE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Culqi: sin llaves la web funciona, pero el botón de pago queda desactivado.
       CULQI_PUBLIC_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       CULQI_SECRET_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),

@@ -36,6 +36,13 @@
       "when": 1792700391388,
       "tag": "0004_admin_auth_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792700939172,
+      "tag": "0005_purchases",
+      "breakpoints": true
     }
   ]
 }

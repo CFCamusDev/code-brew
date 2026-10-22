@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { adminPost } from './request';
 
 type Status = 'pending' | 'paid' | 'preparing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
 
@@ -17,19 +18,7 @@ interface Props {
   adminNotes: string;
 }
 
-async function send(orderId: string, body: unknown) {
-  const response = await fetch(`/api/admin/orders/${orderId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (response.ok) return null;
-  if (response.status === 401) {
-    window.location.assign(`/admin/login?next=${encodeURIComponent(location.pathname)}`);
-    return null;
-  }
-  return (await response.json().catch(() => ({}))).error ?? 'No se pudo completar la acción.';
-}
+const send = async (orderId: string, body: unknown) => (await adminPost(`/api/admin/orders/${orderId}`, body)).error ?? null;
 
 export default function OrderActions({ orderId, transitions, canRefund, autoRefund, adminNotes }: Props) {
   const [busy, setBusy] = useState(false);

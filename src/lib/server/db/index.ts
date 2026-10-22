@@ -7,6 +7,7 @@ import * as schema from './schema';
 let instance: ReturnType<typeof createDb> | undefined;
 
 function createDb() {
+  if (!DATABASE_URL) throw new Error('Falta la variable de entorno DATABASE_URL');
   return drizzle(postgres(DATABASE_URL, { max: 10 }), { schema });
 }
 

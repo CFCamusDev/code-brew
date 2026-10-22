@@ -44,6 +44,16 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 - Correos con Resend (`RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `SITE_URL`); sin API key solo se registran en los logs.
 - Pruebas: tarjetas en https://docs.culqi.com/es/documentacion/pagos-online/tarjetas-de-prueba (Visa 4111 1111 1111 1111, 09/30, CVV 123).
 
+## Panel de administración (`/admin`)
+
+- Primer usuario: `pnpm admin:create correo@dominio.com "Nombre" admin` (en Docker: `docker exec -it codebrew-app node scripts/admin/create-user.mjs correo@dominio.com "Nombre" admin`). Imprime una contraseña temporal; se cambia en **Mi cuenta**. Repetir el comando con un correo existente restablece su contraseña.
+- Roles: **operador** (pedidos, cambios de estado, stock y compras) y **administrador** (además precios, productos, envíos, reembolsos, borrar compras y usuarios).
+- Pedidos: filtros por estado, búsqueda, detalle con pagos e historial; flujo pagado → en preparación → enviado (transportista y seguimiento, correo al cliente) → entregado. Reembolsos por Culqi con reposición de stock.
+- Productos y stock: precios y disponibilidad se reflejan al instante en la landing; cada cambio de stock queda en `stock_movements`.
+- Envíos: tarifa base por zona, envío gratis por bolsas o subtotal y tarifas por departamento.
+- Compras y gastos por mes y categoría.
+- Seguridad: contraseñas con scrypt, sesiones en cookie HttpOnly/SameSite=Lax (en BD solo el hash del token), límite de 5 intentos de login por IP y correo cada 15 minutos, acciones solo por JSON.
+
 ## Producción (Docker / Portainer)
 
 `docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.

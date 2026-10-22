@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -270,4 +271,33 @@ export const stockMovements = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
   },
   t => [index('stock_movements_variant_idx').on(t.variantId), index('stock_movements_created_idx').on(t.createdAt)]
+);
+
+export const purchaseCategory = pgEnum('purchase_category', [
+  'cafe_verde',
+  'tueste',
+  'empaques',
+  'envios',
+  'marketing',
+  'servicios',
+  'otros'
+]);
+
+/** Compras y gastos del negocio. Junto con las ventas alimentan el margen del dashboard. */
+export const purchases = pgTable(
+  'purchases',
+  {
+    id: serial('id').primaryKey(),
+    purchasedOn: date('purchased_on', { mode: 'string' }).notNull(),
+    supplier: text('supplier').notNull(),
+    category: purchaseCategory('category').notNull(),
+    description: text('description').notNull(),
+    /** N.º de boleta o factura del proveedor. */
+    documentNumber: text('document_number'),
+    amountCents: integer('amount_cents').notNull(),
+    notes: text('notes'),
+    adminUserId: integer('admin_user_id').references(() => adminUsers.id, { onDelete: 'set null' }),
+    ...timestamps
+  },
+  t => [index('purchases_date_idx').on(t.purchasedOn), check('purchases_amount_check', sql`${t.amountCents} > 0`)]
 );
