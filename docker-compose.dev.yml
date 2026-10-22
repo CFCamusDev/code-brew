@@ -1,0 +1,22 @@
+# Base de datos para desarrollo local (`pnpm db:up`). La app corre fuera de Docker con `pnpm dev`.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: codebrew-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: codebrew
+      POSTGRES_USER: codebrew
+      POSTGRES_PASSWORD: codebrew
+    ports:
+      - "5434:5432"
+    volumes:
+      - codebrew-db-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codebrew -d codebrew"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  codebrew-db-dev:

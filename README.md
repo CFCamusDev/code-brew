@@ -1,15 +1,31 @@
 # CodeBrew — immersive prototype
 
-Web estática en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.**
+Web en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing se prerenderiza como HTML estático; las rutas de API, checkout y administración se ejecutan en un servidor Node con PostgreSQL. Los componentes interactivos se escriben como islas React.
 
 ## Desarrollo
 
-- `npm install`
-- `npm run dev` usa el puerto definido en `astro.config.mjs`.
-- Puerto alternativo: `node node_modules/astro/astro.js dev --host 127.0.0.1 --port 4321`.
-- `npm run build` genera `dist/`.
-- `npm run preview` sirve la compilación.
-- `node node_modules/typescript/bin/tsc --noEmit` comprueba los módulos TypeScript.
+El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
+
+- `pnpm install`
+- `cp .env.example .env`
+- `pnpm db:up` levanta PostgreSQL de desarrollo en Docker (puerto 5434).
+- `pnpm db:migrate` aplica las migraciones y `pnpm db:seed` carga el catálogo inicial.
+- `pnpm dev` usa el puerto definido en `astro.config.mjs`.
+- Puerto alternativo: `pnpm exec astro dev --host 127.0.0.1 --port 4321`.
+- `pnpm build` genera `dist/client` (estático) y `dist/server` (servidor Node).
+- `pnpm preview` sirve la compilación.
+- `pnpm exec tsc --noEmit` comprueba los módulos TypeScript.
+
+## Base de datos
+
+- Esquema en `src/lib/server/db/schema.ts` (Drizzle ORM). Montos en céntimos de sol.
+- Tras cambiar el esquema: `pnpm db:generate` crea la migración SQL en `drizzle/`; se versiona en git.
+- `src/data/catalog.json` es la fuente del catálogo inicial: la landing toma de ahí precios y moliendas, y el seed lo inserta en la base de datos sin pisar precios ni stock editados después.
+- `pnpm db:studio` abre un explorador de la base de datos.
+
+## Producción (Docker / Portainer)
+
+`docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
 
 ## Experiencia
 

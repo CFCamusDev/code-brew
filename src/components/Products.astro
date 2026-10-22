@@ -5,11 +5,13 @@ import espresso from '../assets/demo/espresso.png';
 import microlote from '../assets/demo/microlote.png';
 const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote};
 import { PRODUCTS, getWhatsAppUrl } from '../data/config';
+import catalog from '../data/catalog.json';
+const grindsOf=(slug:string)=>catalog.products.find(p=>p.slug===slug)!.grinds;
 const profiles = [
- {id:'monteverde',name:'Origen Monteverde',tag:'01 / EL DAILY DRIVER',description:'Tu punto de partida. Tueste medio para acompañar el primer commit del día y esa pausa que siempre viene bien.',roast:'Tueste medio',color:'#436952',image:'monteverde',ids:['monteverde-250','monteverde-500'],grinds:['Grano entero','Molido para filtro','Molido para prensa francesa','Molido para moka']},
- {id:'espresso',name:'Espresso Amazonas',tag:'02 / MODO INTENSO',description:'Un perfil de tueste medio-oscuro para quienes disfrutan un café con más carácter. Tu siguiente ritual empieza aquí.',roast:'Tueste medio-oscuro',color:'#a65c3d',image:'espresso',ids:['espresso-250','espresso-500'],grinds:['Grano entero','Molido para espresso']},
- {id:'developer',name:'Pack Developer',tag:'03 / MEJOR EN PAREJA',description:'Monteverde + Espresso Amazonas. Dos bolsas, dos perfiles y una buena excusa para descubrir tu favorito o compartir con tu pair.',roast:'Dos perfiles de tueste',color:'#b89350',image:'monteverde',ids:['pack-developer'],grinds:['Combinación por coordinar','Ambos en grano','Ambos molidos']},
- {id:'microlote',name:'Microlote de Temporada',tag:'04 / EXPLORA ALGO NUEVO',description:'Un tueste claro para salir de la rutina y acercarte al origen desde otra perspectiva. Consulta el lote disponible.',roast:'Tueste claro',color:'#727d9b',image:'microlote',ids:['microlote-temporada'],grinds:['Grano entero','Molido para filtrado']}
+ {id:'monteverde',name:'Origen Monteverde',tag:'01 / EL DAILY DRIVER',description:'Tu punto de partida. Tueste medio para acompañar el primer commit del día y esa pausa que siempre viene bien.',roast:'Tueste medio',color:'#436952',image:'monteverde',ids:['monteverde-250','monteverde-500'],grinds:grindsOf('monteverde')},
+ {id:'espresso',name:'Espresso Amazonas',tag:'02 / MODO INTENSO',description:'Un perfil de tueste medio-oscuro para quienes disfrutan un café con más carácter. Tu siguiente ritual empieza aquí.',roast:'Tueste medio-oscuro',color:'#a65c3d',image:'espresso',ids:['espresso-250','espresso-500'],grinds:grindsOf('espresso')},
+ {id:'developer',name:'Pack Developer',tag:'03 / MEJOR EN PAREJA',description:'Monteverde + Espresso Amazonas. Dos bolsas, dos perfiles y una buena excusa para descubrir tu favorito o compartir con tu pair.',roast:'Dos perfiles de tueste',color:'#b89350',image:'monteverde',ids:['pack-developer'],grinds:grindsOf('developer')},
+ {id:'microlote',name:'Microlote de Temporada',tag:'04 / EXPLORA ALGO NUEVO',description:'Un tueste claro para salir de la rutina y acercarte al origen desde otra perspectiva. Consulta el lote disponible.',roast:'Tueste claro',color:'#727d9b',image:'microlote',ids:['microlote-temporada'],grinds:grindsOf('microlote')}
 ];
 ---
 <section id="productos" class="blend-section section">
