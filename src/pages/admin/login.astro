@@ -1,0 +1,45 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import LogoMark from '../../components/LogoMark.astro';
+
+export const prerender = false;
+
+const next = Astro.url.searchParams.get('next');
+// Solo rutas internas del panel, para no abrir redirecciones a otros sitios.
+const target = next && next.startsWith('/admin') && !next.startsWith('//') ? next : '/admin/pedidos';
+if (Astro.locals.admin) return Astro.redirect(target);
+---
+<AdminLayout title="Iniciar sesión">
+  <form class="login-card admin-form" id="login-form" data-target={target} novalidate>
+    <LogoMark size={32} />
+    <h1>Panel CodeBrew</h1>
+    <p class="muted">Ingresa con tu cuenta del equipo.</p>
+    <label>Correo<input name="email" type="email" autocomplete="username" required /></label>
+    <label>Contraseña<input name="password" type="password" autocomplete="current-password" required /></label>
+    <p class="form-error" id="login-error" role="alert"></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</AdminLayout>
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const error = document.getElementById('login-error')!;
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = form.querySelector('button')!;
+    button.disabled = true;
+    error.textContent = '';
+    const data = Object.fromEntries(new FormData(form));
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (response.ok) return window.location.assign(form.dataset.target!);
+      error.textContent = (await response.json().catch(() => ({}))).error ?? 'No se pudo iniciar sesión.';
+    } catch {
+      error.textContent = 'Sin conexión. Inténtalo de nuevo.';
+    }
+    button.disabled = false;
+  });
+</script>

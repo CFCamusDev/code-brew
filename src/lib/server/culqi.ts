@@ -123,6 +123,17 @@ export function getOrder(id: string) {
   return request<CulqiOrder>('GET', `/orders/${encodeURIComponent(id)}`);
 }
 
+export type RefundReason = 'solicitud_comprador' | 'duplicado' | 'fraudulento';
+
+/** Devolución total o parcial de un cargo (chr_…). */
+export function createRefund(chargeId: string, amountCents: number, reason: RefundReason) {
+  return request<{ object: 'refund'; id: string; amount: number; charge_id: string }>('POST', '/refunds', {
+    amount: amountCents,
+    charge_id: chargeId,
+    reason
+  });
+}
+
 export function isCulqiError(data: unknown): data is CulqiError {
   return typeof data === 'object' && data !== null && (data as { object?: string }).object === 'error';
 }

@@ -1,0 +1,119 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import OrderActions from '../../../components/admin/OrderActions';
+import { getOrderDetail, REFUNDABLE, STATUS_LABEL, TRANSITIONS } from '../../../lib/server/admin/orders';
+import { isOrderId } from '../../../lib/server/shop';
+import { formatDateTime, formatOrderNumber, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const order = isOrderId(id) ? await getOrderDetail(id) : undefined;
+if (!order) return new Response('Pedido no encontrado', { status: 404 });
+
+const admin = Astro.locals.admin!;
+const number = formatOrderNumber(order.number);
+const PAYMENT_STATUS = { pending: 'Pendiente', paid: 'Pagado', failed: 'Fallido', refunded: 'Reembolsado' } as const;
+const whatsapp = `https://wa.me/51${order.customerPhone}`;
+---
+<AdminLayout title={`Pedido ${number}`}>
+  <div class="admin-head">
+    <div>
+      <p><a href="/admin/pedidos">← Pedidos</a></p>
+      <h1>Pedido {number}</h1>
+      <p>Creado {formatDateTime(order.createdAt)}{order.paidAt && ` · Pagado ${formatDateTime(order.paidAt)}`}</p>
+    </div>
+    <span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+  </div>
+
+  {order.stockShortage && (
+    <p class="alert">Este pedido se pagó cuando el stock no alcanzaba. Revisa el inventario antes de despacharlo o contacta al cliente.</p>
+  )}
+
+  <div class="admin-grid">
+    <div class="admin-stack">
+      <section class="admin-card">
+        <h2>Productos</h2>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Producto</th><th>Molienda</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              {order.items.map(item => (
+                <tr>
+                  <td>{item.productName} · {item.format}</td>
+                  <td>{item.grind}</td>
+                  <td class="num">{item.quantity}</td>
+                  <td class="num">{formatPEN(item.unitPriceCents)}</td>
+                  <td class="num">{formatPEN(item.lineTotalCents)}</td>
+                </tr>
+              ))}
+              <tr><td colspan="4">Envío · {order.shippingZoneName}</td><td class="num">{order.shippingCents === 0 ? 'Gratis' : formatPEN(order.shippingCents)}</td></tr>
+              <tr><td colspan="4"><strong>Total</strong></td><td class="num"><strong>{formatPEN(order.totalCents)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Cliente y entrega</h2>
+        <dl class="kv">
+          <dt>Nombre</dt><dd>{order.customerName}</dd>
+          <dt>Correo</dt><dd><a href={`mailto:${order.customerEmail}`}>{order.customerEmail}</a></dd>
+          <dt>Celular</dt><dd><a href={whatsapp} target="_blank" rel="noopener noreferrer">{order.customerPhone} (WhatsApp)</a></dd>
+          {order.customerDocument && <><dt>Documento</dt><dd>{order.customerDocument}</dd></>}
+          <dt>Dirección</dt><dd>{order.shippingAddress}, {order.shippingDistrict}, {order.shippingCity}, {order.shippingRegion}</dd>
+          {order.shippingReference && <><dt>Referencia</dt><dd>{order.shippingReference}</dd></>}
+          {order.notes && <><dt>Nota del cliente</dt><dd>{order.notes}</dd></>}
+          {(order.carrier || order.trackingNumber) && <><dt>Seguimiento</dt><dd>{[order.carrier, order.trackingNumber].filter(Boolean).join(' · ')}</dd></>}
+        </dl>
+      </section>
+
+      <section class="admin-card">
+        <h2>Pagos</h2>
+        {order.payments.length === 0 ? <p class="muted">Sin intentos de pago.</p> : (
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Fecha</th><th>Medio</th><th>Referencia Culqi</th><th class="num">Monto</th><th>Estado</th></tr></thead>
+              <tbody>
+                {order.payments.map(payment => (
+                  <tr>
+                    <td>{formatDateTime(payment.createdAt)}</td>
+                    <td>{payment.method === 'order' ? 'Orden (efectivo/billetera)' : payment.method}</td>
+                    <td><code>{payment.reference ?? '—'}</code></td>
+                    <td class="num">{formatPEN(payment.amountCents)}</td>
+                    <td>{PAYMENT_STATUS[payment.status]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+
+    <div class="admin-stack">
+      <OrderActions
+        client:load
+        orderId={order.id}
+        transitions={TRANSITIONS[order.status]}
+        canRefund={admin.role === 'admin' && REFUNDABLE.includes(order.status)}
+        autoRefund={Boolean(order.refundableCharge)}
+        adminNotes={order.adminNotes ?? ''}
+      />
+      <section class="admin-card">
+        <h2>Historial</h2>
+        <ol class="timeline">
+          <li>Pedido creado<small>{formatDateTime(order.createdAt)}</small></li>
+          {order.paidAt && <li>Pago confirmado por Culqi<small>{formatDateTime(order.paidAt)}</small></li>}
+          {order.events.map(event => (
+            <li>
+              {event.type === 'refund' ? 'Reembolsado' : event.toStatus ? STATUS_LABEL[event.toStatus] : 'Nota'}
+              {event.note && <> · {event.note}</>}
+              <small>{formatDateTime(event.createdAt)}{event.adminName && ` · ${event.adminName}`}</small>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </div>
+  </div>
+</AdminLayout>

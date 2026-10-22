@@ -2,7 +2,7 @@ import { and, desc, eq, gt, gte, inArray, sql } from 'drizzle-orm';
 import { formatOrderNumber } from '../shop/format';
 import * as culqi from './culqi';
 import { getDb } from './db';
-import { orderItems, orders, payments, productVariants } from './db/schema';
+import { orderItems, orders, payments, productVariants, stockMovements } from './db/schema';
 import { sendOrderPaidEmails } from './email';
 import { getOrder } from './shop';
 
@@ -62,8 +62,18 @@ async function markPaid(orderId: string, payment: { reference: string; method: s
         .update(productVariants)
         .set({ stock: sql`${productVariants.stock} - ${item.quantity}` })
         .where(and(eq(productVariants.id, item.variantId), gte(productVariants.stock, item.quantity)))
-        .returning({ id: productVariants.id });
-      if (!updated.length) stockShortage = true;
+        .returning({ stock: productVariants.stock });
+      if (!updated.length) {
+        stockShortage = true;
+        continue;
+      }
+      await tx.insert(stockMovements).values({
+        variantId: item.variantId,
+        delta: -item.quantity,
+        stockAfter: updated[0].stock,
+        reason: 'sale',
+        orderId
+      });
     }
 
     await tx.update(orders).set({ status: 'paid', paidAt: new Date(), stockShortage }).where(eq(orders.id, orderId));

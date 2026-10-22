@@ -9,3 +9,10 @@ export function formatPEN(cents: number): string {
 export function formatOrderNumber(number: number): string {
   return `CB-${String(number).padStart(6, '0')}`;
 }
+
+const dateTime = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', dateStyle: 'short', timeStyle: 'short' });
+
+/** Fecha y hora de Lima: "22/10/26, 14:05" */
+export function formatDateTime(date: Date | string): string {
+  return dateTime.format(new Date(date));
+}

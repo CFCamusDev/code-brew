@@ -77,3 +77,19 @@ export async function sendOrderPaidEmails(order: Order) {
     );
   }
 }
+
+export async function sendOrderShippedEmail(order: Order) {
+  const number = formatOrderNumber(order.number);
+  const link = SITE_URL ? `${SITE_URL.replace(/\/$/, '')}/pedido/${order.id}` : null;
+  const tracking = [order.carrier, order.trackingNumber].filter(Boolean).map(value => escape(value!)).join(' · ');
+  await sendEmail(
+    order.customerEmail,
+    `Tu café va en camino · Pedido ${number}`,
+    layout(
+      `¡Tu pedido ${number} salió!`,
+      `<p style="font-size:14px;line-height:1.6">Ya despachamos tu café hacia ${escape(order.shippingDistrict)}, ${escape(order.shippingCity)}.${tracking ? `<br>Seguimiento: <strong>${tracking}</strong>` : ''}</p>
+      ${orderSummary(order)}
+      ${link ? `<p style="margin-top:20px"><a href="${link}" style="color:#d16c40">Ver mi pedido</a></p>` : ''}`
+    )
+  );
+}

@@ -138,6 +138,13 @@ export const orders = pgTable(
     paidAt: timestamp('paid_at', { withTimezone: true }),
     /** Se pagó pero no alcanzó el stock al confirmar: requiere revisión manual. */
     stockShortage: boolean('stock_shortage').notNull().default(false),
+    carrier: text('carrier'),
+    trackingNumber: text('tracking_number'),
+    /** Notas internas del equipo; el cliente no las ve. */
+    adminNotes: text('admin_notes'),
+    shippedAt: timestamp('shipped_at', { withTimezone: true }),
+    deliveredAt: timestamp('delivered_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     ...timestamps
   },
   t => [
@@ -195,4 +202,72 @@ export const payments = pgTable(
     ...timestamps
   },
   t => [index('payments_order_idx').on(t.orderId)]
+);
+
+export const adminRole = pgEnum('admin_role', ['admin', 'operator']);
+
+/** Usuarios del panel. `admin` gestiona todo; `operator` atiende pedidos, stock y compras. */
+export const adminUsers = pgTable('admin_users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  passwordHash: text('password_hash').notNull(),
+  role: adminRole('role').notNull().default('operator'),
+  active: boolean('active').notNull().default(true),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  ...timestamps
+});
+
+/** Sesión del panel. El id es el SHA-256 del token de la cookie: un volcado de la tabla no permite iniciar sesión. */
+export const adminSessions = pgTable(
+  'admin_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => adminUsers.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+  },
+  t => [index('admin_sessions_user_idx').on(t.userId)]
+);
+
+/** Historial del pedido: cambios de estado, notas y devoluciones, con quién los hizo. */
+export const orderEvents = pgTable(
+  'order_events',
+  {
+    id: serial('id').primaryKey(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    fromStatus: orderStatus('from_status'),
+    toStatus: orderStatus('to_status'),
+    note: text('note'),
+    adminUserId: integer('admin_user_id').references(() => adminUsers.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+  },
+  t => [index('order_events_order_idx').on(t.orderId)]
+);
+
+export const stockReason = pgEnum('stock_reason', ['sale', 'refund', 'adjustment', 'purchase']);
+
+/** Cada cambio de stock con su motivo: ventas, devoluciones, ajustes manuales e ingresos por compra. */
+export const stockMovements = pgTable(
+  'stock_movements',
+  {
+    id: serial('id').primaryKey(),
+    variantId: integer('variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'cascade' }),
+    delta: integer('delta').notNull(),
+    stockAfter: integer('stock_after').notNull(),
+    reason: stockReason('reason').notNull(),
+    orderId: uuid('order_id').references(() => orders.id, { onDelete: 'set null' }),
+    adminUserId: integer('admin_user_id').references(() => adminUsers.id, { onDelete: 'set null' }),
+    note: text('note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+  },
+  t => [index('stock_movements_variant_idx').on(t.variantId), index('stock_movements_created_idx').on(t.createdAt)]
 );

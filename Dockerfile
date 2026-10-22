@@ -36,7 +36,7 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY package.json ./
 COPY drizzle ./drizzle
-COPY scripts/db ./scripts/db
+COPY scripts ./scripts
 COPY src/data/catalog.json src/data/shipping.json ./src/data/
 
 USER node
