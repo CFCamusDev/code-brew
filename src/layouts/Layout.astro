@@ -1,78 +1,41 @@
 ---
 import '../styles/global.css';
-import CoffeeExperience3D from '../components/CoffeeExperience3D.astro';
-import ScrollAnimations from '../components/ScrollAnimations.astro';
-
-interface Props {
-  title?: string;
-  description?: string;
-}
-
-const {
-  title = 'CodeBrew | Café de especialidad de Amazonas',
-  description = 'Café de especialidad peruano con identidad de desarrollo de software. Granos de Rodríguez de Mendoza, Amazonas. Tueste artesanal fresco y pedidos directos por WhatsApp.'
-} = Astro.props;
+interface Props { title?: string; description?: string; }
+const { title = 'CodeBrew — Buen café. Grandes ideas.', description = 'Café de especialidad de Amazonas, Perú, para quienes crean. Descubre tu próximo ritual y elige tu café en grano o molido.' } = Astro.props;
 ---
-
 <!doctype html>
 <html lang="es">
   <head>
-    <!-- Google tag (gtag.js) - GA4 CodeBrew (G-YMMJ7V30SZ) -->
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-YMMJ7V30SZ"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-YMMJ7V30SZ');
-    </script>
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
     <meta name="generator" content={Astro.generator} />
-
-    <!-- SEO Básico -->
+    <meta name="theme-color" content="#203c32" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="author" content="CodeBrew" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#0B0B0C" />
-
-    <!-- Open Graph / Redes Sociales -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:site_name" content="CodeBrew" />
     <meta property="og:locale" content="es_PE" />
-
-    <!-- Tipografías de Google Fonts: Space Grotesk, Inter y JetBrains Mono -->
+    {import.meta.env.PROD && <>
+      <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-YMMJ7V30SZ"></script>
+      <script is:inline>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YMMJ7V30SZ');
+        document.addEventListener('click', function (event) {
+          var link = event.target instanceof Element ? event.target.closest('a[href*="wa.me"]') : null;
+          if (link) gtag('event', 'whatsapp_click', { link_url: link.href, link_text: link.textContent.trim().slice(0, 100) });
+        });
+      </script>
+    </>}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- Escena 3D Cinemática Scrollytelling (Three.js WebGL) -->
-    <CoffeeExperience3D />
-
-    <!-- Motor de Animación por Scroll y Microinteracciones DOM -->
-    <ScrollAnimations />
-
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
     <slot />
-
-    <!-- GA4: evento personalizado whatsapp_click (clics en enlaces de WhatsApp) -->
-    <script is:inline>
-      document.addEventListener('click', function (e) {
-        var a = e.target.closest && e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"], a[href^="whatsapp:"]');
-        if (a && typeof gtag === 'function') {
-          gtag('event', 'whatsapp_click', {
-            link_url: a.href,
-            link_text: (a.textContent || '').trim().slice(0, 100)
-          });
-        }
-      });
-    </script>
   </body>
 </html>

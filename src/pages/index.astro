@@ -2,58 +2,154 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
-import TrustBar from '../components/TrustBar.astro';
-import Origin from '../components/Origin.astro';
 import Products from '../components/Products.astro';
-import Features from '../components/Features.astro';
-import Offers from '../components/Offers.astro';
-import HowToOrder from '../components/HowToOrder.astro';
-import Corporate from '../components/Corporate.astro';
-import FinalCTA from '../components/FinalCTA.astro';
-import Footer from '../components/Footer.astro';
-import WhatsAppFloat from '../components/WhatsAppFloat.astro';
-import MobileStickyBar from '../components/MobileStickyBar.astro';
+import LogoMark from '../components/LogoMark.astro';
+import WorldStage from '../components/WorldStage.astro';
+import Experience from '../components/Experience.astro';
+import OriginMap from '../components/OriginMap.astro';
+import { getWhatsAppUrl } from '../data/config';
+const questions = [
+  ['¿Cuál elijo si es mi primer café CodeBrew?', 'Origen Monteverde tiene tueste medio y es nuestro punto de partida para tu ritual diario. Si prefieres un tueste medio-oscuro, elige Espresso Amazonas. Con el Pack Developer puedes probar ambos.'],
+  ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, dinos qué cafetera usas y coordinamos la molienda. Para el Pack Developer puedes personalizar las dos bolsas por WhatsApp.'],
+  ['¿Cómo coordino el envío y el pago?', 'El botón de cada café abre WhatsApp con tu selección. Allí confirmamos disponibilidad, dirección, costo de envío, plazo de entrega y medio de pago antes de cerrar el pedido.'],
+  ['¿Puedo pedir café para mi equipo?', 'Sí. Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos la propuesta, las presentaciones y la entrega directamente contigo.']
+];
 ---
-
-<Layout
-  title="CodeBrew | Café que despierta ideas · Café de especialidad de Amazonas"
-  description="Café de especialidad peruano de Rodríguez de Mendoza, Amazonas (84+ SCA). Tostado artesanal para programadores y mentes analíticas. Pide directo por WhatsApp."
->
+<Layout title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para programadores. De Amazonas a tu escritorio: elige tu tueste, formato y molienda, y pide directamente por WhatsApp.">
   <Header />
-
+  <Experience />
   <main id="main-content">
-    <!-- 2. Hero Section -->
     <Hero />
-
-    <!-- 3. Barra de confianza (Métricas) -->
-    <TrustBar />
-
-    <!-- 4. Origen (01 — origen) -->
-    <Origin />
-
-    <!-- 5. Productos (02 — productos) -->
+    <section class="manifesto section" data-reveal>
+<p class="eyebrow">ESPECIALIDAD EN EL CAFÉ. IDENTIDAD EN EL CÓDIGO.</p>
+<h2>Hay cosas que no se automatizan.<br />
+<span>El placer de un buen café es una de ellas.</span>
+</h2>
+<p>Nos gusta construir cosas. Y también hacer una pausa para disfrutarlas. CodeBrew une el café de origen peruano con la cultura de quienes viven entre ideas, código y nuevos proyectos.</p>
+<span class="manifesto-code">const ritual = café + pausa + código;</span>
+</section>
     <Products />
-
-    <!-- 6. Por qué CodeBrew (03 — features) -->
-    <Features />
-
-    <!-- 7. Ofertas (> oferta --activa) -->
-    <Offers />
-
-    <!-- 8. Cómo pedir (04 — deploy) -->
-    <HowToOrder />
-
-    <!-- 9. Para empresas -->
-    <Corporate />
-
-    <!-- 10. CTA final -->
-    <FinalCTA />
+    <section id="origen" class="origin-section">
+<div class="origin-photo">
+<OriginMap />
+</div>
+<div class="origin-copy">
+<p class="eyebrow">02 / DESDE AMAZONAS, PERÚ</p>
+<h2>Antes del código,<br />está la <span class="serif-word">tierra.</span>
+</h2>
+<p>Nuestro café comienza en Rodríguez de Mendoza, Amazonas. Un origen peruano que merece su propio lugar en tu escritorio.</p>
+<p>El tueste artesanal y la elección de la molienda son parte de un mismo propósito: que encuentres una taza que quieras preparar todos los días.</p>
+<dl class="origin-facts">
+<div>
+<dt>PROCEDENCIA</dt>
+<dd>Rodríguez de Mendoza</dd>
+</div>
+<div>
+<dt>REGIÓN</dt>
+<dd>Amazonas, Perú</dd>
+</div>
+<div>
+<dt>CAFÉ</dt>
+<dd>100% arábica</dd>
+</div>
+<div>
+<dt>TUESTE</dt>
+<dd>Artesanal</dd>
+</div>
+</dl>
+<a href="#productos" class="text-link">Del origen a tu taza <span aria-hidden="true">↗</span>
+</a>
+</div>
+</section>
+    <section id="ritual" class="section ritual-section">
+<div class="section-heading">
+<div>
+<p class="eyebrow">03 / UNA PAUSA BIEN HECHA</p>
+<h2>Tu mejor rutina<br />empieza <span class="serif-word">aquí.</span>
+</h2>
+</div>
+<p>No necesitas ser barista.<br />Solo encontrar tu forma de disfrutarlo.</p>
+</div>
+<div class="ritual-grid">
+<div class="ritual-image">
+<WorldStage kind="ritual" label="Taza de café verde con plato y vapor en 3D" />
+<span class="image-label">// take a coffee break</span>
+</div>
+<div class="ritual-steps">
+<article>
+<span>01</span>
+<div>
+<h3>Elige tu punto de partida.</h3>
+<p>Tueste medio para tu día a día, medio-oscuro para explorar más intensidad o un dúo para descubrir ambos.</p>
+</div>
+</article>
+<article>
+<span>02</span>
+<div>
+<h3>Hazlo a tu manera.</h3>
+<p>En grano si tienes molino. Molido para tu método si quieres ir directo a la preparación. Te ayudamos a elegir.</p>
+</div>
+</article>
+<article>
+<span>03</span>
+<div>
+<h3>Una pausa. Y seguimos.</h3>
+<p>Aléjate un momento de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.</p>
+</div>
+</article>
+<a href={getWhatsAppUrl('¡Hola CodeBrew! Quisiera ayuda para elegir un café y la molienda para mi cafetera.')} target="_blank" rel="noopener noreferrer" class="text-link">Ayúdame a elegir <span aria-hidden="true">↗</span>
+</a>
+</div>
+</div>
+</section>
+    <section id="empresas" class="team-section">
+<WorldStage kind="team" label="Dos empaques conceptuales de café CodeBrew en 3D" />
+<div class="team-copy">
+<p class="eyebrow">PARA EQUIPOS QUE CONSTRUYEN</p>
+<h2>El mejor perk.<br />
+<span class="serif-word">Un buen café.</span>
+</h2>
+<p>Para la oficina, el próximo sprint o ese welcome pack. Hagamos del café un ritual que tu equipo quiera compartir.</p>
+<a class="button cream" href={getWhatsAppUrl('¡Hola CodeBrew! Me interesa café para mi equipo. Quisiera coordinar una propuesta para oficina o regalos.')} target="_blank" rel="noopener noreferrer">Hablemos de tu equipo <span aria-hidden="true">↗</span>
+</a>
+</div>
+</section>
+    <section class="section faq-section">
+<div>
+<p class="eyebrow">ANTES DEL PRIMER SORBO</p>
+<h2>Sin dudas.<br />
+<span class="serif-word">Con café.</span>
+</h2>
+<p>Y si queda alguna, <a class="inline-link" href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos</a>.</p>
+</div>
+<div class="faq-list">{questions.map(([q, a]) => <details>
+<summary>{q}<span aria-hidden="true">+</span>
+</summary>
+<p>{a}</p>
+</details>)}</div>
+</section>
+    <section class="closing">
+<p class="eyebrow">MENOS RUIDO. MÁS RITUAL.</p>
+<h2>¿Listo para tu<br />
+<span class="serif-word">próximo café?</span>
+</h2>
+<a class="button primary" href="#productos">Encuentra tu blend <span aria-hidden="true">↗</span>
+</a>
+<span class="closing-star" aria-hidden="true">✳</span>
+</section>
   </main>
-
-  <!-- 11. Footer -->
-  <Footer />
-
-  <!-- Elementos Flotantes Móviles -->
-  <WhatsAppFloat />
-  <MobileStickyBar />
+  <footer class="site-footer">
+<div class="footer-top">
+<a class="wordmark" href="#">
+<LogoMark size={32} />codebrew
+</a>
+<p>Café de origen.<br />Espíritu developer.</p>
+<a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Hablemos por WhatsApp ↗</a>
+</div>
+<div class="footer-bottom">
+<span>© {new Date().getFullYear()} CodeBrew. Hecho en Perú.</span>
+<span>Buen café. Mejor código.</span>
+<a href="#">Volver arriba ↑</a>
+</div>
+</footer>
 </Layout>
