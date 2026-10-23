@@ -230,6 +230,15 @@ describe('inicio del panel', () => {
     expect(after.todayOrders).toBe(before.todayOrders);
   });
 
+  it('los gráficos respetan el rango y muestran lo vendido', async () => {
+    await paidOrder();
+    const week = await api('/admin?rango=7', { cookie: adminCookie });
+    expect(week.text.match(/class="col"/g)).toHaveLength(7);
+    expect(week.text).toContain('Espresso Amazonas · 250 g');
+    expect((await api('/admin?rango=90', { cookie: adminCookie })).text.match(/class="col"/g)).toHaveLength(90);
+    expect((await api('/admin?rango=999', { cookie: adminCookie })).text.match(/class="col"/g)).toHaveLength(30);
+  });
+
   it('lista el stock bajo', async () => {
     const sql = db();
     await sql`update product_variants set stock = 0 where sku = 'microlote-temporada'`;

@@ -1,0 +1,81 @@
+---
+import { formatPEN } from '../../../lib/shop/format';
+
+// Columnas de ventas por día. Énfasis: hoy en el acento, el resto en el tono de fondo.
+// Sin JavaScript: el detalle de cada día aparece al pasar el mouse o al enfocarlo con el teclado.
+interface Props {
+  series: { day: string; cents: number; orders: number }[];
+}
+const { series } = Astro.props;
+
+const dayLabel = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const longLabel = new Intl.DateTimeFormat('es-PE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const asDate = (day: string) => new Date(`${day}T00:00:00Z`);
+
+/** Tope "redondo" del eje para que las marcas caigan en valores limpios. */
+function niceMax(value: number) {
+  if (value <= 0) return 10_000;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 2, 2.5, 5, 10].find(m => m * magnitude >= value)!;
+  return step * magnitude;
+}
+const max = niceMax(Math.max(...series.map(point => point.cents)));
+const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => f * max);
+const compact = (cents: number) => {
+  const soles = cents / 100;
+  if (soles >= 1000) return `S/ ${(soles / 1000).toLocaleString('es-PE', { maximumFractionDigits: 1 })}k`;
+  return `S/ ${Math.round(soles)}`;
+};
+const last = series.length - 1;
+const edge = (index: number) => (index < 3 ? 'start' : index > last - 3 ? 'end' : undefined);
+const xLabels = [series[0], series[Math.floor(last / 2)], series[last]].filter(Boolean);
+---
+<figure class="chart" aria-label="Ventas por día">
+  <div class="columns">
+    <div class="y-axis" aria-hidden="true">
+      {ticks.map(tick => <span style={`bottom:${(tick / max) * 100}%`}>{compact(tick)}</span>)}
+    </div>
+    <div class="plot">
+      {ticks.map(tick => <div class:list={['gridline', { base: tick === 0 }]} style={`bottom:${(tick / max) * 100}%`} aria-hidden="true"></div>)}
+      <div class="bars">
+        {series.map((point, index) => {
+          const height = `${(point.cents / max) * 100}%`;
+          const isToday = index === last;
+          return (
+            <div
+              class="col"
+              tabindex="0"
+              style={`--h:${height}`}
+              data-today={isToday ? '' : undefined}
+              data-edge={edge(index)}
+              aria-label={`${longLabel.format(asDate(point.day))}: ${formatPEN(point.cents)}, ${point.orders} pedidos`}
+            >
+              <span class="bar"></span>
+              {isToday && point.cents > 0 && <span class="today-label" aria-hidden="true">{compact(point.cents)}</span>}
+              <span class="tip" aria-hidden="true">
+                <b>{formatPEN(point.cents)}</b>
+                <span>{isToday ? 'Hoy' : longLabel.format(asDate(point.day))} · {point.orders} {point.orders === 1 ? 'pedido' : 'pedidos'}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+  <div class="x-axis" aria-hidden="true">
+    {xLabels.map((point, index) => <span>{index === xLabels.length - 1 ? 'Hoy' : dayLabel.format(asDate(point.day))}</span>)}
+  </div>
+  <details class="table-view">
+    <summary>Ver como tabla</summary>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Día</th><th class="num">Pedidos</th><th class="num">Ventas</th></tr></thead>
+        <tbody>
+          {[...series].reverse().map(point => (
+            <tr><td>{longLabel.format(asDate(point.day))}</td><td class="num">{point.orders}</td><td class="num">{formatPEN(point.cents)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>

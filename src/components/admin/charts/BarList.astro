@@ -1,0 +1,22 @@
+---
+// Barras horizontales para comparar magnitudes en un solo tono; la primera (la mayor) va resaltada.
+interface Props {
+  items: { label: string; value: number; display: string; detail?: string }[];
+  empty: string;
+}
+const { items, empty } = Astro.props;
+const max = Math.max(...items.map(item => item.value), 1);
+---
+{items.length === 0 ? (
+  <p class="empty-chart">{empty}</p>
+) : (
+  <ul class="barlist">
+    {items.map(item => (
+      <li>
+        <span class="name" title={item.label}>{item.label}</span>
+        <span class="value">{item.display}{item.detail && <small>{item.detail}</small>}</span>
+        <span class="track" aria-hidden="true"><span class="fill" style={`width:${(item.value / max) * 100}%`}></span></span>
+      </li>
+    ))}
+  </ul>
+)}

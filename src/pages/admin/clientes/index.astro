@@ -25,17 +25,20 @@ const link = (changes: Record<string, string | undefined>) => {
       <h1>Clientes</h1>
       <p>{total} {total === 1 ? 'cliente' : 'clientes'}{q ? ` · “${q}”` : ''}. Se agrupan por correo; compran sin crear cuenta.</p>
     </div>
-    <form class="filters" method="get" action="/admin/clientes">
-      <input type="hidden" name="orden" value={sort} />
-      <input type="search" name="q" value={q} placeholder="Nombre, correo o celular" aria-label="Buscar clientes" />
-      <button class="btn ghost" type="submit">Buscar</button>
-    </form>
   </div>
 
-  <nav class="status-tabs" aria-label="Ordenar">
-    <a href={link({ orden: undefined })} aria-current={sort === 'reciente' ? 'true' : undefined}>Compra más reciente</a>
-    <a href={link({ orden: 'total' })} aria-current={sort === 'total' ? 'true' : undefined}>Mayor total comprado</a>
-  </nav>
+  <div class="toolbar">
+    <form class="filters" method="get" action="/admin/clientes">
+      <input type="hidden" name="orden" value={sort} />
+      <input type="search" name="q" value={q} placeholder="Buscar por nombre, correo o celular" aria-label="Buscar clientes" />
+      <button class="btn" type="submit">Buscar</button>
+      {q && <a class="btn ghost" href={sort === 'total' ? '/admin/clientes?orden=total' : '/admin/clientes'}>Limpiar</a>}
+    </form>
+    <nav class="seg" aria-label="Ordenar">
+      <a href={link({ orden: undefined })} aria-current={sort === 'reciente' ? 'true' : undefined}>Más recientes</a>
+      <a href={link({ orden: 'total' })} aria-current={sort === 'total' ? 'true' : undefined}>Mayor total</a>
+    </nav>
+  </div>
 
   <div class="table-wrap">
     <table class="admin-table">
