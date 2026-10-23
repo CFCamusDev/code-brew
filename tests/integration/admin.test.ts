@@ -268,3 +268,62 @@ describe('hoja de despacho', () => {
     expect((await api('/admin/pedidos?estado=delivered', { cookie: adminCookie })).text).not.toContain('class="select-order"');
   });
 });
+
+describe('filtro por fechas y exportación', () => {
+  const limaDate = (offsetDays = 0) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(Date.now() + offsetDays * 86_400_000));
+
+  it('exige sesión y fechas válidas', async () => {
+    expect((await api('/api/admin/export/pedidos')).status).toBe(401);
+    expect((await api('/api/admin/export/pedidos?desde=23-10-2026', { cookie: adminCookie })).status).toBe(400);
+    expect((await api('/api/admin/export/clientes', { cookie: adminCookie })).status).toBe(404);
+  });
+
+  it('exporta pedidos del rango en CSV para Excel y neutraliza fórmulas', async () => {
+    const today = await api('/api/orders', {
+      body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 2 }], customer: { ...customer, name: '=HYPERLINK("http://x") Cliente' } }
+    });
+    const old = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const sql = db();
+    const todayRow = { number: today.json.number as number };
+    const oldRow = { number: old.json.number as number };
+    await sql`update orders set created_at = now() - interval '40 days' where id = ${old.json.id}`;
+    await sql.end();
+
+    const csv = await api(`/api/admin/export/pedidos?desde=${limaDate()}&hasta=${limaDate()}`, { cookie: operatorCookie });
+    expect(csv.status).toBe(200);
+    expect(csv.headers.get('content-type')).toContain('text/csv');
+    expect(csv.headers.get('content-disposition')).toContain('attachment');
+    // text() descarta el BOM al decodificar: se revisan los bytes que recibe Excel.
+    const raw = await fetch(`${process.env.INTEGRATION_BASE_URL ?? 'http://127.0.0.1:4321'}/api/admin/export/pedidos?desde=${limaDate()}`, {
+      headers: { Cookie: operatorCookie }
+    });
+    expect([...new Uint8Array(await raw.arrayBuffer()).slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    expect(csv.text).toContain('Pedido,Fecha,Estado,Cliente');
+    expect(csv.text).toContain(`CB-${String(todayRow.number).padStart(6, '0')}`);
+    expect(csv.text).not.toContain(`CB-${String(oldRow.number).padStart(6, '0')}`);
+    expect(csv.text).toContain('2× Espresso Amazonas 250 g (Grano entero)');
+    expect(csv.text).toContain(`"'=HYPERLINK(""http://x"") Cliente"`);
+  });
+
+  it('la lista aplica el rango y cuenta los estados dentro de él', async () => {
+    const page = await api(`/admin/pedidos?desde=${limaDate(1)}`, { cookie: adminCookie });
+    expect(page.status).toBe(200);
+    expect(page.text).toContain('No hay pedidos con estos filtros.');
+    expect(page.text).toMatch(/Todos<span>0<\/span>/);
+  });
+
+  it('exporta compras y movimientos de stock', async () => {
+    await api('/api/admin/purchases', {
+      body: { action: 'create', purchasedOn: limaDate(), supplier: 'Tostaduría Export CI', category: 'tueste', description: 'Tueste lote export', amountCents: 25050 },
+      cookie: operatorCookie
+    });
+    const purchasesCsv = await api(`/api/admin/export/compras?desde=${limaDate()}&hasta=${limaDate()}`, { cookie: adminCookie });
+    expect(purchasesCsv.text).toContain('Tostaduría Export CI');
+    expect(purchasesCsv.text).toContain('250.50');
+
+    const stockCsv = await api(`/api/admin/export/stock?desde=${limaDate()}`, { cookie: adminCookie });
+    expect(stockCsv.status).toBe(200);
+    expect(stockCsv.text).toContain('Fecha,Producto,SKU,Presentación,Motivo');
+  });
+});

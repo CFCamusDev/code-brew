@@ -8,6 +8,7 @@ export const prerender = false;
 
 const [products, movements] = await Promise.all([listProducts(), recentStockMovements()]);
 const canEdit = Astro.locals.admin!.role === 'admin';
+const monthStart = `${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date()).slice(0, 7)}-01`;
 const REASON = { sale: 'Venta', refund: 'Devolución', adjustment: 'Ajuste', purchase: 'Ingreso' } as const;
 const lowStock = products.flatMap(p => p.variants.filter(v => v.active && p.active && v.stock <= 3).map(v => `${p.name} ${v.format} (${v.stock})`));
 ---
@@ -24,7 +25,10 @@ const lowStock = products.flatMap(p => p.variants.filter(v => v.active && p.acti
   <ProductsManager client:load products={products} canEdit={canEdit} />
 
   <section class="admin-card" style="margin-top:20px">
-    <h2>Últimos movimientos de stock</h2>
+    <div class="card-head">
+      <h2>Últimos movimientos de stock</h2>
+      <a class="btn ghost small" href={`/api/admin/export/stock?desde=${monthStart}`}>Exportar movimientos del mes</a>
+    </div>
     <div class="table-wrap">
       <table class="admin-table">
         <thead><tr><th>Fecha</th><th>Producto</th><th>Motivo</th><th class="num">Cambio</th><th class="num">Queda</th><th>Detalle</th></tr></thead>

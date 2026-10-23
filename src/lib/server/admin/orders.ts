@@ -33,10 +33,20 @@ export const REFUNDABLE: OrderStatus[] = ['paid', 'preparing'];
 
 const PAGE_SIZE = 25;
 
-export async function listOrders({ q, status, page }: { q?: string; status?: OrderStatus; page: number }) {
-  const db = getDb();
+export interface OrderFilters {
+  q?: string;
+  status?: OrderStatus;
+  /** Fechas YYYY-MM-DD en hora de Lima, inclusivas, sobre la fecha de creación del pedido. */
+  from?: string;
+  to?: string;
+}
+
+/** Filtros comunes de la lista y de la exportación. Sin `status` se usa para contar por estado. */
+export function orderConditions({ q, status, from, to }: OrderFilters) {
   const filters: SQL[] = [];
   if (status) filters.push(eq(orders.status, status));
+  if (from) filters.push(sql`(${orders.createdAt} at time zone 'America/Lima')::date >= ${from}::date`);
+  if (to) filters.push(sql`(${orders.createdAt} at time zone 'America/Lima')::date <= ${to}::date`);
   if (q) {
     const number = Number(q.replace(/^CB-?/i, ''));
     const like = `%${q.replace(/[%_\\]/g, '\\$&')}%`;
@@ -49,7 +59,12 @@ export async function listOrders({ q, status, page }: { q?: string; status?: Ord
       )!
     );
   }
-  const where = filters.length ? and(...filters) : undefined;
+  return filters.length ? and(...filters) : undefined;
+}
+
+export async function listOrders({ page, ...filters }: OrderFilters & { page: number }) {
+  const db = getDb();
+  const where = orderConditions(filters);
 
   const [rows, [{ total }], byStatus] = await Promise.all([
     db
@@ -72,7 +87,8 @@ export async function listOrders({ q, status, page }: { q?: string; status?: Ord
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE),
     db.select({ total: count() }).from(orders).where(where),
-    db.select({ status: orders.status, total: count() }).from(orders).groupBy(orders.status)
+    // Conteo por estado dentro del mismo rango de fechas y búsqueda.
+    db.select({ status: orders.status, total: count() }).from(orders).where(orderConditions({ ...filters, status: undefined })).groupBy(orders.status)
   ]);
 
   return {

@@ -1,0 +1,44 @@
+import type { APIRoute } from 'astro';
+import { csvResponse } from '../../../../lib/server/csv';
+import { exportOrders, exportPurchases, exportStockMovements } from '../../../../lib/server/admin/exports';
+import { STATUS_LABEL, type OrderStatus } from '../../../../lib/server/admin/orders';
+
+export const prerender = false;
+
+const isDate = (value: string | null): value is string => !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+
+/** GET /api/admin/export/{pedidos|compras|stock}?desde=YYYY-MM-DD&hasta=YYYY-MM-DD[&estado=…&q=…] */
+export const GET: APIRoute = async ({ params, url, locals }) => {
+  const from = url.searchParams.get('desde');
+  const to = url.searchParams.get('hasta');
+  if ((from && !isDate(from)) || (to && !isDate(to))) {
+    return Response.json({ error: 'Usa fechas con formato AAAA-MM-DD.' }, { status: 400 });
+  }
+  const range = { from: from ?? undefined, to: to ?? undefined };
+  const suffix = [from, to].filter(Boolean).join('_a_') || 'todo';
+
+  let csv: string;
+  switch (params.tipo) {
+    case 'pedidos': {
+      const status = url.searchParams.get('estado');
+      csv = await exportOrders({
+        ...range,
+        status: status && status in STATUS_LABEL ? (status as OrderStatus) : undefined,
+        q: url.searchParams.get('q')?.trim().slice(0, 100) || undefined
+      });
+      break;
+    }
+    case 'compras':
+      csv = await exportPurchases(range.from, range.to);
+      break;
+    case 'stock':
+      csv = await exportStockMovements(range.from, range.to);
+      break;
+    default:
+      return Response.json({ error: 'Exportación desconocida.' }, { status: 404 });
+  }
+
+  // Registro de quién descargó datos (los pedidos incluyen datos personales de clientes).
+  console.info(`[export] ${locals.admin!.email} descargó ${params.tipo} (${suffix})`);
+  return csvResponse(csv, `codebrew-${params.tipo}-${suffix}.csv`);
+};

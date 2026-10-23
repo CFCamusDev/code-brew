@@ -10,7 +10,15 @@ const q = params.get('q')?.trim().slice(0, 100) || undefined;
 const statusParam = params.get('estado');
 const status = statusParam && statusParam in STATUS_LABEL ? (statusParam as OrderStatus) : undefined;
 const page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
-const { rows, total, pages, byStatus } = await listOrders({ q, status, page });
+const dateParam = (key: string) => {
+  const value = params.get(key);
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+};
+const from = dateParam('desde');
+const to = dateParam('hasta');
+const { rows, total, pages, byStatus } = await listOrders({ q, status, from, to, page });
+const exportQuery = new URLSearchParams(Object.entries({ estado: status, q, desde: from, hasta: to }).filter((entry): entry is [string, string] => Boolean(entry[1])));
+const rangeLabel = from && to ? `del ${from} al ${to}` : from ? `desde ${from}` : to ? `hasta ${to}` : '';
 
 const link = (changes: Record<string, string | undefined>) => {
   const next = new URLSearchParams(params);
@@ -27,12 +35,16 @@ const selectable = status === 'paid' || status === 'preparing';
   <div class="admin-head">
     <div>
       <h1>Pedidos</h1>
-      <p>{total} {total === 1 ? 'pedido' : 'pedidos'}{status ? ` · ${STATUS_LABEL[status]}` : ''}{q ? ` · “${q}”` : ''}</p>
+      <p>{total} {total === 1 ? 'pedido' : 'pedidos'}{status ? ` · ${STATUS_LABEL[status]}` : ''}{q ? ` · “${q}”` : ''}{rangeLabel && ` · ${rangeLabel}`}</p>
     </div>
     <form class="filters" method="get" action="/admin/pedidos">
       {status && <input type="hidden" name="estado" value={status} />}
       <input type="search" name="q" value={q} placeholder="N.º, nombre, correo o celular" aria-label="Buscar pedidos" />
-      <button class="btn ghost" type="submit">Buscar</button>
+      <label class="date-field">Desde<input type="date" name="desde" value={from} /></label>
+      <label class="date-field">Hasta<input type="date" name="hasta" value={to} /></label>
+      <button class="btn ghost" type="submit">Filtrar</button>
+      {(from || to || q) && <a class="btn ghost" href={status ? `/admin/pedidos?estado=${status}` : '/admin/pedidos'}>Limpiar</a>}
+      <a class="btn" href={`/api/admin/export/pedidos?${exportQuery}`}>Exportar CSV</a>
     </form>
   </div>
 
