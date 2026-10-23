@@ -327,3 +327,33 @@ describe('filtro por fechas y exportación', () => {
     expect(stockCsv.text).toContain('Fecha,Producto,SKU,Presentación,Motivo');
   });
 });
+
+describe('clientes', () => {
+  it('agrupa por correo sin importar mayúsculas y suma solo pedidos pagados', async () => {
+    const email = `cliente-${randomUUID().slice(0, 8)}@codebrew.test`;
+    const order = (mail: string, quantity: number) =>
+      api('/api/orders', { body: { items: [{ sku: 'pack-developer', grind: 'Ambos en grano', quantity }], customer: { ...customer, name: 'Rosa Fiel', email: mail } } });
+    const a = await order(email, 1);
+    const b = await order(email.toUpperCase(), 2);
+    await order(email, 1); // queda pendiente: no cuenta como compra
+    const sql = db();
+    const paid = await sql`update orders set status = 'paid', paid_at = now() where id in (${a.json.id}, ${b.json.id}) returning total_cents`;
+    await sql.end();
+    const expected = paid.reduce((sum, row) => sum + row.total_cents, 0);
+
+    const list = await api(`/admin/clientes?q=${encodeURIComponent(email)}`, { cookie: operatorCookie });
+    expect(list.status).toBe(200);
+    expect(list.text.match(/class="row-link"/g)).toHaveLength(1);
+    expect(list.text).toContain('Rosa Fiel');
+
+    const detail = await api(`/admin/clientes/${encodeURIComponent(email)}`, { cookie: operatorCookie });
+    expect(detail.status).toBe(200);
+    expect(detail.text).toMatch(/data-kpi="paidOrders" data-value="2"/);
+    expect(detail.text).toContain(`data-kpi="totalCents" data-value="${expected}"`);
+    expect(detail.text).toContain('Pack Developer · 2 × 250 g');
+  });
+
+  it('responde 404 a un cliente que no existe', async () => {
+    expect((await api('/admin/clientes/nadie%40codebrew.test', { cookie: adminCookie })).status).toBe(404);
+  });
+});

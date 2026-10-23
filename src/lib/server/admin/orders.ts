@@ -28,6 +28,9 @@ export const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   refunded: []
 };
 
+/** Estados que cuentan como venta: se cobró y no se devolvió. */
+export const SOLD_STATUSES = ['paid', 'preparing', 'shipped', 'delivered'] as const satisfies readonly OrderStatus[];
+
 /** Estados desde los que se puede reembolsar (antes de despachar). */
 export const REFUNDABLE: OrderStatus[] = ['paid', 'preparing'];
 

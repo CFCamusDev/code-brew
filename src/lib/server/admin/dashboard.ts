@@ -1,9 +1,8 @@
 import { and, asc, eq, inArray, lte, sql } from 'drizzle-orm';
 import { getDb } from '../db';
 import { orders, products, productVariants } from '../db/schema';
+import { SOLD_STATUSES } from './orders';
 
-/** Estados que cuentan como venta: se cobró y no se devolvió. */
-const SOLD = ['paid', 'preparing', 'shipped', 'delivered'] as const;
 export const LOW_STOCK_THRESHOLD = 3;
 const ABANDONED_AFTER_HOURS = 24;
 
@@ -23,7 +22,7 @@ export async function getDashboardSummary() {
         monthOrders: sql<number>`count(*) filter (where ${paidDayLima} >= date_trunc('month', ${limaToday}))::int`
       })
       .from(orders)
-      .where(and(inArray(orders.status, [...SOLD]), sql`${orders.paidAt} is not null`)),
+      .where(and(inArray(orders.status, [...SOLD_STATUSES]), sql`${orders.paidAt} is not null`)),
     db
       .select({
         toPrepare: sql<number>`count(*) filter (where ${orders.status} = 'paid')::int`,

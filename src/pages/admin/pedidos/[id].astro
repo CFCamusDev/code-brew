@@ -62,7 +62,7 @@ const DISPATCHABLE = ['paid', 'preparing', 'shipped'];
         <h2>Cliente y entrega</h2>
         <dl class="kv">
           <dt>Nombre</dt><dd>{order.customerName}</dd>
-          <dt>Correo</dt><dd><a href={`mailto:${order.customerEmail}`}>{order.customerEmail}</a></dd>
+          <dt>Correo</dt><dd><a href={`mailto:${order.customerEmail}`}>{order.customerEmail}</a> · <a href={`/admin/clientes/${encodeURIComponent(order.customerEmail.toLowerCase())}`}>ver cliente</a></dd>
           <dt>Celular</dt><dd><a href={whatsapp} target="_blank" rel="noopener noreferrer">{order.customerPhone} (WhatsApp)</a></dd>
           {order.customerDocument && <><dt>Documento</dt><dd>{order.customerDocument}</dd></>}
           <dt>Dirección</dt><dd>{order.shippingAddress}, {order.shippingDistrict}, {order.shippingCity}, {order.shippingRegion}</dd>
