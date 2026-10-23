@@ -27,6 +27,7 @@ export function mountWorlds() {
     const remember = <T extends THREE.BufferGeometry | THREE.Material | THREE.Texture>(value: T): T => { resources.add(value); return value; };
     const cream = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .82, metalness: .02 }));
     const green = remember(new THREE.MeshStandardMaterial({ color: '#214d39', roughness: .7 }));
+    const valveMaterial = remember(new THREE.MeshStandardMaterial({ color: '#b7ae93', roughness: .75, metalness: .04 }));
     const beanMaterials = ['#ffffff', '#d9b89b', '#bda18b'].map(color => remember(
         new THREE.MeshStandardMaterial({ color, vertexColors: true, roughness: .64, metalness: 0 })
     ));
@@ -80,10 +81,33 @@ export function mountWorlds() {
         x.fillStyle = '#213e31';
         x.font = 'bold 86px Georgia';
         x.fillText('codebrew', 384, 340);
+        x.font = '28px Georgia';
+        x.fillText('®', 384 + x.measureText('codebrew').width / 2 + 16, 310);
         x.font = '19px sans-serif';
         x.fillText('C O F F E E  F O R  D E V E L O P E R S', 384, 390);
+        // Válvula de desgasificación: anillo gris embebido en el papel, con punto central.
+        x.save();
+        x.fillStyle = '#00000014';
+        x.beginPath();
+        x.arc(384, 452, 30, 0, Math.PI * 2);
+        x.fill();
+        x.strokeStyle = '#21302722';
+        x.lineWidth = 3;
+        x.beginPath();
+        x.arc(384, 452, 24, 0, Math.PI * 2);
+        x.stroke();
+        x.fillStyle = '#21302735';
+        x.beginPath();
+        x.arc(384, 452, 4.5, 0, Math.PI * 2);
+        x.fill();
+        x.restore();
+        const labelX = 58, labelY = 515, labelW = 652, labelH = 500, labelR = 28;
+        x.save();
+        x.beginPath();
+        x.roundRect(labelX, labelY, labelW, labelH, labelR);
+        x.clip();
         x.fillStyle = color;
-        x.fillRect(58, 515, 652, 500);
+        x.fillRect(labelX, labelY, labelW, labelH);
         x.strokeStyle = '#e6e2bc35';
         x.lineWidth = 1.5;
         for (let j = 0; j < 13; j++) {
@@ -94,6 +118,7 @@ export function mountWorlds() {
             }
             x.stroke();
         }
+        x.restore();
         x.fillStyle = '#f5efdb';
         x.font = `${label.length > 9 ? 65 : 78}px Georgia`;
         x.fillText(label, 384, 730);
@@ -285,9 +310,10 @@ export function mountWorlds() {
             seal.position.set(0, 1.49 + i * .055, .17);
             group.add(seal);
         }
-        const valve = new THREE.Mesh(valveGeometry, cream);
+        // Alineada con el anillo impreso en la textura frontal (misma posición que el círculo dibujado en packageTexture).
+        const valve = new THREE.Mesh(valveGeometry, valveMaterial);
         valve.rotation.x = Math.PI / 2;
-        valve.position.set(.45, 1.03, .33);
+        valve.position.set(0, .38, .345);
         if (!hotfix) group.add(valve);
         return group;
     }
