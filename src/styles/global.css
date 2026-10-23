@@ -1538,6 +1538,34 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 .world-ready .world-fallback {
   opacity:0;
 }
+.hero-package-preview {
+  width:44%;
+  height:auto;
+  aspect-ratio:13 / 20;
+  left:28%;
+  top:50%;
+  transform:translateY(-50%) perspective(900px) rotateY(-16deg);
+  transform-style:preserve-3d;
+  transition:opacity .2s;
+}
+.hero-package-preview img {
+  width:100%;
+  height:100%;
+  border-radius:7px;
+  position:relative;
+  z-index:1;
+}
+.hero-package-preview .preview-side {
+  position:absolute;
+  top:0;
+  left:100%;
+  width:25%;
+  height:100%;
+  background:#1d2822 url('/assets/brand/hotfix-side.webp') center / 100% 100%;
+  transform-origin:left;
+  transform:rotateY(90deg);
+  border-radius:0 6px 6px 0;
+}
 .world-coordinate,.world-note {
   position:absolute;
   font:9px/1.7 monospace;
@@ -1611,8 +1639,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   padding-bottom:20px;
 }
 .immersive-hero .world-stage {
-  height:610px;
+  height:740px;
   min-height:520px;
+}
+@media(min-width:761px){
+  .hero.immersive-hero {
+    grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+    padding-right:3%;
+  }
 }
 .immersive-hero .hero-bottom {
   margin-top:0;
@@ -2073,7 +2107,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
     height:510px
   }
   .immersive-hero .world-stage{
-    height:540px
+    height:640px
   }
 }
 @media(max-width:760px){
