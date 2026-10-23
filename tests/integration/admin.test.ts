@@ -62,11 +62,11 @@ describe('acceso al panel', () => {
 
   it('no permite redirigir a otros sitios después del login', async () => {
     const page = await api('/admin/login?next=//evil.example', { cookie: adminCookie });
-    expect(page.headers.get('location')).toBe('/admin/pedidos');
+    expect(page.headers.get('location')).toBe('/admin');
   });
 
   it('el operador no entra a usuarios', async () => {
-    expect((await api('/admin/usuarios', { cookie: operatorCookie })).headers.get('location')).toBe('/admin/pedidos');
+    expect((await api('/admin/usuarios', { cookie: operatorCookie })).headers.get('location')).toBe('/admin');
   });
 });
 
@@ -190,5 +190,52 @@ describe('envíos, compras y usuarios', () => {
       cookie: operatorCookie
     });
     expect(response.status).toBe(403);
+  });
+});
+
+describe('inicio del panel', () => {
+  const kpis = async (cookie: string) => {
+    const { status, text } = await api('/admin', { cookie });
+    expect(status).toBe(200);
+    return Object.fromEntries([...text.matchAll(/data-kpi="(\w+)" data-value="(\d+)"/g)].map(([, key, value]) => [key, Number(value)]));
+  };
+
+  it('una venta pagada hoy suma a ventas del día, del mes y a “por preparar”', async () => {
+    const before = await kpis(operatorCookie);
+    const id = await paidOrder();
+    const sql = db();
+    const [order] = await sql`select total_cents from orders where id = ${id}`;
+    await sql.end();
+    const after = await kpis(operatorCookie);
+
+    expect(after.todayOrders).toBe(before.todayOrders + 1);
+    expect(after.todayCents).toBe(before.todayCents + order.total_cents);
+    expect(after.monthOrders).toBe(before.monthOrders + 1);
+    expect(after.toPrepare).toBe(before.toPrepare + 1);
+  });
+
+  it('cuenta pedidos sin pagar de más de 24 h y no cuenta los reembolsados como venta', async () => {
+    const before = await kpis(adminCookie);
+    const created = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const refunded = await paidOrder();
+    const sql = db();
+    try {
+      await sql`update orders set created_at = now() - interval '25 hours' where id = ${created.json.id}`;
+      await sql`update orders set status = 'refunded' where id = ${refunded}`;
+    } finally {
+      await sql.end();
+    }
+    const after = await kpis(adminCookie);
+    expect(after.abandoned).toBe(before.abandoned + 1);
+    expect(after.todayOrders).toBe(before.todayOrders);
+  });
+
+  it('lista el stock bajo', async () => {
+    const sql = db();
+    await sql`update product_variants set stock = 0 where sku = 'microlote-temporada'`;
+    await sql.end();
+    const { text } = await api('/admin', { cookie: adminCookie });
+    expect(text).toContain('Microlote de Temporada · 250 g');
+    expect(text).toContain('Agotado');
   });
 });

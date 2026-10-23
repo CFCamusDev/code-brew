@@ -11,6 +11,7 @@ const admin = Astro.locals.admin;
 const path = Astro.url.pathname;
 
 const nav = [
+  { href: '/admin', label: 'Inicio', exact: true },
   { href: '/admin/pedidos', label: 'Pedidos' },
   { href: '/admin/productos', label: 'Productos y stock' },
   { href: '/admin/envios', label: 'Envíos' },
@@ -36,10 +37,10 @@ const nav = [
     {admin ? (
       <div class="admin-shell">
         <aside class="admin-sidebar">
-          <a class="admin-brand" href="/admin/pedidos"><LogoMark size={26} />codebrew <small>panel</small></a>
+          <a class="admin-brand" href="/admin"><LogoMark size={26} />codebrew <small>panel</small></a>
           <nav aria-label="Panel">
             {nav.map(item => (
-              <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>
+              <a href={item.href} aria-current={(item.exact ? path === item.href : path.startsWith(item.href)) ? 'page' : undefined}>{item.label}</a>
             ))}
           </nav>
           <div class="admin-user">
