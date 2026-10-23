@@ -1,0 +1,19 @@
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "Tipos, pruebas unitarias y build",
+      "Pruebas de integración (PostgreSQL)",
+      "Imagen Docker"
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true
+  },
+  "restrictions": null,
+  "required_conversation_resolution": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}

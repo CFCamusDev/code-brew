@@ -1,0 +1,67 @@
+---
+import '../styles/global.css';
+import '../styles/admin.css';
+import LogoMark from '../components/LogoMark.astro';
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+const admin = Astro.locals.admin;
+const path = Astro.url.pathname;
+
+const nav = [
+  { href: '/admin', label: 'Inicio', exact: true },
+  { href: '/admin/pedidos', label: 'Pedidos' },
+  { href: '/admin/clientes', label: 'Clientes' },
+  { href: '/admin/productos', label: 'Productos y stock' },
+  { href: '/admin/envios', label: 'Envíos' },
+  { href: '/admin/compras', label: 'Compras y gastos' },
+  ...(admin?.role === 'admin' ? [{ href: '/admin/usuarios', label: 'Usuarios' }] : []),
+  { href: '/admin/cuenta', label: 'Mi cuenta' }
+];
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#203c32" />
+    <title>{title} · Panel CodeBrew</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body class="admin-body">
+    {admin ? (
+      <div class="admin-shell">
+        <aside class="admin-sidebar">
+          <a class="admin-brand" href="/admin"><LogoMark size={26} />codebrew <small>panel</small></a>
+          <nav aria-label="Panel">
+            {nav.map(item => (
+              <a href={item.href} aria-current={(item.exact ? path === item.href : path.startsWith(item.href)) ? 'page' : undefined}>{item.label}</a>
+            ))}
+          </nav>
+          <div class="admin-user">
+            <span>{admin.name}</span>
+            <small>{admin.role === 'admin' ? 'Administrador' : 'Operador'}</small>
+            <button type="button" id="admin-logout">Cerrar sesión</button>
+          </div>
+        </aside>
+        <main class="admin-main" id="main-content">
+          <slot />
+        </main>
+      </div>
+    ) : (
+      <main class="admin-login-wrap"><slot /></main>
+    )}
+    <script>
+      document.getElementById('admin-logout')?.addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        window.location.assign('/admin/login');
+      });
+    </script>
+  </body>
+</html>

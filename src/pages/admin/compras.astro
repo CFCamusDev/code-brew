@@ -1,0 +1,50 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import PurchasesManager from '../../components/admin/PurchasesManager';
+import { CATEGORY_LABEL, listPurchases } from '../../lib/server/admin/purchases';
+import { formatPEN } from '../../lib/shop/format';
+
+export const prerender = false;
+
+// Fechas en hora de Lima.
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date());
+const param = Astro.url.searchParams.get('mes');
+const month = param && /^\d{4}-(0[1-9]|1[0-2])$/.test(param) ? param : today.slice(0, 7);
+const { rows, byCategory, totalCents } = await listPurchases(month);
+
+const shift = (delta: number) => {
+  const [year, m] = month.split('-').map(Number);
+  const date = new Date(Date.UTC(year, m - 1 + delta, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+};
+const lastDay = (() => {
+  const [year, m] = month.split('-').map(Number);
+  return `${month}-${String(new Date(Date.UTC(year, m, 0)).getUTCDate()).padStart(2, '0')}`;
+})();
+const monthLabel = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}-01T00:00:00Z`));
+---
+<AdminLayout title="Compras y gastos">
+  <div class="admin-head">
+    <div>
+      <h1>Compras y gastos</h1>
+      <p>Café verde, tueste, empaques, envíos y demás costos. Se usarán para calcular el margen en el dashboard.</p>
+    </div>
+    <nav class="actions" aria-label="Mes">
+      <a class="btn ghost small" href={`/admin/compras?mes=${shift(-1)}`}>←</a>
+      <span class="btn ghost small" style="pointer-events:none;text-transform:capitalize">{monthLabel}</span>
+      <a class="btn ghost small" href={`/admin/compras?mes=${shift(1)}`}>→</a>
+      <a class="btn small" href={`/api/admin/export/compras?desde=${month}-01&hasta=${lastDay}`}>Exportar mes</a>
+    </nav>
+  </div>
+
+  <section class="admin-card" style="margin-bottom:20px">
+    <h2>Total del mes: {formatPEN(totalCents)}</h2>
+    {byCategory.length > 0 ? (
+      <dl class="kv">
+        {byCategory.map(row => <><dt>{CATEGORY_LABEL[row.category]}</dt><dd>{formatPEN(row.total)}</dd></>)}
+      </dl>
+    ) : <p class="muted">Sin gastos registrados.</p>}
+  </section>
+
+  <PurchasesManager client:load rows={rows} categories={CATEGORY_LABEL} canDelete={Astro.locals.admin!.role === 'admin'} today={today} />
+</AdminLayout>

@@ -1,0 +1,28 @@
+name: Tareas programadas
+
+# Cada hora: cancela los pedidos sin pagar con más de 48 h en producción.
+# Necesita el secreto CRON_SECRET (el mismo valor que la variable CRON_SECRET de la stack).
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pedidos-abandonados:
+    name: Cancelar pedidos abandonados
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar a la tarea
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://coffeecodebrew.com' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::warning::Falta el secreto CRON_SECRET; no se ejecutó la tarea."
+            exit 0
+          fi
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/cron/pedidos-abandonados"

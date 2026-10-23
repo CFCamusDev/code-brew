@@ -1,0 +1,20 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import UsersManager from '../../components/admin/UsersManager';
+import { listUsers } from '../../lib/server/admin/users';
+
+export const prerender = false;
+
+const admin = Astro.locals.admin!;
+if (admin.role !== 'admin') return Astro.redirect('/admin');
+const users = await listUsers();
+---
+<AdminLayout title="Usuarios">
+  <div class="admin-head">
+    <div>
+      <h1>Usuarios del panel</h1>
+      <p>Operadores atienden pedidos, stock y compras. Administradores además cambian precios, envíos, reembolsan y gestionan usuarios.</p>
+    </div>
+  </div>
+  <UsersManager client:load users={users} selfId={admin.id} />
+</AdminLayout>

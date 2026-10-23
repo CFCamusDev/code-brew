@@ -1,0 +1,119 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listOrders, STATUS_LABEL, type OrderStatus } from '../../../lib/server/admin/orders';
+import { formatDateTime, formatOrderNumber, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const params = Astro.url.searchParams;
+const q = params.get('q')?.trim().slice(0, 100) || undefined;
+const statusParam = params.get('estado');
+const status = statusParam && statusParam in STATUS_LABEL ? (statusParam as OrderStatus) : undefined;
+const page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
+const dateParam = (key: string) => {
+  const value = params.get(key);
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+};
+const from = dateParam('desde');
+const to = dateParam('hasta');
+const { rows, total, pages, byStatus } = await listOrders({ q, status, from, to, page });
+const exportQuery = new URLSearchParams(Object.entries({ estado: status, q, desde: from, hasta: to }).filter((entry): entry is [string, string] => Boolean(entry[1])));
+const rangeLabel = from && to ? `del ${from} al ${to}` : from ? `desde ${from}` : to ? `hasta ${to}` : '';
+
+const link = (changes: Record<string, string | undefined>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(changes)) value ? next.set(key, value) : next.delete(key);
+  if (!('pagina' in changes)) next.delete('pagina');
+  const query = next.toString();
+  return `/admin/pedidos${query ? `?${query}` : ''}`;
+};
+const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+// En las colas de armado se pueden marcar pedidos para imprimir sus hojas de despacho en lote.
+const selectable = status === 'paid' || status === 'preparing';
+---
+<AdminLayout title="Pedidos">
+  <div class="admin-head">
+    <div>
+      <h1>Pedidos</h1>
+      <p>{total} {total === 1 ? 'pedido' : 'pedidos'}{status ? ` · ${STATUS_LABEL[status]}` : ''}{q ? ` · “${q}”` : ''}{rangeLabel && ` · ${rangeLabel}`}</p>
+    </div>
+    <form class="filters" method="get" action="/admin/pedidos">
+      {status && <input type="hidden" name="estado" value={status} />}
+      <input type="search" name="q" value={q} placeholder="N.º, nombre, correo o celular" aria-label="Buscar pedidos" />
+      <label class="date-field">Desde<input type="date" name="desde" value={from} /></label>
+      <label class="date-field">Hasta<input type="date" name="hasta" value={to} /></label>
+      <button class="btn ghost" type="submit">Filtrar</button>
+      {(from || to || q) && <a class="btn ghost" href={status ? `/admin/pedidos?estado=${status}` : '/admin/pedidos'}>Limpiar</a>}
+      <a class="btn" href={`/api/admin/export/pedidos?${exportQuery}`}>Exportar CSV</a>
+    </form>
+  </div>
+
+  <nav class="status-tabs" aria-label="Filtrar por estado">
+    <a href={link({ estado: undefined })} aria-current={!status ? 'true' : undefined}>Todos<span>{allCount}</span></a>
+    {(Object.keys(STATUS_LABEL) as OrderStatus[]).map(key => (
+      <a href={link({ estado: key })} aria-current={status === key ? 'true' : undefined}>{STATUS_LABEL[key]}<span>{byStatus[key] ?? 0}</span></a>
+    ))}
+  </nav>
+
+  {selectable && rows.length > 0 && (
+    <div class="bulk-bar">
+      <span id="selected-count">Ningún pedido seleccionado</span>
+      <a class="btn small" id="print-selected" href="/admin/despacho" aria-disabled="true">Imprimir hojas de despacho</a>
+    </div>
+  )}
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>{selectable && <th><input type="checkbox" id="select-all" aria-label="Seleccionar todos" /></th>}<th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Destino</th><th class="num">Total</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {rows.length === 0 && <tr><td class="empty-row" colspan={selectable ? 7 : 6}>No hay pedidos con estos filtros.</td></tr>}
+        {rows.map(order => (
+          <tr>
+            {selectable && <td><input type="checkbox" class="select-order" value={order.id} aria-label={`Seleccionar ${formatOrderNumber(order.number)}`} /></td>}
+            <td><a class="row-link" href={`/admin/pedidos/${order.id}`}>{formatOrderNumber(order.number)}</a></td>
+            <td>{formatDateTime(order.createdAt)}</td>
+            <td>{order.customerName}<br /><small class="muted">{order.customerPhone}</small></td>
+            <td>{order.shippingRegion}<br /><small class="muted">{order.shippingZoneName}</small></td>
+            <td class="num">{formatPEN(order.totalCents)}</td>
+            <td>
+              <span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+              {order.stockShortage && <span class="badge warn" title="Pagado sin stock suficiente">Stock</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {pages > 1 && (
+    <nav class="pagination" aria-label="Páginas">
+      {page > 1 && <a class="btn ghost small" href={link({ pagina: String(page - 1) })}>← Anterior</a>}
+      <span>Página {page} de {pages}</span>
+      {page < pages && <a class="btn ghost small" href={link({ pagina: String(page + 1) })}>Siguiente →</a>}
+    </nav>
+  )}
+</AdminLayout>
+<script>
+  const boxes = [...document.querySelectorAll<HTMLInputElement>('.select-order')];
+  const all = document.getElementById('select-all') as HTMLInputElement | null;
+  const link = document.getElementById('print-selected') as HTMLAnchorElement | null;
+  const label = document.getElementById('selected-count');
+  const refresh = () => {
+    const ids = boxes.filter(box => box.checked).map(box => box.value);
+    if (link) {
+      link.href = `/admin/despacho?ids=${ids.join(',')}`;
+      link.setAttribute('aria-disabled', String(ids.length === 0));
+    }
+    if (label) label.textContent = ids.length ? `${ids.length} ${ids.length === 1 ? 'pedido seleccionado' : 'pedidos seleccionados'}` : 'Ningún pedido seleccionado';
+    if (all) all.checked = ids.length > 0 && ids.length === boxes.length;
+  };
+  boxes.forEach(box => box.addEventListener('change', refresh));
+  all?.addEventListener('change', () => {
+    boxes.forEach(box => (box.checked = all.checked));
+    refresh();
+  });
+  link?.addEventListener('click', event => {
+    if (link.getAttribute('aria-disabled') === 'true') event.preventDefault();
+  });
+</script>

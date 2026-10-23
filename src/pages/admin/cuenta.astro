@@ -1,0 +1,46 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { MIN_PASSWORD_LENGTH } from '../../../scripts/lib/password.mjs';
+
+export const prerender = false;
+const admin = Astro.locals.admin!;
+---
+<AdminLayout title="Mi cuenta">
+  <div class="admin-head">
+    <div>
+      <h1>Mi cuenta</h1>
+      <p>{admin.name} · {admin.email}</p>
+    </div>
+  </div>
+  <section class="admin-card" style="max-width:460px">
+    <h2>Cambiar contraseña</h2>
+    <form class="admin-form" id="password-form" novalidate>
+      <label>Contraseña actual<input name="current" type="password" autocomplete="current-password" required /></label>
+      <label>Nueva contraseña<input name="next" type="password" autocomplete="new-password" minlength={MIN_PASSWORD_LENGTH} required /></label>
+      <p class="muted">Mínimo {MIN_PASSWORD_LENGTH} caracteres. Se cerrarán tus sesiones en otros dispositivos.</p>
+      <p class="form-error" id="password-error" role="alert"></p>
+      <p class="form-ok" id="password-ok" role="status"></p>
+      <div class="actions"><button class="btn" type="submit">Guardar</button></div>
+    </form>
+  </section>
+</AdminLayout>
+<script>
+  const form = document.getElementById('password-form') as HTMLFormElement;
+  const error = document.getElementById('password-error')!;
+  const ok = document.getElementById('password-ok')!;
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    error.textContent = ok.textContent = '';
+    const response = await fetch('/api/admin/account/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    }).catch(() => null);
+    if (response?.ok) {
+      ok.textContent = 'Contraseña actualizada.';
+      form.reset();
+    } else {
+      error.textContent = (await response?.json().catch(() => ({})))?.error ?? 'No se pudo actualizar.';
+    }
+  });
+</script>

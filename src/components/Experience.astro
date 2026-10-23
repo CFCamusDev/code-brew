@@ -1,0 +1,47 @@
+<div class="reading-progress" aria-hidden="true"><i></i></div>
+<button class="motion-toggle" type="button" aria-pressed="false" aria-label="Pausar animaciones">Ⅱ <span>Pausar movimiento</span></button>
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const button = document.querySelector<HTMLButtonElement>('.motion-toggle')!;
+  let paused = false;
+  function setupMotion(intro = false) {
+    const context = gsap.matchMedia();
+    context.add('(prefers-reduced-motion: no-preference)', () => {
+      if (intro) gsap.timeline().from('.hero-copy > *', { y:25, opacity:0, stagger:.09, duration:.85, ease:'power3.out' }).from('.world-hero', { opacity:0, duration:1 }, .1);
+      gsap.to('.chapter-track i', { scaleX:1, ease:'none', scrollTrigger:{ trigger:'.hero-chapter', start:'top top', end:'bottom bottom', scrub:true } });
+      gsap.to('.hero-asterisk', { rotation:18, y:-12, ease:'none', scrollTrigger:{ trigger:'.hero-chapter', start:'top top', end:'bottom top', scrub:1 } });
+      document.querySelectorAll('[data-reveal],.origin-copy,.ritual-steps article,.faq-list details,.closing h2').forEach(el => {
+        if (!intro && el.getBoundingClientRect().top < innerHeight) return;
+        gsap.from(el, { y:28, opacity:0, duration:.8, ease:'power2.out', scrollTrigger:{ trigger:el, start:'top 92%', once:true } });
+      });
+      gsap.to('.manifesto-code', { xPercent:5, ease:'none', scrollTrigger:{ trigger:'.manifesto', start:'top bottom', end:'bottom top', scrub:1 } });
+    });
+    return context;
+  }
+  let context = setupMotion(true);
+  const updateProgress = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    document.querySelector<HTMLElement>('.reading-progress i')!.style.transform = `scaleX(${max > 0 ? scrollY/max : 0})`;
+  };
+  window.addEventListener('scroll', updateProgress, {passive:true});
+  updateProgress();
+  import('../scripts/worlds').then(({mountWorlds}) => mountWorlds()).catch((error) => {
+    console.error('[CodeBrew] No se pudo iniciar la escena 3D', error);
+    // The transparent product remains visible if the 3D module cannot load.
+  });
+  button.addEventListener('click', () => {
+    paused = !paused;
+    button.setAttribute('aria-pressed', String(paused));
+    button.setAttribute('aria-label', paused ? 'Activar animaciones' : 'Pausar animaciones');
+    button.innerHTML = paused ? '▶ <span>Activar movimiento</span>' : 'Ⅱ <span>Pausar movimiento</span>';
+    document.documentElement.classList.toggle('motion-paused', paused);
+    if (paused) context.revert(); else context = setupMotion();
+    window.dispatchEvent(new Event('codebrew:motion'));
+  });
+  const syncPreference = () => { button.hidden = reduced.matches; };
+  reduced.addEventListener('change', syncPreference);
+  syncPreference();
+</script>

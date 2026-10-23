@@ -1,0 +1,56 @@
+name: Deploy
+
+# Despliega solo cuando el CI de un push a main terminó bien (después de fusionar un PR aprobado).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Redesplegar en Portainer
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # En Settings > Environments > production se pueden exigir aprobadores antes de desplegar.
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL || 'https://coffeecodebrew.com' }}
+    steps:
+      - name: Avisar a Portainer
+        env:
+          PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+        run: |
+          if [ -z "$PORTAINER_WEBHOOK_URL" ]; then
+            echo "::warning::Falta el secreto PORTAINER_WEBHOOK_URL; no se desplegó nada."
+            exit 0
+          fi
+          curl -fsS -X POST "$PORTAINER_WEBHOOK_URL"
+
+      - name: Verificar que el sitio responde
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://coffeecodebrew.com' }}
+          PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+        run: |
+          [ -z "$PORTAINER_WEBHOOK_URL" ] && exit 0
+          # Portainer reconstruye la imagen y aplica migraciones al arrancar: puede tardar unos minutos.
+          for i in $(seq 1 30); do
+            if curl -fs "$SITE_URL/api/health" | grep -q '"database":"ok"'; then
+              echo "Sitio y base de datos responden en $SITE_URL"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$SITE_URL/api/health no respondió OK tras el despliegue"
+          exit 1

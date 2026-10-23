@@ -1,0 +1,89 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ShopHeader from '../../components/shop/ShopHeader.astro';
+import { getOrder, isOrderId } from '../../lib/server/shop';
+import { formatOrderNumber, formatPEN } from '../../lib/shop/format';
+import { getWhatsAppUrl } from '../../data/config';
+import { culqiEnabled } from '../../lib/server/culqi';
+import PayButton from '../../components/shop/PayButton';
+import '../../styles/shop.css';
+
+export const prerender = false;
+
+const STATUS_LABEL = {
+  pending: 'Pendiente de pago',
+  paid: 'Pagado',
+  preparing: 'En preparación',
+  shipped: 'Enviado',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
+  refunded: 'Reembolsado'
+} as const;
+
+const { id } = Astro.params;
+const order = isOrderId(id) ? await getOrder(id) : undefined;
+if (!order) return new Response('Pedido no encontrado', { status: 404 });
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+const number = formatOrderNumber(order.number);
+const whatsapp = getWhatsAppUrl(`¡Hola CodeBrew! Acabo de registrar el pedido ${number} por ${formatPEN(order.totalCents)}. ¿Cómo completo el pago?`);
+---
+<Layout title={`Pedido ${number} — CodeBrew`} description="Resumen de tu pedido CodeBrew." noindex>
+  <ShopHeader />
+  <main id="main-content" class="shop-main order-page">
+    <p class="eyebrow">PEDIDO {number}</p>
+    <h1>{order.status === 'pending' ? '¡Pedido registrado!' : order.status === 'paid' ? '¡Gracias por tu compra!' : `Pedido ${number}`}</h1>
+    <span class="order-status" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+
+    {order.status === 'pending' && (
+      <section class="order-card">
+        <h2>Siguiente paso: el pago</h2>
+        <p>Guardamos tu pedido; reservamos tu café en cuanto se confirme el pago.</p>
+        {culqiEnabled() ? (
+          <PayButton client:load orderId={order.id} whatsappUrl={whatsapp} />
+        ) : (
+          <>
+            <p>Escríbenos por WhatsApp con tu número de pedido y te indicamos cómo pagar.</p>
+            <div class="order-actions">
+              <a class="button primary" href={whatsapp} target="_blank" rel="noopener noreferrer">Coordinar pago por WhatsApp <span aria-hidden="true">↗</span></a>
+            </div>
+          </>
+        )}
+      </section>
+    )}
+    {order.status === 'paid' && (
+      <section class="order-card">
+        <h2>¡Pago confirmado!</h2>
+        <p>Ya estamos preparando tu café. Te enviamos el detalle a <strong>{order.customerEmail}</strong> y te avisaremos cuando salga tu pedido.</p>
+      </section>
+    )}
+
+    <section class="order-card">
+      <h2>Tu café</h2>
+      <ul class="cart-lines">
+        {order.items.map(item => (
+          <li class="cart-line">
+            <div>
+              <p class="cart-line-name">{item.productName} <span class="cart-line-qty">× {item.quantity}</span></p>
+              <p class="cart-line-meta">{item.format} · {item.grind}</p>
+            </div>
+            <span>{formatPEN(item.lineTotalCents)}</span>
+          </li>
+        ))}
+      </ul>
+      <dl class="totals">
+        <div><dt>Subtotal</dt><dd>{formatPEN(order.subtotalCents)}</dd></div>
+        <div><dt>Envío ({order.shippingZoneName})</dt><dd>{order.shippingCents === 0 ? 'Gratis' : formatPEN(order.shippingCents)}</dd></div>
+        <div class="total"><dt>Total</dt><dd>{formatPEN(order.totalCents)}</dd></div>
+      </dl>
+    </section>
+
+    <section class="order-card">
+      <h2>Entrega</h2>
+      <p>{order.customerName} · {order.customerPhone}</p>
+      <p>{order.shippingAddress}, {order.shippingDistrict}, {order.shippingCity}, {order.shippingRegion}</p>
+      {order.shippingReference && <p>Referencia: {order.shippingReference}</p>}
+      <p>Guarda esta página: es el enlace para consultar tu pedido.</p>
+    </section>
+  </main>
+</Layout>

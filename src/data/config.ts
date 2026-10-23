@@ -4,6 +4,7 @@ import bagDark from '../assets/products/bag-dark.png';
 import lifestyleCup from '../assets/lifestyle/cup.png';
 import lifestyleBeans from '../assets/lifestyle/beans.png';
 import lifestyleLaptop from '../assets/lifestyle/laptop-code.png';
+import catalog from './catalog.json';
 
 export const SITE_CONFIG = {
   name: 'CodeBrew',
@@ -49,6 +50,13 @@ export interface ProductItem {
   galleryMode?: 'duo';
 }
 
+/** Precio en soles de una presentación según el catálogo (fuente única compartida con el seed de la base de datos). */
+function priceOf(sku: string): number {
+  const variant = catalog.products.flatMap(p => p.variants).find(v => v.sku === sku);
+  if (!variant) throw new Error(`SKU sin precio en catalog.json: ${sku}`);
+  return variant.price;
+}
+
 export const PRODUCTS: ProductItem[] = [
   {
     id: 'monteverde-250',
@@ -56,7 +64,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '250 g',
     grind: 'Grano entero o molido',
     roast: 'Tueste medio',
-    price: 34,
+    price: priceOf('monteverde-250'),
     imgSlotId: 'img-producto-monteverde-250',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]',
     images: bagGallery(bagLight, lifestyleCup, 'Taza de café de especialidad recién preparado', 'Origen Monteverde 250 g')
@@ -67,7 +75,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '500 g',
     grind: 'Grano entero o molido',
     roast: 'Tueste medio',
-    price: 60,
+    price: priceOf('monteverde-500'),
     imgSlotId: 'img-producto-monteverde-500',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]',
     images: bagGallery(bagLight, lifestyleLaptop, 'Laptop con código junto a café CodeBrew', 'Origen Monteverde 500 g')
@@ -78,7 +86,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '250 g',
     grind: 'Grano entero o molido para espresso',
     roast: 'Tueste medio-oscuro',
-    price: 34,
+    price: priceOf('espresso-250'),
     imgSlotId: 'img-producto-espresso-250',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 250 g | 1:1 ]',
     images: bagGallery(bagDark, lifestyleBeans, 'Granos de café de especialidad CodeBrew', 'Espresso Amazonas 250 g')
@@ -89,7 +97,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '500 g',
     grind: 'Grano entero o molido para espresso',
     roast: 'Tueste medio-oscuro',
-    price: 60,
+    price: priceOf('espresso-500'),
     imgSlotId: 'img-producto-espresso-500',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 500 g | 1:1 ]',
     images: bagGallery(bagDark, lifestyleCup, 'Taza de café de especialidad recién preparado', 'Espresso Amazonas 500 g')
@@ -100,7 +108,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '2 × 250 g',
     grind: 'Combinación personalizable',
     roast: 'Tueste medio + medio-oscuro',
-    price: 62,
+    price: priceOf('pack-developer'),
     highlighted: true,
     highlightTag: 'const favorito = true;',
     imgSlotId: 'img-producto-pack-developer',
@@ -117,7 +125,7 @@ export const PRODUCTS: ProductItem[] = [
     format: '250 g',
     grind: 'Grano entero o filtrado',
     roast: 'Tueste claro',
-    price: 45,
+    price: priceOf('microlote-temporada'),
     imgSlotId: 'img-producto-microlote',
     imgSlotLabel: '[ IMG: bolsa Microlote Selección Especial 250 g | 1:1 ]',
     images: bagGallery(bagLight, lifestyleBeans, 'Granos de café de especialidad CodeBrew', 'Microlote de Temporada 250 g')

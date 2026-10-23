@@ -1,0 +1,60 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getCustomer } from '../../../lib/server/admin/customers';
+import { STATUS_LABEL } from '../../../lib/server/admin/orders';
+import { formatDateTime, formatOrderNumber, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const customer = await getCustomer(decodeURIComponent(Astro.params.correo ?? ''));
+if (!customer) return new Response('Cliente no encontrado', { status: 404 });
+---
+<AdminLayout title={customer.name}>
+  <div class="admin-head">
+    <div>
+      <p><a href="/admin/clientes">← Clientes</a></p>
+      <h1>{customer.name}</h1>
+      <p>{customer.email} · {customer.district}</p>
+    </div>
+    <a class="btn ghost small" href={`https://wa.me/51${customer.phone}`} target="_blank" rel="noopener noreferrer">WhatsApp {customer.phone}</a>
+  </div>
+
+  <section class="kpi-grid" aria-label="Resumen del cliente">
+    <article class="kpi">
+      <span class="kpi-label">Total comprado</span>
+      <strong class="kpi-value" data-kpi="totalCents" data-value={customer.totalCents}>{formatPEN(customer.totalCents)}</strong>
+      <span class="kpi-sub"><b data-kpi="paidOrders" data-value={customer.paidOrders}>{customer.paidOrders}</b> pedidos pagados · ticket promedio {formatPEN(customer.averageCents)}</span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-label">Cliente desde</span>
+      <strong class="kpi-value" style="font-size:22px">{customer.firstPurchase ? formatDateTime(customer.firstPurchase).split(',')[0] : '—'}</strong>
+      <span class="kpi-sub">Última compra: {customer.lastPurchase ? formatDateTime(customer.lastPurchase) : '—'}</span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-label">Sus cafés favoritos</span>
+      {customer.favorites.length ? (
+        <ul class="stock-list">
+          {customer.favorites.map(item => <li><span>{item.productName} · {item.format}</span><b>{item.quantity}</b></li>)}
+        </ul>
+      ) : <span class="kpi-sub">Aún sin compras pagadas.</span>}
+    </article>
+  </section>
+
+  <h2 class="section-title">Pedidos</h2>
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Pedido</th><th>Fecha</th><th>Destino</th><th class="num">Total</th><th>Estado</th></tr></thead>
+      <tbody>
+        {customer.orders.map(order => (
+          <tr>
+            <td><a class="row-link" href={`/admin/pedidos/${order.id}`}>{formatOrderNumber(order.number)}</a></td>
+            <td>{formatDateTime(order.createdAt)}</td>
+            <td>{order.shippingDistrict}, {order.shippingRegion}</td>
+            <td class="num">{formatPEN(order.totalCents)}</td>
+            <td><span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</AdminLayout>
