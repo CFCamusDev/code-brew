@@ -17,6 +17,10 @@ const shift = (delta: number) => {
   const date = new Date(Date.UTC(year, m - 1 + delta, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 };
+const lastDay = (() => {
+  const [year, m] = month.split('-').map(Number);
+  return `${month}-${String(new Date(Date.UTC(year, m, 0)).getUTCDate()).padStart(2, '0')}`;
+})();
 const monthLabel = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}-01T00:00:00Z`));
 ---
 <AdminLayout title="Compras y gastos">
@@ -29,6 +33,7 @@ const monthLabel = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'nume
       <a class="btn ghost small" href={`/admin/compras?mes=${shift(-1)}`}>←</a>
       <span class="btn ghost small" style="pointer-events:none;text-transform:capitalize">{monthLabel}</span>
       <a class="btn ghost small" href={`/admin/compras?mes=${shift(1)}`}>→</a>
+      <a class="btn small" href={`/api/admin/export/compras?desde=${month}-01&hasta=${lastDay}`}>Exportar mes</a>
     </nav>
   </div>
 
