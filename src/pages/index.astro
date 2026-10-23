@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import BotanicalMark from '../components/BotanicalMark.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Products from '../components/Products.astro';
@@ -138,13 +139,13 @@ const questions = [
 </h2>
 <a class="button primary" href="#productos">Encuentra tu blend <span aria-hidden="true">↗</span>
 </a>
-<span class="closing-star" aria-hidden="true">✳</span>
+<span class="closing-star" aria-hidden="true"><BotanicalMark kind="bean" /></span>
 </section>
   </main>
   <footer class="site-footer">
 <div class="footer-top">
 <a class="wordmark" href="#">
-<LogoMark size={32} />codebrew
+<LogoMark size={32} light />codebrew
 </a>
 <p>Café de origen.<br />Espíritu developer.</p>
 <a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Hablemos por WhatsApp ↗</a>

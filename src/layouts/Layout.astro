@@ -34,6 +34,38 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style is:inline>
+      /* Anti-FOUC instantáneo: oculta el body hasta que el CSS y DOM estén parseados */
+      html {
+        background-color: #f6f3eb;
+      }
+      html:not(.app-ready) body {
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      html.app-ready body {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transition: opacity 0.25s ease-out;
+      }
+    </style>
+    <script is:inline>
+      (function() {
+        function show() {
+          if (!document.documentElement.classList.contains('app-ready')) {
+            document.documentElement.classList.add('app-ready');
+          }
+        }
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+          requestAnimationFrame(show);
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            requestAnimationFrame(show);
+          });
+        }
+        setTimeout(show, 250);
+      })();
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Saltar al contenido</a>

@@ -12,7 +12,7 @@
     context.add('(prefers-reduced-motion: no-preference)', () => {
       if (intro) gsap.timeline().from('.hero-copy > *', { y:25, opacity:0, stagger:.09, duration:.85, ease:'power3.out' }).from('.world-hero', { opacity:0, duration:1 }, .1);
       gsap.to('.chapter-track i', { scaleX:1, ease:'none', scrollTrigger:{ trigger:'.hero-chapter', start:'top top', end:'bottom bottom', scrub:true } });
-      gsap.to('.hero-asterisk', { rotation:120, ease:'none', scrollTrigger:{ trigger:'.hero-chapter', start:'top top', end:'bottom top', scrub:1 } });
+      gsap.to('.hero-asterisk', { rotation:18, y:-12, ease:'none', scrollTrigger:{ trigger:'.hero-chapter', start:'top top', end:'bottom top', scrub:1 } });
       document.querySelectorAll('[data-reveal],.origin-copy,.ritual-steps article,.faq-list details,.closing h2').forEach(el => {
         if (!intro && el.getBoundingClientRect().top < innerHeight) return;
         gsap.from(el, { y:28, opacity:0, duration:.8, ease:'power2.out', scrollTrigger:{ trigger:el, start:'top 92%', once:true } });
@@ -28,7 +28,8 @@
   };
   window.addEventListener('scroll', updateProgress, {passive:true});
   updateProgress();
-  import('../scripts/worlds').then(({mountWorlds}) => mountWorlds()).catch(() => {
+  import('../scripts/worlds').then(({mountWorlds}) => mountWorlds()).catch((error) => {
+    console.error('[CodeBrew] No se pudo iniciar la escena 3D', error);
     // The transparent product remains visible if the 3D module cannot load.
   });
   button.addEventListener('click', () => {

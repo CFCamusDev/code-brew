@@ -1,12 +1,13 @@
 ---
 import WorldStage from './WorldStage.astro';
+import BotanicalMark from './BotanicalMark.astro';
 ---
 <section class="hero-chapter" aria-labelledby="hero-title">
   <div class="hero-sticky">
     <div class="hero immersive-hero">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="tiny-star">✳</span> SPECIALTY COFFEE / DEVELOPER SPIRIT</p>
-        <h1 id="hero-title">Buen café.<br />Mejor<br /><span class="serif-word">código.</span><span class="hero-asterisk" aria-hidden="true">✳</span></h1>
+        <p class="eyebrow"><span class="tiny-star"><BotanicalMark /></span> SPECIALTY COFFEE / DEVELOPER SPIRIT</p>
+        <h1 id="hero-title">Buen café.<br />Mejor<br /><span class="serif-word">código.</span><span class="hero-asterisk" aria-hidden="true"><BotanicalMark /></span></h1>
         <p class="hero-description">De Amazonas a tu escritorio. Café de especialidad para quienes convierten una idea en algo real.</p>
         <div class="hero-actions"><a href="#productos" class="button primary">Encuentra tu blend <span aria-hidden="true">↗</span></a><a href="#origen" class="text-link">Explora el origen <span aria-hidden="true">↓</span></a></div>
         <div class="hero-footnote"><span class="status-dot"></span> Origen peruano. Espíritu developer.</div>
@@ -16,4 +17,4 @@ import WorldStage from './WorldStage.astro';
     </div>
   </div>
 </section>
-<div class="quality-strip"><span>100% arábica</span><i>✳</i><span>Origen peruano</span><i>✳</i><span>Tueste artesanal</span><i>✳</i><span>Built for your daily ritual</span></div>
+<div class="quality-strip"><span>100% arábica</span><i><BotanicalMark kind="bean" /></i><span>Origen peruano</span><i><BotanicalMark /></i><span>Tueste artesanal</span><i><BotanicalMark kind="bean" /></i><span>Built for your daily ritual</span></div>
