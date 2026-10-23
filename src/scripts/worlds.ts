@@ -211,23 +211,18 @@ export function mountWorlds() {
             x -= Math.sign(x) * sideTuck * crease * 0.16;
         }
 
-        // 3. Transición superior hacia el sello (pliegue triangular tipo gable / tin-tie)
-        // Entre ny = 0.60 y ny = 0.84: z disminuye suavemente hacia el grosor del sello
-        if (ny >= 0.60 && ny <= 0.84) {
-            const t = (ny - 0.60) / 0.24;
+        // 3. Transición superior hacia el sello (pliegue triangular tipo gable / tin-tie) y la zona plana
+        // del propio sello (ny > 0.84): una sola curva continua desde ny = 0.60 hasta la punta, para que
+        // el ancho nunca "rebote" hacia afuera justo antes del sello (lo que lo desalineaba del cuerpo).
+        if (ny >= 0.60) {
+            const t = Math.min(1, (ny - 0.60) / 0.24);
             const smoothT = t * t * (3 - 2 * t);
             z *= (1.0 - smoothT * 0.88);
-            if (absX > 0.72) {
-                const foldTuck = (absX - 0.72) / 0.44;
+            if (absX > 0.68) {
+                const foldTuck = Math.min(1, (absX - 0.68) / 0.48);
                 const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
-                x -= Math.sign(x) * foldTuck * centerZ * (0.06 + smoothT * 0.08);
+                x -= Math.sign(x) * foldTuck * centerZ * (0.06 + smoothT * 0.16);
             }
-        }
-
-        // 4. Zona superior del sello sellado plano (ny > 0.84)
-        if (ny > 0.84) {
-            z *= 0.12;
-            x *= 0.99;
         }
 
         // 5. Base sólida
@@ -270,13 +265,15 @@ export function mountWorlds() {
             : [cream, cream, cream, cream, orange ? frontOrange : frontGreen, orange ? backOrange : backGreen]));
         if (hotfix) {
             // Sello superior plano realista (barra de sellado térmico / tin-tie clip)
-            const sealBarGeom = remember(new THREE.BoxGeometry(2.34, 0.18, 0.12));
+            // Ancho ajustado al ancho real del cuerpo ya angostado en esa altura (~1.88), para que coincida
+            // con el contorno de la bolsa en vez de sobresalir por los costados.
+            const sealBarGeom = remember(new THREE.BoxGeometry(1.8, 0.18, 0.1));
             const sealBar = new THREE.Mesh(sealBarGeom, hotfixBody);
             sealBar.position.y = 1.73;
             group.add(sealBar);
 
             // Relieves de sellado térmico sutiles
-            const crimpGeom = remember(new THREE.BoxGeometry(2.35, 0.018, 0.13));
+            const crimpGeom = remember(new THREE.BoxGeometry(1.78, 0.018, 0.11));
             for (const cy of [1.68, 1.73, 1.78]) {
                 const crimp = new THREE.Mesh(crimpGeom, hotfixBody);
                 crimp.position.y = cy;
