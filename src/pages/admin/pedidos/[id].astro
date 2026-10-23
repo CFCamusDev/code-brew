@@ -15,6 +15,7 @@ const admin = Astro.locals.admin!;
 const number = formatOrderNumber(order.number);
 const PAYMENT_STATUS = { pending: 'Pendiente', paid: 'Pagado', failed: 'Fallido', refunded: 'Reembolsado' } as const;
 const whatsapp = `https://wa.me/51${order.customerPhone}`;
+const DISPATCHABLE = ['paid', 'preparing', 'shipped'];
 ---
 <AdminLayout title={`Pedido ${number}`}>
   <div class="admin-head">
@@ -23,7 +24,10 @@ const whatsapp = `https://wa.me/51${order.customerPhone}`;
       <h1>Pedido {number}</h1>
       <p>Creado {formatDateTime(order.createdAt)}{order.paidAt && ` · Pagado ${formatDateTime(order.paidAt)}`}</p>
     </div>
-    <span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+    <div class="actions" style="align-items:center">
+      {DISPATCHABLE.includes(order.status) && <a class="btn ghost small" href={`/admin/despacho?ids=${order.id}`}>Hoja de despacho</a>}
+      <span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+    </div>
   </div>
 
   {order.stockShortage && (
