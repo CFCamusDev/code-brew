@@ -290,3 +290,45 @@ export async function getDispatchSheets(ids: string[]) {
   const byId = new Map(orderRows.map(order => [order.id, { ...order, items: itemRows.filter(item => item.orderId === order.id) }]));
   return ids.map(id => byId.get(id)).filter(order => order !== undefined);
 }
+
+export const ABANDONED_CANCEL_AFTER_HOURS = 48;
+
+/**
+ * Cancela pedidos pendientes sin pago tras 48 h. Respeta los que tienen una orden de Culqi vigente
+ * (PagoEfectivo o billetera aún pagable). Es idempotente: correrla dos veces no cambia nada más.
+ */
+export async function cancelAbandonedOrders(adminUserId: number | null = null) {
+  return getDb().transaction(async tx => {
+    const cancelled = await tx
+      .update(orders)
+      .set({ status: 'cancelled', cancelledAt: new Date() })
+      .where(
+        and(
+          eq(orders.status, 'pending'),
+          sql`${orders.createdAt} < now() - make_interval(hours => ${ABANDONED_CANCEL_AFTER_HOURS})`,
+          sql`not exists (
+            select 1 from ${payments}
+            where ${payments.orderId} = ${orders.id}
+              and ${payments.method} = 'order'
+              and ${payments.status} = 'pending'
+              and ${payments.expiresAt} > now()
+          )`
+        )
+      )
+      .returning({ id: orders.id });
+
+    if (cancelled.length) {
+      await tx.insert(orderEvents).values(
+        cancelled.map(order => ({
+          orderId: order.id,
+          type: 'status',
+          fromStatus: 'pending' as const,
+          toStatus: 'cancelled' as const,
+          note: `Cancelado automáticamente: sin pago en ${ABANDONED_CANCEL_AFTER_HOURS} h`,
+          adminUserId
+        }))
+      );
+    }
+    return cancelled.length;
+  });
+}

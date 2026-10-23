@@ -29,6 +29,7 @@ services:
       - EMAIL_FROM=${EMAIL_FROM:-}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-}
       - SITE_URL=${SITE_URL:-}
+      - CRON_SECRET=${CRON_SECRET:-}
     depends_on:
       codebrew-db:
         condition: service_healthy
