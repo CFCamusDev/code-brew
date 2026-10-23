@@ -1,0 +1,20 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ShippingManager from '../../components/admin/ShippingManager';
+import { listShipping } from '../../lib/server/admin/shipping';
+import { REGIONS } from '../../lib/shop/checkout';
+
+export const prerender = false;
+
+const zones = await listShipping();
+const canEdit = Astro.locals.admin!.role === 'admin';
+---
+<AdminLayout title="Envíos">
+  <div class="admin-head">
+    <div>
+      <h1>Envíos</h1>
+      <p>Tarifas que ve el cliente en el checkout. Una tarifa por departamento reemplaza la tarifa base de la zona.</p>
+    </div>
+  </div>
+  <ShippingManager client:load zones={zones} regions={REGIONS} canEdit={canEdit} />
+</AdminLayout>

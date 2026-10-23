@@ -1,11 +1,53 @@
 services:
+  # Entrada pública: compresión, cabeceras de seguridad y proxy hacia la app
   codebrew-landing:
     build:
       context: .
       dockerfile: Dockerfile
+      target: web
     container_name: codebrew-landing
     restart: unless-stopped
     ports:
       - "${PORT:-8025}:80"
+    depends_on:
+      - codebrew-app
+
+  codebrew-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: codebrew-app
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=postgres://codebrew:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}@codebrew-db:5432/codebrew
+      - CULQI_PUBLIC_KEY=${CULQI_PUBLIC_KEY:-}
+      - CULQI_SECRET_KEY=${CULQI_SECRET_KEY:-}
+      - CULQI_WEBHOOK_SECRET=${CULQI_WEBHOOK_SECRET:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - SITE_URL=${SITE_URL:-}
+    depends_on:
+      codebrew-db:
+        condition: service_healthy
+
+  codebrew-db:
+    image: postgres:17-alpine
+    container_name: codebrew-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=codebrew
+      - POSTGRES_USER=codebrew
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}
+    volumes:
+      - codebrew-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codebrew -d codebrew"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  codebrew-db-data:

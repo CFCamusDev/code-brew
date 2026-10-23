@@ -1,0 +1,74 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listOrders, STATUS_LABEL, type OrderStatus } from '../../../lib/server/admin/orders';
+import { formatDateTime, formatOrderNumber, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const params = Astro.url.searchParams;
+const q = params.get('q')?.trim().slice(0, 100) || undefined;
+const statusParam = params.get('estado');
+const status = statusParam && statusParam in STATUS_LABEL ? (statusParam as OrderStatus) : undefined;
+const page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
+const { rows, total, pages, byStatus } = await listOrders({ q, status, page });
+
+const link = (changes: Record<string, string | undefined>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(changes)) value ? next.set(key, value) : next.delete(key);
+  if (!('pagina' in changes)) next.delete('pagina');
+  const query = next.toString();
+  return `/admin/pedidos${query ? `?${query}` : ''}`;
+};
+const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+---
+<AdminLayout title="Pedidos">
+  <div class="admin-head">
+    <div>
+      <h1>Pedidos</h1>
+      <p>{total} {total === 1 ? 'pedido' : 'pedidos'}{status ? ` · ${STATUS_LABEL[status]}` : ''}{q ? ` · “${q}”` : ''}</p>
+    </div>
+    <form class="filters" method="get" action="/admin/pedidos">
+      {status && <input type="hidden" name="estado" value={status} />}
+      <input type="search" name="q" value={q} placeholder="N.º, nombre, correo o celular" aria-label="Buscar pedidos" />
+      <button class="btn ghost" type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <nav class="status-tabs" aria-label="Filtrar por estado">
+    <a href={link({ estado: undefined })} aria-current={!status ? 'true' : undefined}>Todos<span>{allCount}</span></a>
+    {(Object.keys(STATUS_LABEL) as OrderStatus[]).map(key => (
+      <a href={link({ estado: key })} aria-current={status === key ? 'true' : undefined}>{STATUS_LABEL[key]}<span>{byStatus[key] ?? 0}</span></a>
+    ))}
+  </nav>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Destino</th><th class="num">Total</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {rows.length === 0 && <tr><td class="empty-row" colspan="6">No hay pedidos con estos filtros.</td></tr>}
+        {rows.map(order => (
+          <tr>
+            <td><a class="row-link" href={`/admin/pedidos/${order.id}`}>{formatOrderNumber(order.number)}</a></td>
+            <td>{formatDateTime(order.createdAt)}</td>
+            <td>{order.customerName}<br /><small class="muted">{order.customerPhone}</small></td>
+            <td>{order.shippingRegion}<br /><small class="muted">{order.shippingZoneName}</small></td>
+            <td class="num">{formatPEN(order.totalCents)}</td>
+            <td>
+              <span class="badge" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
+              {order.stockShortage && <span class="badge warn" title="Pagado sin stock suficiente">Stock</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {pages > 1 && (
+    <nav class="pagination" aria-label="Páginas">
+      {page > 1 && <a class="btn ghost small" href={link({ pagina: String(page - 1) })}>← Anterior</a>}
+      <span>Página {page} de {pages}</span>
+      {page < pages && <a class="btn ghost small" href={link({ pagina: String(page + 1) })}>Siguiente →</a>}
+    </nav>
+  )}
+</AdminLayout>

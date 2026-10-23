@@ -1,26 +1,46 @@
-# Stage 1: Build de la aplicación Astro
+# Stage 1: dependencias y build de la aplicación Astro
 FROM node:22-alpine AS builder
 
 WORKDIR /app
+RUN corepack enable
 
 # Copiar manifiestos de dependencias e instalarlas
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# Copiar el código fuente y construir la versión estática
+# Copiar el código fuente y construir (landing prerenderizada + servidor Node)
 COPY . .
-RUN npm run build
+RUN pnpm build
 
-# Stage 2: Servidor web ultraligero Nginx para producción
-FROM nginx:alpine AS runner
+# Stage 2: solo dependencias de producción
+FROM node:22-alpine AS prod-deps
 
-# Copiar configuración optimizada de Nginx
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+
+# Proxy Nginx público (se construye con `target: web` desde docker-compose)
+FROM nginx:alpine AS web
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copiar salida compilada de Astro desde el builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Stage 3: servidor Node de producción (etapa por defecto)
+FROM node:22-alpine AS runner
 
-# Exponer el puerto interno 80
-EXPOSE 80
+WORKDIR /app
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=4321
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+COPY drizzle ./drizzle
+COPY scripts ./scripts
+COPY src/data/catalog.json src/data/shipping.json ./src/data/
+
+USER node
+EXPOSE 4321
+
+# Aplica migraciones pendientes, carga el catálogo que falte (no pisa ediciones del admin) y arranca el servidor
+CMD ["sh", "-c", "node scripts/db/migrate.mjs && node scripts/db/seed.mjs && node dist/server/entry.mjs"]

@@ -8,10 +8,13 @@ import WorldStage from '../components/WorldStage.astro';
 import Experience from '../components/Experience.astro';
 import OriginMap from '../components/OriginMap.astro';
 import { getWhatsAppUrl } from '../data/config';
+
+// Se renderiza por solicitud para mostrar precios y stock vigentes del panel.
+export const prerender = false;
 const questions = [
   ['¿Cuál elijo si es mi primer café CodeBrew?', 'Origen Monteverde tiene tueste medio y es nuestro punto de partida para tu ritual diario. Si prefieres un tueste medio-oscuro, elige Espresso Amazonas. Con el Pack Developer puedes probar ambos.'],
   ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, dinos qué cafetera usas y coordinamos la molienda. Para el Pack Developer puedes personalizar las dos bolsas por WhatsApp.'],
-  ['¿Cómo coordino el envío y el pago?', 'El botón de cada café abre WhatsApp con tu selección. Allí confirmamos disponibilidad, dirección, costo de envío, plazo de entrega y medio de pago antes de cerrar el pedido.'],
+  ['¿Cómo coordino el envío y el pago?', 'Agrega tu café al carrito, elige tu zona de envío y confirma tu pedido: verás el costo de envío y el plazo antes de confirmar. Pagas en línea con tarjeta, Yape, billeteras o agentes a través de Culqi. El envío es gratis en Lima y Callao desde 3 bolsas. Si prefieres, también puedes pedir por WhatsApp.'],
   ['¿Puedo pedir café para mi equipo?', 'Sí. Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos la propuesta, las presentaciones y la entrega directamente contigo.']
 ];
 ---
