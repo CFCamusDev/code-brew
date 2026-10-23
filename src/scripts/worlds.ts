@@ -190,17 +190,20 @@ export function mountWorlds() {
 
         const ny = y / 1.825; // Normalizado de -1 a 1
 
-        // 1. Inflado orgánico del cuerpo con café (belly)
+        // 1. Inflado orgánico del cuerpo con café (belly), que se desvanece cerca de los paneles laterales
+        // para no redondear las esquinas: el panel frontal/trasero abomba al centro pero llega plano al borde.
+        const absX = Math.abs(x);
+        const edgeFactor = 1.0 - THREE.MathUtils.smoothstep(absX, 0.52, 0.92);
         if (ny > -0.85 && ny < 0.60) {
             const belly = Math.cos((ny + 0.1) * Math.PI * 0.58);
             if (belly > 0) {
-                z *= 1.0 + belly * 0.22;
+                z *= 1.0 + belly * 0.22 * edgeFactor;
             }
         }
 
         // 2. Fuelles laterales (gussets) con pliegue central visible, como en una bolsa stand-up pouch real:
         // el panel lateral se hunde hacia la mitad de su profundidad, dejando una arista/sombra marcada en z=0.
-        const absX = Math.abs(x);
+        // La esquina (absX y |z| altos a la vez) se deja casi intacta para que se note como una arista definida.
         if (absX > 0.78 && ny > -0.88 && ny < 0.65) {
             const sideTuck = THREE.MathUtils.smoothstep(absX, 0.78, 1.16);
             const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
