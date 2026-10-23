@@ -1,4 +1,69 @@
 ---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getDashboardSummary, LOW_STOCK_THRESHOLD } from '../../lib/server/admin/dashboard';
+import { formatPEN } from '../../lib/shop/format';
+
 export const prerender = false;
-return Astro.redirect('/admin/pedidos');
+
+const summary = await getDashboardSummary();
+const admin = Astro.locals.admin!;
+const today = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+
+const queues = [
+  { key: 'toPrepare', label: 'Por preparar', hint: 'Pagados, aún sin armar', href: '/admin/pedidos?estado=paid', value: summary.toPrepare },
+  { key: 'toShip', label: 'Por despachar', hint: 'En preparación', href: '/admin/pedidos?estado=preparing', value: summary.toShip },
+  { key: 'stockAlerts', label: 'Pagados sin stock', hint: 'Revisar inventario antes de armar', href: '/admin/pedidos?estado=paid', value: summary.stockAlerts, warn: true },
+  { key: 'abandoned', label: 'Sin pagar hace +24 h', hint: 'Pedidos abandonados', href: '/admin/pedidos?estado=pending', value: summary.abandoned }
+];
 ---
+<AdminLayout title="Inicio">
+  <div class="admin-head">
+    <div>
+      <h1>Hola, {admin.name.split(' ')[0]}</h1>
+      <p style="text-transform:capitalize">{today}</p>
+    </div>
+  </div>
+
+  <section class="kpi-grid" aria-label="Ventas">
+    <article class="kpi">
+      <span class="kpi-label">Ventas de hoy</span>
+      <strong class="kpi-value" data-kpi="todayCents" data-value={summary.todayCents}>{formatPEN(summary.todayCents)}</strong>
+      <span class="kpi-sub"><b data-kpi="todayOrders" data-value={summary.todayOrders}>{summary.todayOrders}</b> {summary.todayOrders === 1 ? 'pedido pagado' : 'pedidos pagados'}</span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-label">Ventas del mes</span>
+      <strong class="kpi-value" data-kpi="monthCents" data-value={summary.monthCents}>{formatPEN(summary.monthCents)}</strong>
+      <span class="kpi-sub"><b data-kpi="monthOrders" data-value={summary.monthOrders}>{summary.monthOrders}</b> pedidos · ticket promedio {formatPEN(summary.monthAverageCents)}</span>
+    </article>
+  </section>
+
+  <h2 class="section-title">Para atender</h2>
+  <section class="queue-grid" aria-label="Pedidos para atender">
+    {queues.map(queue => (
+      <a class="queue" href={queue.href} data-attention={queue.value > 0 ? (queue.warn ? 'warn' : 'yes') : undefined}>
+        <strong data-kpi={queue.key} data-value={queue.value}>{queue.value}</strong>
+        <span>{queue.label}</span>
+        <small>{queue.hint}</small>
+      </a>
+    ))}
+  </section>
+
+  <section class="admin-card" style="margin-top:20px">
+    <div class="card-head">
+      <h2>Stock bajo (≤ {LOW_STOCK_THRESHOLD})</h2>
+      <a class="btn ghost small" href="/admin/productos">Ir a productos</a>
+    </div>
+    {summary.lowStock.length === 0 ? (
+      <p class="muted" data-kpi="lowStock" data-value="0">Todo el café activo tiene más de {LOW_STOCK_THRESHOLD} unidades.</p>
+    ) : (
+      <ul class="stock-list" data-kpi="lowStock" data-value={summary.lowStock.length}>
+        {summary.lowStock.map(item => (
+          <li>
+            <span>{item.productName} · {item.format}</span>
+            <span class="badge" data-status={item.stock === 0 ? 'pending' : 'preparing'}>{item.stock === 0 ? 'Agotado' : `Quedan ${item.stock}`}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</AdminLayout>

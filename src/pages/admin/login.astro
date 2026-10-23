@@ -6,7 +6,7 @@ export const prerender = false;
 
 const next = Astro.url.searchParams.get('next');
 // Solo rutas internas del panel, para no abrir redirecciones a otros sitios.
-const target = next && next.startsWith('/admin') && !next.startsWith('//') ? next : '/admin/pedidos';
+const target = next && next.startsWith('/admin') && !next.startsWith('//') ? next : '/admin';
 if (Astro.locals.admin) return Astro.redirect(target);
 ---
 <AdminLayout title="Iniciar sesión">

@@ -6,7 +6,7 @@ import { listUsers } from '../../lib/server/admin/users';
 export const prerender = false;
 
 const admin = Astro.locals.admin!;
-if (admin.role !== 'admin') return Astro.redirect('/admin/pedidos');
+if (admin.role !== 'admin') return Astro.redirect('/admin');
 const users = await listUsers();
 ---
 <AdminLayout title="Usuarios">
