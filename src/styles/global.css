@@ -1541,7 +1541,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 .hero-package-preview {
   width:44%;
   height:auto;
-  aspect-ratio:13 / 20;
+  aspect-ratio:2000 / 3280;
   left:28%;
   top:50%;
   transform:translateY(-50%) perspective(900px) rotateY(-16deg);
@@ -1561,7 +1561,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   left:100%;
   width:25%;
   height:100%;
-  background:linear-gradient(90deg, #d8d0b8, #e9e2cd);
+  background:url(/assets/brand/hotfix-stable-right.webp) center / 100% 100%;
   transform-origin:left;
   transform:rotateY(90deg);
   border-radius:0 6px 6px 0;
@@ -1982,6 +1982,15 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .ritual-image .world-stage {
   min-height:480px;
+}
+.ritual-cup-photo {
+  position:absolute;
+  width:96%;
+  height:90%;
+  left:2%;
+  top:5%;
+  object-fit:contain;
+  filter:drop-shadow(0 16px 14px #203c321c);
 }
 .ritual-image .world-fallback {
   width:60%;

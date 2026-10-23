@@ -1,5 +1,6 @@
+import { stepBeans, convexHull } from './bean-physics';
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { createHotfixGeometry, createHotfixZipper } from './hotfix-geometry';
 /** One WebGL renderer, scissored to the visible editorial stages. */
 export function mountWorlds() {
     const hosts = [...document.querySelectorAll<HTMLElement>('[data-world]')];
@@ -28,14 +29,14 @@ export function mountWorlds() {
     const cream = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .82, metalness: .02 }));
     const green = remember(new THREE.MeshStandardMaterial({ color: '#214d39', roughness: .7 }));
     const valveMaterial = remember(new THREE.MeshStandardMaterial({ color: '#b7ae93', roughness: .75, metalness: .04 }));
-    const beanMaterials = ['#ffffff', '#d9b89b', '#bda18b'].map(color => remember(
-        new THREE.MeshStandardMaterial({ color, vertexColors: true, roughness: .64, metalness: 0 })
+    const beanMaterials = ['#ffffff', '#e7cba5', '#bfa58d'].map(color => remember(
+        new THREE.MeshStandardMaterial({ color, vertexColors: true, roughness: .76, metalness: 0 })
     ));
     const beanGeometry = remember(new THREE.SphereGeometry(1, 64, 48));
     const beanPositions = beanGeometry.attributes.position;
     const beanColors = [];
-    const roast = new THREE.Color('#60331c');
-    const creaseColor = new THREE.Color('#1b0d06');
+    const roast = new THREE.Color('#704622');
+    const creaseColor = new THREE.Color('#29170b');
     for (let i = 0; i < beanPositions.count; i++) {
         const x = beanPositions.getX(i), y = beanPositions.getY(i), z = beanPositions.getZ(i);
         const seam = .075 * Math.sin(y * 3.7) + .025 * Math.sin(y * 9);
@@ -211,249 +212,12 @@ export function mountWorlds() {
         texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
         return texture;
     }
-    function pillBadge(x: CanvasRenderingContext2D, cx: number, cy: number, text: string) {
-        x.save();
-        x.font = 'bold 16px sans-serif';
-        const w = x.measureText(text).width + 44;
-        x.fillStyle = '#d16c401a';
-        x.strokeStyle = '#d16c40';
-        x.lineWidth = 1.5;
-        x.beginPath();
-        x.roundRect(cx - w / 2, cy - 20, w, 40, 20);
-        x.fill();
-        x.stroke();
-        x.fillStyle = '#b8552b';
-        x.textAlign = 'center';
-        x.fillText(text, cx, cy + 6);
-        x.restore();
-    }
-    function hotfixFrontTexture() {
-        const c = document.createElement('canvas');
-        c.width = 768;
-        c.height = 1152;
-        const x = c.getContext('2d')!;
-        x.fillStyle = '#eee8da';
-        x.fillRect(0, 0, 768, 1152);
-        for (let i = 0; i < 6000; i++) {
-            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
-            x.fillRect((i * 127) % 768, (i * 71) % 1152, 2, 2);
-        }
-        x.textAlign = 'center';
-        x.fillStyle = '#213e31';
-        x.font = 'bold 86px Georgia';
-        x.fillText('codebrew', 384, 340);
-        x.font = '28px Georgia';
-        x.fillText('®', 384 + x.measureText('codebrew').width / 2 + 16, 310);
-        x.font = '19px sans-serif';
-        x.fillText('C O F F E E  F O R  D E V E L O P E R S', 384, 390);
-        x.save();
-        x.fillStyle = '#00000014';
-        x.beginPath();
-        x.arc(384, 452, 30, 0, Math.PI * 2);
-        x.fill();
-        x.strokeStyle = '#21302722';
-        x.lineWidth = 3;
-        x.beginPath();
-        x.arc(384, 452, 24, 0, Math.PI * 2);
-        x.stroke();
-        x.fillStyle = '#21302735';
-        x.beginPath();
-        x.arc(384, 452, 4.5, 0, Math.PI * 2);
-        x.fill();
-        x.restore();
-        // Etiqueta angosta (centrada, con buen margen a cada lado): así su contorno redondeado
-        // queda lejos del canto de la bolsa y no se deforma al girar en ángulos rasantes.
-        const labelX = 120, labelY = 540, labelW = 528, labelH = 475, labelR = 26;
-        x.save();
-        x.beginPath();
-        x.roundRect(labelX, labelY, labelW, labelH, labelR);
-        x.clip();
-        x.fillStyle = '#1d3a2b';
-        x.fillRect(labelX, labelY, labelW, labelH);
-        x.strokeStyle = '#e6e2bc35';
-        x.lineWidth = 1.5;
-        for (let j = 0; j < 13; j++) {
-            x.beginPath();
-            for (let i = 0; i < 680; i += 6) {
-                const y = 565 + j * 36 + Math.sin(i * .013 + j * .43) * 18;
-                x.lineTo(45 + i, y);
-            }
-            x.stroke();
-        }
-        x.restore();
-        pillBadge(x, 384, labelY - 8, 'PIPELINE · STABLE');
-        x.fillStyle = '#f5efdb';
-        x.font = '76px Georgia';
-        const headline = 'Hotfix';
-        const headW = x.measureText(headline).width;
-        x.fillText(headline, 384 - 14, 735);
-        x.fillStyle = '#d16c40';
-        x.fillRect(384 + headW / 2 - 10, 672, 5, 72);
-        x.fillStyle = '#f5efdb';
-        x.font = '20px sans-serif';
-        x.fillText('A M A Z O N A S  ·  P E R Ú', 384, 800);
-        x.font = '17px sans-serif';
-        x.fillText('ESPRESSO · TUESTE MEDIO-OSCURO', 384, 890);
-        x.font = '24px sans-serif';
-        x.fillText('250 g', 384, 960);
-        x.fillStyle = '#344737';
-        x.font = '12px sans-serif';
-        x.fillText('B U E N  C A F É .  M E J O R  C Ó D I G O .', 384, 1075);
-        const texture = remember(new THREE.CanvasTexture(c));
+    const textureLoader = new THREE.TextureLoader();
+    function printedFace(face: string) {
+        const texture = remember(textureLoader.load(`/assets/brand/hotfix-stable-${face}.webp`, () => request()));
         texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        return texture;
-    }
-    function hotfixBackTexture() {
-        const c = document.createElement('canvas');
-        c.width = 768;
-        c.height = 1152;
-        const x = c.getContext('2d')!;
-        x.fillStyle = '#eee8da';
-        x.fillRect(0, 0, 768, 1152);
-        for (let i = 0; i < 6000; i++) {
-            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
-            x.fillRect((i * 127) % 768, (i * 71) % 1152, 2, 2);
-        }
-        // Margen generoso: el contenido se mantiene lejos de los bordes para no deformarse
-        // por la perspectiva cuando la bolsa gira y esa zona queda casi de canto a la cámara.
-        const M = 120, R = 768 - M;
-        x.textAlign = 'left';
-        x.fillStyle = '#8a8372';
-        x.font = '18px monospace';
-        x.fillText('// hotfix.js', M, 90);
-        pillBadge(x, 540, 76, 'PIPELINE · STABLE');
-        x.fillStyle = '#213e31';
-        x.font = '36px Georgia';
-        wrapText(x, 'Hay bugs que no esperan al próximo sprint. Para esos, existe un hotfix.', M, 165, R - M, 44);
-        x.fillStyle = '#4b564c';
-        x.font = '17px sans-serif';
-        wrapText(x, 'Cultivado en la ceja de selva de Rodríguez de Mendoza, Amazonas. Lavado, secado con paciencia y tostado medio-oscuro para un espresso de cuerpo alto, dulzor a chancaca y un final limpio de cacao.', M, 330, R - M, 26);
-        x.strokeStyle = '#21302730';
-        x.lineWidth = 1;
-        x.beginPath(); x.moveTo(M, 455); x.lineTo(R, 455); x.stroke();
-        const col2 = M + 280;
-        x.font = 'bold 15px sans-serif';
-        x.fillStyle = '#8a8372';
-        x.fillText('FICHA TÉCNICA', M, 495);
-        x.fillText('PERFIL', col2, 495);
-        x.font = '16px sans-serif';
-        x.fillStyle = '#213e31';
-        const specs: [string, string][] = [['Proceso', 'Lavado'], ['Tueste', 'Medio-oscuro'], ['Altitud', '1 500-1 600 msnm'], ['Variedad', 'Caturra, Catuaí']];
-        specs.forEach(([k, v], i) => {
-            x.fillStyle = '#8a8372';
-            x.fillText(k, M, 530 + i * 34);
-            x.fillStyle = '#213e31';
-            x.fillText(v, M + 108, 530 + i * 34);
-        });
-        const profile: [string, number][] = [['cuerpo', .85], ['dulzor', .7], ['acidez', .35]];
-        const barX = col2 + 72, barW = R - barX;
-        profile.forEach(([k, v], i) => {
-            x.fillStyle = '#8a8372';
-            x.font = '15px sans-serif';
-            x.fillText(k, col2, 530 + i * 34);
-            x.fillStyle = '#e4ded0';
-            x.fillRect(barX, 518 + i * 34, barW, 10);
-            x.fillStyle = '#d16c40';
-            x.fillRect(barX, 518 + i * 34, barW * v, 10);
-        });
-        const codeX = M, codeY = 660, codeW = R - M, codeH = 210;
-        x.fillStyle = '#1d3a2b';
-        x.beginPath();
-        x.roundRect(codeX, codeY, codeW, codeH, 14);
-        x.fill();
-        x.font = '16px monospace';
-        x.fillStyle = '#8fae9c';
-        x.fillText('// receta sugerida · espresso', codeX + 24, codeY + 38);
-        x.fillStyle = '#f5efdb';
-        const code = [
-            'const hotfix = brew({',
-            '  dosis: "18 g",',
-            '  rendimiento: "36 g",',
-            '  tiempo: "25-30 s",',
-            '  agua: "92-94 °C",',
-            '});'
-        ];
-        code.forEach((line, i) => x.fillText(line, codeX + 24, codeY + 72 + i * 26));
-        const qrX = M, qrY = codeY + codeH + 36, qrSize = 76;
-        x.strokeStyle = '#21302755';
-        x.lineWidth = 2;
-        x.strokeRect(qrX, qrY, qrSize, qrSize);
-        x.fillStyle = '#21302740';
-        x.font = '11px sans-serif';
-        x.textAlign = 'center';
-        x.fillText('[QR]', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
-        x.textAlign = 'left';
-        x.fillStyle = '#213e31';
-        x.font = 'bold 16px sans-serif';
-        x.fillText('git log --origen', qrX + qrSize + 22, qrY + 26);
-        x.fillStyle = '#4b564c';
-        x.font = '14px sans-serif';
-        wrapText(x, 'Escanea y conoce la finca, el lote y la fecha de tueste.', qrX + qrSize + 22, qrY + 50, R - (qrX + qrSize + 22), 20);
-        x.textAlign = 'center';
-        x.fillStyle = '#4b564c';
-        x.font = '14px sans-serif';
-        x.fillText('Conservar en lugar fresco y seco. Peso neto 250 g · Hecho en Perú', 384, 1074);
-        x.fillStyle = '#8a8372';
-        x.font = '13px sans-serif';
-        x.fillText('coffeecodebrew.com', 384, 1100);
-        const texture = remember(new THREE.CanvasTexture(c));
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        return texture;
-    }
-    function hotfixSideTexture() {
-        const c = document.createElement('canvas');
-        c.width = 320;
-        c.height = 1152;
-        const x = c.getContext('2d')!;
-        x.fillStyle = '#eee8da';
-        x.fillRect(0, 0, 320, 1152);
-        for (let i = 0; i < 2600; i++) {
-            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
-            x.fillRect((i * 97) % 320, (i * 53) % 1152, 2, 2);
-        }
-        // Traza de circuito vertical tipo PCB, con nodos en los extremos.
-        x.strokeStyle = '#21302755';
-        x.lineWidth = 2;
-        x.beginPath();
-        x.moveTo(160, 90);
-        x.lineTo(160, 420);
-        x.lineTo(190, 460);
-        x.lineTo(190, 760);
-        x.lineTo(150, 820);
-        x.lineTo(150, 1060);
-        x.stroke();
-        x.fillStyle = '#21302770';
-        [[160, 90], [190, 460], [150, 1060]].forEach(([cx, cy]) => {
-            x.beginPath();
-            x.arc(cx, cy, 5, 0, Math.PI * 2);
-            x.fill();
-        });
-        x.textAlign = 'left';
-        x.fillStyle = '#213e31';
-        x.font = 'bold 38px sans-serif';
-        ['GOOD', 'COFFEE.', 'BETTER', 'IDEAS.'].forEach((line, i) => x.fillText(line, 78, 540 + i * 52));
-        // Icono taza + llaves de código
-        x.save();
-        x.translate(78, 788);
-        x.strokeStyle = '#213e31';
-        x.lineWidth = 6;
-        x.lineCap = 'round';
-        x.beginPath();
-        x.moveTo(8, 10); x.lineTo(0, 22); x.lineTo(8, 34);
-        x.moveTo(44, 10); x.lineTo(52, 22); x.lineTo(44, 34);
-        x.stroke();
-        x.lineWidth = 5;
-        x.strokeRect(2, 46, 48, 34);
-        x.beginPath();
-        x.arc(55, 58, 10, -Math.PI / 2, Math.PI / 2);
-        x.stroke();
-        x.restore();
-        const texture = remember(new THREE.CanvasTexture(c));
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        return texture;
+        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        return remember(new THREE.MeshStandardMaterial({ map: texture, roughness: .9, metalness: 0 }));
     }
     const pouchGeometry = remember(new THREE.BoxGeometry(2.25, 3.55, .57, 28, 40, 6));
     const pos = pouchGeometry.attributes.position;
@@ -465,99 +229,36 @@ export function mountWorlds() {
         pos.setXYZ(i, x * taper, y, z * (.58 + Math.sin(vertical * Math.PI) * .42) + Math.sign(z) * bulge);
     }
     pouchGeometry.computeVertexNormals();
-    // Bolsa de café con fuelle lateral y sellado superior limpio tipo stand-up pouch
-    const hotfixGeometry = remember(new THREE.BoxGeometry(2.32, 3.65, 0.82, 32, 48, 16));
-    const hotfixPositions = hotfixGeometry.attributes.position;
-    for (let i = 0; i < hotfixPositions.count; i++) {
-        let x = hotfixPositions.getX(i);
-        let y = hotfixPositions.getY(i);
-        let z = hotfixPositions.getZ(i);
-
-        const ny = y / 1.825; // Normalizado de -1 a 1
-
-        // 1. Inflado orgánico del cuerpo con café (belly), que se desvanece cerca de los paneles laterales
-        // para no redondear las esquinas: el panel frontal/trasero abomba al centro pero llega plano al borde.
-        const absX = Math.abs(x);
-        const edgeFactor = 1.0 - THREE.MathUtils.smoothstep(absX, 0.52, 0.92);
-        if (ny > -0.85 && ny < 0.60) {
-            const belly = Math.cos((ny + 0.1) * Math.PI * 0.58);
-            if (belly > 0) {
-                z *= 1.0 + belly * 0.22 * edgeFactor;
-            }
-        }
-
-        // 2. Fuelles laterales (gussets) con pliegue central visible, como en una bolsa stand-up pouch real:
-        // el panel lateral se hunde hacia la mitad de su profundidad, dejando una arista/sombra marcada en z=0.
-        // La esquina (absX y |z| altos a la vez) se deja casi intacta para que se note como una arista definida.
-        if (absX > 0.78 && ny > -0.88 && ny < 0.65) {
-            const sideTuck = THREE.MathUtils.smoothstep(absX, 0.78, 1.16);
-            const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
-            const crease = Math.pow(centerZ, 1.8);
-            x -= Math.sign(x) * sideTuck * crease * 0.16;
-        }
-
-        // 3. Transición superior hacia el sello (pliegue triangular tipo gable / tin-tie) y la zona plana
-        // del propio sello (ny > 0.84): una sola curva continua desde ny = 0.60 hasta la punta, para que
-        // el ancho nunca "rebote" hacia afuera justo antes del sello (lo que lo desalineaba del cuerpo).
-        if (ny >= 0.60) {
-            const t = Math.min(1, (ny - 0.60) / 0.24);
-            const smoothT = t * t * (3 - 2 * t);
-            z *= (1.0 - smoothT * 0.88);
-            if (absX > 0.68) {
-                const foldTuck = Math.min(1, (absX - 0.68) / 0.48);
-                const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
-                x -= Math.sign(x) * foldTuck * centerZ * (0.06 + smoothT * 0.16);
-            }
-        }
-
-        // 5. Base sólida
-        if (ny < -0.88) {
-            const b = (ny + 0.88) / -0.12;
-            z *= (1.0 + b * 0.06);
-        }
-
-        hotfixPositions.setXYZ(i, x, y, z);
-    }
-    hotfixGeometry.computeVertexNormals();
+    const hotfixGeometry = remember(createHotfixGeometry());
     const frontGreen = remember(new THREE.MeshStandardMaterial({ map: packageTexture('Monteverde', '#2c523b'), roughness: .88 }));
     const frontOrange = remember(new THREE.MeshStandardMaterial({ map: packageTexture('Espresso', '#9e563c'), roughness: .88 }));
     const backGreen = remember(new THREE.MeshStandardMaterial({ map: backTexture('Monteverde', '#2c523b'), roughness: .88 }));
     const backOrange = remember(new THREE.MeshStandardMaterial({ map: backTexture('Espresso', '#9e563c'), roughness: .88 }));
-    // Cuerpo crema (igual que el resto de la línea) en vez del verde oscuro anterior.
-    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .85, metalness: .02 }));
-    const hotfixFront = remember(new THREE.MeshStandardMaterial({ map: hotfixFrontTexture(), roughness: .85 }));
-    const hotfixBack = remember(new THREE.MeshStandardMaterial({ map: hotfixBackTexture(), roughness: .85 }));
-    const hotfixSide = remember(new THREE.MeshStandardMaterial({ map: hotfixSideTexture(), roughness: .85 }));
+    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .9 }));
+    const hotfixBase = remember(new THREE.MeshStandardMaterial({ color: '#1d392b', roughness: .9 }));
+    const hotfixFront = printedFace('front');
+    const hotfixBack = printedFace('back');
+    const hotfixLeft = printedFace('left');
+    const hotfixRight = printedFace('right');
     const sealGeometry = remember(new THREE.BoxGeometry(2.02, .035, .22));
     const valveGeometry = remember(new THREE.CylinderGeometry(.083, .083, .02, 20));
     function pouch(orange = false, hotfix = false) {
         const group = new THREE.Group();
         group.add(new THREE.Mesh(hotfix ? hotfixGeometry : pouchGeometry, hotfix
-            ? [hotfixSide, hotfixSide, hotfixBody, hotfixBody, hotfixFront, hotfixBack]
+            ? [hotfixRight, hotfixLeft, hotfixBody, hotfixBase, hotfixFront, hotfixBack]
             : [cream, cream, cream, cream, orange ? frontOrange : frontGreen, orange ? backOrange : backGreen]));
-        if (hotfix) {
-            // Sello superior plano realista (barra de sellado térmico / tin-tie clip)
-            // Ancho ajustado al ancho real del cuerpo ya angostado en esa altura (~1.88), para que coincida
-            // con el contorno de la bolsa en vez de sobresalir por los costados.
-            const sealBarGeom = remember(new THREE.BoxGeometry(1.8, 0.18, 0.1));
-            const sealBar = new THREE.Mesh(sealBarGeom, hotfixBody);
-            sealBar.position.y = 1.73;
-            group.add(sealBar);
-
-            // Relieves de sellado térmico sutiles
-            const crimpGeom = remember(new THREE.BoxGeometry(1.78, 0.018, 0.11));
-            for (const cy of [1.68, 1.73, 1.78]) {
-                const crimp = new THREE.Mesh(crimpGeom, hotfixBody);
-                crimp.position.y = cy;
-                group.add(crimp);
-            }
-        }
         for (let i = 0; !hotfix && i < 3; i++) {
             const seal = new THREE.Mesh(sealGeometry, cream);
             seal.position.set(0, 1.49 + i * .055, .17);
             group.add(seal);
         }
         // Alineada con el anillo impreso en la textura frontal (misma posición que el círculo dibujado en el canvas).
+        if (hotfix) {
+            for (const geometry of createHotfixZipper()) {
+                group.add(new THREE.Mesh(remember(geometry), hotfixBody));
+            }
+            return group; // The valve is already present in the original artwork.
+        }
         const valve = new THREE.Mesh(valveGeometry, valveMaterial);
         valve.rotation.x = Math.PI / 2;
         valve.position.set(0, hotfix ? .39 : .38, hotfix ? .49 : .345);
@@ -603,18 +304,12 @@ export function mountWorlds() {
                 const b = bean();
                 const angle = i / count * Math.PI * 2;
                 b.position.set(Math.cos(angle) * (1.8 + (i % 3) * .22), Math.sin(angle) * 2.1, Math.sin(i * 2) * .7);
-                if (kind === 'hero') {
-                    // Keep bean centers outside the bag's full rotational envelope,
-                    // including their own radius and the wave animation offsets.
-                    const x = Math.cos(angle), y = Math.sin(angle);
-                    const clearance = Math.min(2.02 / Math.max(Math.abs(x), .0001), 2.78 / Math.max(Math.abs(y), .0001));
-                    b.position.set(x * clearance, y * clearance, Math.sin(i * 2) * .35);
-                }
                 b.rotation.set(i * .7, i * .9, i * .5);
                 const s = .65 + (i % 4) * .16;
                 b.scale.setScalar(s);
                 b.userData.restPosition = b.position.clone();
-                root.add(b);
+                if (kind === 'hero') scene.add(b);
+                else root.add(b);
                 floaters.push(b);
             }
         }
@@ -648,31 +343,6 @@ export function mountWorlds() {
             root.position.y = -.3;
             root.scale.setScalar(.8);
         }
-        else {
-            const points = [new THREE.Vector2(.02, -.8), new THREE.Vector2(.64, -.8), new THREE.Vector2(.78, -.7), new THREE.Vector2(.91, .55), new THREE.Vector2(.9, .68), new THREE.Vector2(.83, .69), new THREE.Vector2(.81, .57), new THREE.Vector2(.7, -.55), new THREE.Vector2(.02, -.55)];
-            const cup = new THREE.Mesh(remember(new THREE.LatheGeometry(points, 64)), green);
-            root.add(cup);
-            const handle = new THREE.Mesh(remember(new THREE.TorusGeometry(.48, .115, 12, 40, Math.PI * 1.75)), green);
-            handle.position.set(.93, 0, 0);
-            handle.rotation.z = -Math.PI * .875;
-            root.add(handle);
-            const coffee = new THREE.Mesh(remember(new THREE.CircleGeometry(.815, 64)), remember(new THREE.MeshStandardMaterial({ color: '#351b0c', roughness: .22 })));
-            coffee.rotation.x = -Math.PI / 2;
-            coffee.position.y = .56;
-            root.add(coffee);
-            const saucer = new THREE.Mesh(remember(new THREE.CylinderGeometry(1.4, 1.3, .09, 64)), cream);
-            saucer.position.y = -.86;
-            root.add(saucer);
-            for (let i = 0; i < 3; i++) {
-                const points = [];
-                for (let j = 0; j < 24; j++)
-                    points.push(new THREE.Vector3(Math.sin(j * .3 + i) * .1 + (i - 1) * .24, .8 + j * .055, 0));
-                const steam = new THREE.Mesh(remember(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 32, .012, 5, false)), remember(new THREE.MeshBasicMaterial({ color: '#d3bb97', transparent: true, opacity: .38 })));
-                root.add(steam);
-            }
-            root.rotation.set(.3, -.22, -.08);
-            root.scale.setScalar(1.45);
-        }
         return { host, kind, scene, camera, root, floaters, heroBag, scrollProgress: 0 };
     });
     let frame = 0, disposed = false, inView = true, pointerX = 0, pointerY = 0;
@@ -686,7 +356,7 @@ export function mountWorlds() {
     } };
     const resize = () => { renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.25 : 1.6)); renderer.setSize(innerWidth, innerHeight); request(); };
     const clamp = THREE.MathUtils.clamp;
-    const heroBounds = new THREE.Box3();
+    const projectedVertex = new THREE.Vector3();
     function draw(time: number) {
         frame = 0;
         if (disposed || document.hidden)
@@ -722,7 +392,7 @@ export function mountWorlds() {
                     s.root.scale.setScalar(1 - scroll * .08);
                     if (s.heroBag) {
                         // Giro continuo de 360° para lucir todas las caras de la bolsa, con un leve tilt por mouse/scroll.
-                        s.heroBag.rotation.y = t * 0.4 + pointerX * 0.12 + scroll * 0.35;
+                        s.heroBag.rotation.y = -.35 + elapsed * Math.PI * 2 / 48 + pointerX * .08 + scroll * .8;
                         s.heroBag.rotation.x = 0.05 + Math.cos(t * 0.9) * 0.03 + pointerY * 0.04;
                         s.heroBag.rotation.z = Math.sin(t * 0.6) * 0.015;
                     }
@@ -736,15 +406,50 @@ export function mountWorlds() {
                 s.floaters.forEach((b, i) => {
                     b.rotation.x = t * .6 + i * .7;
                     b.rotation.y = t * .4 + i * .9;
-                    if (s.kind === 'hero') {
-                        const rest = b.userData.restPosition as THREE.Vector3;
-                        b.position.y = rest.y + Math.sin(t * 1.15 + i * .65) * .1;
-                        b.position.x = rest.x + Math.sin(t * .85 + i * .65) * .045;
-                    }
+
                 });
             }
             if (s.kind === 'hero') {
-                s.camera.position.z = 8.5 * Math.max(1, .85 / s.camera.aspect);
+                if (![hotfixFront, hotfixBack, hotfixLeft, hotfixRight].every(m => m.map?.image)) continue;
+                // Frame the pouch independently: falling beans must never zoom it out.
+                const tanY = Math.tan(THREE.MathUtils.degToRad(35 / 2));
+                s.camera.position.z = .7 + Math.max(3.02 / tanY, 2.2 / (tanY * s.camera.aspect));
+                s.heroBag!.updateWorldMatrix(true, true);
+                const mesh = s.heroBag!.children[0] as THREE.Mesh;
+                const vertices = mesh.geometry.attributes.position;
+                const outline = [];
+                for (let i = 0; i < vertices.count; i++) {
+                    projectedVertex.fromBufferAttribute(vertices, i).applyMatrix4(mesh.matrixWorld);
+                    const perspective = s.camera.position.z / (s.camera.position.z - projectedVertex.z);
+                    outline.push({x: projectedVertex.x * perspective, y: projectedVertex.y * perspective});
+                }
+                const contour = convexHull(outline);
+                const halfHeight = tanY * s.camera.position.z + .7;
+                const halfWidth = tanY * s.camera.position.z * s.camera.aspect;
+                const bodies = s.floaters.map((bean, i) => {
+                    if (!bean.userData.fall) {
+                        bean.userData.fall = {
+                            x: (i % 2 ? 1 : -1) * (1.9 + (i % 3) * .14),
+                            y: halfHeight - ((i * .61803398875) % 1) * halfHeight * 2,
+                            vx: (i % 2 ? -.12 : .12), vy: -.65 - (i % 4) * .12,
+                            radius: .30 * bean.scale.x, seed: i, laps: 0
+                        };
+                    }
+                    bean.updateMatrixWorld(true);
+                    const m = bean.children[0].matrixWorld.elements;
+                    const radii = [.19, .285, .135];
+                    let xx = 0, xy = 0, yy = 0;
+                    radii.forEach((radius, axis) => {
+                        const x = m[axis * 4] * radius, y = m[axis * 4 + 1] * radius;
+                        xx += x*x; xy += x*y; yy += y*y;
+                    });
+                    Object.assign(bean.userData.fall, {xx, xy, yy});
+                    return bean.userData.fall;
+                });
+                stepBeans(bodies, staticMode ? 0 : delta, contour, halfWidth, halfHeight);
+                s.floaters.forEach((bean, i) => {
+                    bean.position.set(bodies[i].x, bodies[i].y, 0);
+                });
             }
             const left = Math.max(0, r.left), bottom = Math.max(0, innerHeight - r.bottom);
             const width = Math.min(innerWidth, r.right) - left;

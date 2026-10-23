@@ -4,14 +4,16 @@ import fallback from '../assets/demo/monteverde.png';
 interface Props { kind: 'hero' | 'origin' | 'ritual' | 'team'; label: string; }
 const {kind, label} = Astro.props;
 ---
-<div class={`world-stage world-${kind}`} data-world={kind} role="img" aria-label={label}>
+<div class={`world-stage world-${kind}`} data-world={kind === 'ritual' ? undefined : kind} role="img" aria-label={kind === 'ritual' ? 'Taza verde Codebrew con capuchino, espuma y plato a juego' : label}>
   <div class="world-halo" aria-hidden="true"></div>
   {kind === 'hero'
     ? <div class="world-fallback hero-package-preview" aria-hidden="true">
-        <Image src={fallback} alt="" width={1040} height={1600} loading="eager" fetchpriority="high" style="max-width:100%; height:auto;" />
+        <img src="/assets/brand/hotfix-stable-front.webp" alt="" width="1249" height="2048" loading="eager" fetchpriority="high" />
         <span class="preview-side"></span>
       </div>
-    : <Image class="world-fallback" src={fallback} alt="Empaque conceptual CodeBrew" width={768} height={1152} format="webp" loading="lazy" />}
+    : kind === 'ritual'
+      ? <img class="ritual-cup-photo" src="/assets/brand/cappuccino-cup.webp" width="1100" height="1100" alt="" loading="lazy" decoding="async" />
+      : <Image class="world-fallback" src={fallback} alt="Empaque conceptual CodeBrew" width={768} height={1152} format="webp" loading="lazy" />}
   <div class="world-cross cross-one" aria-hidden="true">+</div><div class="world-cross cross-two" aria-hidden="true">+</div>
   {kind === 'hero' && <><span class="world-coordinate">EST. EN PERÚ<br />6° S / 77° O</span><span class="world-stamp">CAFÉ DE ORIGEN<br /><strong>PE</strong><br />ESPÍRITU DEVELOPER</span><span class="world-note">UN BUEN ORIGEN.<br />INFINITAS POSIBILIDADES.</span></>}
   {kind === 'origin' && <span class="world-coordinate">ORIGEN / AMAZONAS<br />RELIEVE INTERPRETATIVO</span>}
