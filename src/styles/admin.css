@@ -102,7 +102,6 @@
   -webkit-font-smoothing:antialiased;
 }
 .admin-body h1,.admin-body h2,.admin-body h3{font-family:var(--font);color:var(--text)}
-.admin-body a{color:inherit}
 .admin-body :focus-visible{outline:none;box-shadow:var(--focus);border-radius:var(--r-sm)}
 .admin-body input[type="checkbox"],.admin-body input[type="radio"]{accent-color:var(--accent);width:16px;height:16px}
 .admin-body code,.admin-body .mono{font-family:var(--mono);font-size:.86em}
