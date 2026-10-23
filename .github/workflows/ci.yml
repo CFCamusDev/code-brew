@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+# Un nuevo push cancela la ejecución anterior de la misma rama o PR.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Tipos, pruebas unitarias y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Revisión de tipos
+        run: pnpm typecheck
+      - name: Pruebas unitarias
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  integracion:
+    name: Pruebas de integración (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: codebrew
+          POSTGRES_USER: codebrew
+          POSTGRES_PASSWORD: codebrew
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U codebrew -d codebrew"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://codebrew:codebrew@localhost:5432/codebrew
+      # Sin llaves de Culqi ni Resend: las pruebas no cobran ni envían correos reales.
+      CULQI_WEBHOOK_SECRET: ci-secreto-webhook
+      INTEGRATION_BASE_URL: http://127.0.0.1:4321
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Migraciones y catálogo inicial
+        run: |
+          pnpm db:migrate
+          pnpm db:seed
+      - name: Levantar el servidor
+        run: |
+          HOST=127.0.0.1 PORT=4321 nohup node dist/server/entry.mjs > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fs "$INTEGRATION_BASE_URL/api/health" && exit 0
+            sleep 1
+          done
+          echo "El servidor no respondió"; cat server.log; exit 1
+      - name: Pruebas de integración
+        run: pnpm test:integration
+      - name: Log del servidor
+        if: failure()
+        run: cat server.log
+
+  docker:
+    name: Imagen Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build de la app
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build del proxy Nginx
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: web
+          push: false

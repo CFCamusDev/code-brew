@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { CartLine, Customer, Quote } from '../shop/checkout';
+import { isFreeShipping } from '../shop/shipping';
 import { getDb } from './db';
 import { orderItems, orders, products, productVariants, shippingRegionRates, shippingZones } from './db/schema';
 
@@ -123,13 +124,6 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
     shippingCents,
     totalCents: shippingCents === null ? null : subtotalCents + shippingCents
   };
-}
-
-export function isFreeShipping(zone: Quote['zones'][number], subtotalCents: number, bags: number) {
-  return (
-    (zone.freeFromCents !== null && subtotalCents >= zone.freeFromCents) ||
-    (zone.freeFromBags !== null && bags >= zone.freeFromBags)
-  );
 }
 
 /** Crea un pedido pendiente de pago con precios y envío recalculados en el servidor. */
