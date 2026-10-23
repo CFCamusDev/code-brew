@@ -1,5 +1,6 @@
+import { stepBeans, convexHull } from './bean-physics';
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { createHotfixGeometry, createHotfixZipper } from './hotfix-geometry';
 /** One WebGL renderer, scissored to the visible editorial stages. */
 export function mountWorlds() {
     const hosts = [...document.querySelectorAll<HTMLElement>('[data-world]')];
@@ -27,14 +28,15 @@ export function mountWorlds() {
     const remember = <T extends THREE.BufferGeometry | THREE.Material | THREE.Texture>(value: T): T => { resources.add(value); return value; };
     const cream = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .82, metalness: .02 }));
     const green = remember(new THREE.MeshStandardMaterial({ color: '#214d39', roughness: .7 }));
-    const beanMaterials = ['#ffffff', '#d9b89b', '#bda18b'].map(color => remember(
-        new THREE.MeshStandardMaterial({ color, vertexColors: true, roughness: .64, metalness: 0 })
+    const valveMaterial = remember(new THREE.MeshStandardMaterial({ color: '#b7ae93', roughness: .75, metalness: .04 }));
+    const beanMaterials = ['#ffffff', '#e7cba5', '#bfa58d'].map(color => remember(
+        new THREE.MeshStandardMaterial({ color, vertexColors: true, roughness: .76, metalness: 0 })
     ));
     const beanGeometry = remember(new THREE.SphereGeometry(1, 64, 48));
     const beanPositions = beanGeometry.attributes.position;
     const beanColors = [];
-    const roast = new THREE.Color('#60331c');
-    const creaseColor = new THREE.Color('#1b0d06');
+    const roast = new THREE.Color('#704622');
+    const creaseColor = new THREE.Color('#29170b');
     for (let i = 0; i < beanPositions.count; i++) {
         const x = beanPositions.getX(i), y = beanPositions.getY(i), z = beanPositions.getZ(i);
         const seam = .075 * Math.sin(y * 3.7) + .025 * Math.sin(y * 9);
@@ -64,6 +66,22 @@ export function mountWorlds() {
         group.add(mesh);
         return group;
     }
+    function wrapText(x: CanvasRenderingContext2D, text: string, left: number, top: number, maxWidth: number, lineHeight: number) {
+        const words = text.split(' ');
+        let line = '', y = top;
+        for (const word of words) {
+            const test = line ? `${line} ${word}` : word;
+            if (x.measureText(test).width > maxWidth && line) {
+                x.fillText(line, left, y);
+                line = word;
+                y += lineHeight;
+            }
+            else {
+                line = test;
+            }
+        }
+        if (line) x.fillText(line, left, y);
+    }
     function packageTexture(label: string, color: string) {
         const c = document.createElement('canvas');
         c.width = 768;
@@ -80,10 +98,33 @@ export function mountWorlds() {
         x.fillStyle = '#213e31';
         x.font = 'bold 86px Georgia';
         x.fillText('codebrew', 384, 340);
+        x.font = '28px Georgia';
+        x.fillText('®', 384 + x.measureText('codebrew').width / 2 + 16, 310);
         x.font = '19px sans-serif';
         x.fillText('C O F F E E  F O R  D E V E L O P E R S', 384, 390);
+        // Válvula de desgasificación: anillo gris embebido en el papel, con punto central.
+        x.save();
+        x.fillStyle = '#00000014';
+        x.beginPath();
+        x.arc(384, 452, 30, 0, Math.PI * 2);
+        x.fill();
+        x.strokeStyle = '#21302722';
+        x.lineWidth = 3;
+        x.beginPath();
+        x.arc(384, 452, 24, 0, Math.PI * 2);
+        x.stroke();
+        x.fillStyle = '#21302735';
+        x.beginPath();
+        x.arc(384, 452, 4.5, 0, Math.PI * 2);
+        x.fill();
+        x.restore();
+        const labelX = 58, labelY = 515, labelW = 652, labelH = 500, labelR = 28;
+        x.save();
+        x.beginPath();
+        x.roundRect(labelX, labelY, labelW, labelH, labelR);
+        x.clip();
         x.fillStyle = color;
-        x.fillRect(58, 515, 652, 500);
+        x.fillRect(labelX, labelY, labelW, labelH);
         x.strokeStyle = '#e6e2bc35';
         x.lineWidth = 1.5;
         for (let j = 0; j < 13; j++) {
@@ -94,6 +135,7 @@ export function mountWorlds() {
             }
             x.stroke();
         }
+        x.restore();
         x.fillStyle = '#f5efdb';
         x.font = `${label.length > 9 ? 65 : 78}px Georgia`;
         x.fillText(label, 384, 730);
@@ -170,6 +212,13 @@ export function mountWorlds() {
         texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
         return texture;
     }
+    const textureLoader = new THREE.TextureLoader();
+    function printedFace(face: string) {
+        const texture = remember(textureLoader.load(`/assets/brand/hotfix-stable-${face}.webp`, () => request()));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        return remember(new THREE.MeshStandardMaterial({ map: texture, roughness: .9, metalness: 0 }));
+    }
     const pouchGeometry = remember(new THREE.BoxGeometry(2.25, 3.55, .57, 28, 40, 6));
     const pos = pouchGeometry.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -180,115 +229,40 @@ export function mountWorlds() {
         pos.setXYZ(i, x * taper, y, z * (.58 + Math.sin(vertical * Math.PI) * .42) + Math.sign(z) * bulge);
     }
     pouchGeometry.computeVertexNormals();
-    // Bolsa de café con fuelle lateral y sellado superior limpio tipo stand-up pouch
-    const hotfixGeometry = remember(new THREE.BoxGeometry(2.32, 3.65, 0.82, 32, 48, 16));
-    const hotfixPositions = hotfixGeometry.attributes.position;
-    for (let i = 0; i < hotfixPositions.count; i++) {
-        let x = hotfixPositions.getX(i);
-        let y = hotfixPositions.getY(i);
-        let z = hotfixPositions.getZ(i);
-
-        const ny = y / 1.825; // Normalizado de -1 a 1
-
-        // 1. Inflado orgánico del cuerpo con café (belly), que se desvanece cerca de los paneles laterales
-        // para no redondear las esquinas: el panel frontal/trasero abomba al centro pero llega plano al borde.
-        const absX = Math.abs(x);
-        const edgeFactor = 1.0 - THREE.MathUtils.smoothstep(absX, 0.52, 0.92);
-        if (ny > -0.85 && ny < 0.60) {
-            const belly = Math.cos((ny + 0.1) * Math.PI * 0.58);
-            if (belly > 0) {
-                z *= 1.0 + belly * 0.22 * edgeFactor;
-            }
-        }
-
-        // 2. Fuelles laterales (gussets) con pliegue central visible, como en una bolsa stand-up pouch real:
-        // el panel lateral se hunde hacia la mitad de su profundidad, dejando una arista/sombra marcada en z=0.
-        // La esquina (absX y |z| altos a la vez) se deja casi intacta para que se note como una arista definida.
-        if (absX > 0.78 && ny > -0.88 && ny < 0.65) {
-            const sideTuck = THREE.MathUtils.smoothstep(absX, 0.78, 1.16);
-            const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
-            const crease = Math.pow(centerZ, 1.8);
-            x -= Math.sign(x) * sideTuck * crease * 0.16;
-        }
-
-        // 3. Transición superior hacia el sello (pliegue triangular tipo gable / tin-tie) y la zona plana
-        // del propio sello (ny > 0.84): una sola curva continua desde ny = 0.60 hasta la punta, para que
-        // el ancho nunca "rebote" hacia afuera justo antes del sello (lo que lo desalineaba del cuerpo).
-        if (ny >= 0.60) {
-            const t = Math.min(1, (ny - 0.60) / 0.24);
-            const smoothT = t * t * (3 - 2 * t);
-            z *= (1.0 - smoothT * 0.88);
-            if (absX > 0.68) {
-                const foldTuck = Math.min(1, (absX - 0.68) / 0.48);
-                const centerZ = 1.0 - Math.min(1.0, Math.abs(z) / 0.41);
-                x -= Math.sign(x) * foldTuck * centerZ * (0.06 + smoothT * 0.16);
-            }
-        }
-
-        // 5. Base sólida
-        if (ny < -0.88) {
-            const b = (ny + 0.88) / -0.12;
-            z *= (1.0 + b * 0.06);
-        }
-
-        hotfixPositions.setXYZ(i, x, y, z);
-    }
-    hotfixGeometry.computeVertexNormals();
+    const hotfixGeometry = remember(createHotfixGeometry());
     const frontGreen = remember(new THREE.MeshStandardMaterial({ map: packageTexture('Monteverde', '#2c523b'), roughness: .88 }));
     const frontOrange = remember(new THREE.MeshStandardMaterial({ map: packageTexture('Espresso', '#9e563c'), roughness: .88 }));
     const backGreen = remember(new THREE.MeshStandardMaterial({ map: backTexture('Monteverde', '#2c523b'), roughness: .88 }));
     const backOrange = remember(new THREE.MeshStandardMaterial({ map: backTexture('Espresso', '#9e563c'), roughness: .88 }));
-    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#1d2822', roughness: .88 }));
-    const textureLoader = new THREE.TextureLoader();
-    function printedMaterial(path: string) {
-        const material = remember(new THREE.MeshStandardMaterial({ color: '#1d2822', roughness: .88 }));
-        const texture = remember(textureLoader.load(path, loaded => {
-            if (disposed) { loaded.dispose(); return; }
-            material.color.set('#ffffff');
-            material.map = loaded;
-            material.needsUpdate = true;
-            request();
-        }));
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        return material;
-    }
-    const hotfixFront = printedMaterial('/assets/brand/hotfix-front.webp');
-    const hotfixBack = printedMaterial('/assets/brand/hotfix-back.webp');
-    const hotfixSide = printedMaterial('/assets/brand/hotfix-side.webp');
+    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .9 }));
+    const hotfixBase = remember(new THREE.MeshStandardMaterial({ color: '#1d392b', roughness: .9 }));
+    const hotfixFront = printedFace('front');
+    const hotfixBack = printedFace('back');
+    const hotfixLeft = printedFace('left');
+    const hotfixRight = printedFace('right');
     const sealGeometry = remember(new THREE.BoxGeometry(2.02, .035, .22));
     const valveGeometry = remember(new THREE.CylinderGeometry(.083, .083, .02, 20));
     function pouch(orange = false, hotfix = false) {
         const group = new THREE.Group();
         group.add(new THREE.Mesh(hotfix ? hotfixGeometry : pouchGeometry, hotfix
-            ? [hotfixSide, hotfixSide, hotfixBody, hotfixBody, hotfixFront, hotfixBack]
+            ? [hotfixRight, hotfixLeft, hotfixBody, hotfixBase, hotfixFront, hotfixBack]
             : [cream, cream, cream, cream, orange ? frontOrange : frontGreen, orange ? backOrange : backGreen]));
-        if (hotfix) {
-            // Sello superior plano realista (barra de sellado térmico / tin-tie clip)
-            // Ancho ajustado al ancho real del cuerpo ya angostado en esa altura (~1.88), para que coincida
-            // con el contorno de la bolsa en vez de sobresalir por los costados.
-            const sealBarGeom = remember(new THREE.BoxGeometry(1.8, 0.18, 0.1));
-            const sealBar = new THREE.Mesh(sealBarGeom, hotfixBody);
-            sealBar.position.y = 1.73;
-            group.add(sealBar);
-
-            // Relieves de sellado térmico sutiles
-            const crimpGeom = remember(new THREE.BoxGeometry(1.78, 0.018, 0.11));
-            for (const cy of [1.68, 1.73, 1.78]) {
-                const crimp = new THREE.Mesh(crimpGeom, hotfixBody);
-                crimp.position.y = cy;
-                group.add(crimp);
-            }
-        }
         for (let i = 0; !hotfix && i < 3; i++) {
             const seal = new THREE.Mesh(sealGeometry, cream);
             seal.position.set(0, 1.49 + i * .055, .17);
             group.add(seal);
         }
-        const valve = new THREE.Mesh(valveGeometry, cream);
+        // Alineada con el anillo impreso en la textura frontal (misma posición que el círculo dibujado en el canvas).
+        if (hotfix) {
+            for (const geometry of createHotfixZipper()) {
+                group.add(new THREE.Mesh(remember(geometry), hotfixBody));
+            }
+            return group; // The valve is already present in the original artwork.
+        }
+        const valve = new THREE.Mesh(valveGeometry, valveMaterial);
         valve.rotation.x = Math.PI / 2;
-        valve.position.set(.45, 1.03, .33);
-        if (!hotfix) group.add(valve);
+        valve.position.set(0, hotfix ? .39 : .38, hotfix ? .49 : .345);
+        group.add(valve);
         return group;
     }
     const states = hosts.map(host => {
@@ -330,18 +304,12 @@ export function mountWorlds() {
                 const b = bean();
                 const angle = i / count * Math.PI * 2;
                 b.position.set(Math.cos(angle) * (1.8 + (i % 3) * .22), Math.sin(angle) * 2.1, Math.sin(i * 2) * .7);
-                if (kind === 'hero') {
-                    // Keep bean centers outside the bag's full rotational envelope,
-                    // including their own radius and the wave animation offsets.
-                    const x = Math.cos(angle), y = Math.sin(angle);
-                    const clearance = Math.min(2.02 / Math.max(Math.abs(x), .0001), 2.78 / Math.max(Math.abs(y), .0001));
-                    b.position.set(x * clearance, y * clearance, Math.sin(i * 2) * .35);
-                }
                 b.rotation.set(i * .7, i * .9, i * .5);
                 const s = .65 + (i % 4) * .16;
                 b.scale.setScalar(s);
                 b.userData.restPosition = b.position.clone();
-                root.add(b);
+                if (kind === 'hero') scene.add(b);
+                else root.add(b);
                 floaters.push(b);
             }
         }
@@ -375,31 +343,6 @@ export function mountWorlds() {
             root.position.y = -.3;
             root.scale.setScalar(.8);
         }
-        else {
-            const points = [new THREE.Vector2(.02, -.8), new THREE.Vector2(.64, -.8), new THREE.Vector2(.78, -.7), new THREE.Vector2(.91, .55), new THREE.Vector2(.9, .68), new THREE.Vector2(.83, .69), new THREE.Vector2(.81, .57), new THREE.Vector2(.7, -.55), new THREE.Vector2(.02, -.55)];
-            const cup = new THREE.Mesh(remember(new THREE.LatheGeometry(points, 64)), green);
-            root.add(cup);
-            const handle = new THREE.Mesh(remember(new THREE.TorusGeometry(.48, .115, 12, 40, Math.PI * 1.75)), green);
-            handle.position.set(.93, 0, 0);
-            handle.rotation.z = -Math.PI * .875;
-            root.add(handle);
-            const coffee = new THREE.Mesh(remember(new THREE.CircleGeometry(.815, 64)), remember(new THREE.MeshStandardMaterial({ color: '#351b0c', roughness: .22 })));
-            coffee.rotation.x = -Math.PI / 2;
-            coffee.position.y = .56;
-            root.add(coffee);
-            const saucer = new THREE.Mesh(remember(new THREE.CylinderGeometry(1.4, 1.3, .09, 64)), cream);
-            saucer.position.y = -.86;
-            root.add(saucer);
-            for (let i = 0; i < 3; i++) {
-                const points = [];
-                for (let j = 0; j < 24; j++)
-                    points.push(new THREE.Vector3(Math.sin(j * .3 + i) * .1 + (i - 1) * .24, .8 + j * .055, 0));
-                const steam = new THREE.Mesh(remember(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 32, .012, 5, false)), remember(new THREE.MeshBasicMaterial({ color: '#d3bb97', transparent: true, opacity: .38 })));
-                root.add(steam);
-            }
-            root.rotation.set(.3, -.22, -.08);
-            root.scale.setScalar(1.45);
-        }
         return { host, kind, scene, camera, root, floaters, heroBag, scrollProgress: 0 };
     });
     let frame = 0, disposed = false, inView = true, pointerX = 0, pointerY = 0;
@@ -413,7 +356,7 @@ export function mountWorlds() {
     } };
     const resize = () => { renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.25 : 1.6)); renderer.setSize(innerWidth, innerHeight); request(); };
     const clamp = THREE.MathUtils.clamp;
-    const heroBounds = new THREE.Box3();
+    const projectedVertex = new THREE.Vector3();
     function draw(time: number) {
         frame = 0;
         if (disposed || document.hidden)
@@ -432,9 +375,6 @@ export function mountWorlds() {
             const r = s.host.getBoundingClientRect();
             if (r.bottom < 0 || r.top > innerHeight || r.width === 0)
                 continue;
-            // Keep the styled preview until all printed faces are available.
-            if (s.kind === 'hero' && (!hotfixFront.map || !hotfixBack.map || !hotfixSide.map))
-                continue;
             s.camera.aspect = r.width / r.height;
             s.camera.position.z = 8.7 * Math.max(1, (s.kind === 'origin' ? 1.15 : .82) / s.camera.aspect);
             s.camera.updateProjectionMatrix();
@@ -452,7 +392,7 @@ export function mountWorlds() {
                     s.root.scale.setScalar(1 - scroll * .08);
                     if (s.heroBag) {
                         // Giro continuo de 360° para lucir todas las caras de la bolsa, con un leve tilt por mouse/scroll.
-                        s.heroBag.rotation.y = t * 0.4 + pointerX * 0.12 + scroll * 0.35;
+                        s.heroBag.rotation.y = -.35 + elapsed * Math.PI * 2 / 48 + pointerX * .08 + scroll * .8;
                         s.heroBag.rotation.x = 0.05 + Math.cos(t * 0.9) * 0.03 + pointerY * 0.04;
                         s.heroBag.rotation.z = Math.sin(t * 0.6) * 0.015;
                     }
@@ -466,15 +406,50 @@ export function mountWorlds() {
                 s.floaters.forEach((b, i) => {
                     b.rotation.x = t * .6 + i * .7;
                     b.rotation.y = t * .4 + i * .9;
-                    if (s.kind === 'hero') {
-                        const rest = b.userData.restPosition as THREE.Vector3;
-                        b.position.y = rest.y + Math.sin(t * 1.15 + i * .65) * .1;
-                        b.position.x = rest.x + Math.sin(t * .85 + i * .65) * .045;
-                    }
+
                 });
             }
             if (s.kind === 'hero') {
-                s.camera.position.z = 8.5 * Math.max(1, .85 / s.camera.aspect);
+                if (![hotfixFront, hotfixBack, hotfixLeft, hotfixRight].every(m => m.map?.image)) continue;
+                // Frame the pouch independently: falling beans must never zoom it out.
+                const tanY = Math.tan(THREE.MathUtils.degToRad(35 / 2));
+                s.camera.position.z = .7 + Math.max(3.02 / tanY, 2.2 / (tanY * s.camera.aspect));
+                s.heroBag!.updateWorldMatrix(true, true);
+                const mesh = s.heroBag!.children[0] as THREE.Mesh;
+                const vertices = mesh.geometry.attributes.position;
+                const outline = [];
+                for (let i = 0; i < vertices.count; i++) {
+                    projectedVertex.fromBufferAttribute(vertices, i).applyMatrix4(mesh.matrixWorld);
+                    const perspective = s.camera.position.z / (s.camera.position.z - projectedVertex.z);
+                    outline.push({x: projectedVertex.x * perspective, y: projectedVertex.y * perspective});
+                }
+                const contour = convexHull(outline);
+                const halfHeight = tanY * s.camera.position.z + .7;
+                const halfWidth = tanY * s.camera.position.z * s.camera.aspect;
+                const bodies = s.floaters.map((bean, i) => {
+                    if (!bean.userData.fall) {
+                        bean.userData.fall = {
+                            x: (i % 2 ? 1 : -1) * (1.9 + (i % 3) * .14),
+                            y: halfHeight - ((i * .61803398875) % 1) * halfHeight * 2,
+                            vx: (i % 2 ? -.12 : .12), vy: -.65 - (i % 4) * .12,
+                            radius: .30 * bean.scale.x, seed: i, laps: 0
+                        };
+                    }
+                    bean.updateMatrixWorld(true);
+                    const m = bean.children[0].matrixWorld.elements;
+                    const radii = [.19, .285, .135];
+                    let xx = 0, xy = 0, yy = 0;
+                    radii.forEach((radius, axis) => {
+                        const x = m[axis * 4] * radius, y = m[axis * 4 + 1] * radius;
+                        xx += x*x; xy += x*y; yy += y*y;
+                    });
+                    Object.assign(bean.userData.fall, {xx, xy, yy});
+                    return bean.userData.fall;
+                });
+                stepBeans(bodies, staticMode ? 0 : delta, contour, halfWidth, halfHeight);
+                s.floaters.forEach((bean, i) => {
+                    bean.position.set(bodies[i].x, bodies[i].y, 0);
+                });
             }
             const left = Math.max(0, r.left), bottom = Math.max(0, innerHeight - r.bottom);
             const width = Math.min(innerWidth, r.right) - left;
