@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 # Un nuevo push cancela la ejecución anterior de la misma rama o PR.
 concurrency:
