@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import * as culqi from '../culqi';
 import { getDb } from '../db';
 import { adminUsers, orderEvents, orderItems, orders, payments, productVariants, stockMovements } from '../db/schema';
@@ -232,4 +232,42 @@ export async function refundOrder(
 
 export async function saveAdminNotes(orderId: string, adminNotes: string) {
   await getDb().update(orders).set({ adminNotes: adminNotes || null }).where(eq(orders.id, orderId));
+}
+
+export const MAX_DISPATCH_SHEETS = 50;
+
+/** Datos de entrega y productos para imprimir hojas de despacho, en el orden pedido. Sin montos ni pagos. */
+export async function getDispatchSheets(ids: string[]) {
+  if (!ids.length) return [];
+  const db = getDb();
+  const [orderRows, itemRows] = await Promise.all([
+    db
+      .select({
+        id: orders.id,
+        number: orders.number,
+        status: orders.status,
+        customerName: orders.customerName,
+        customerPhone: orders.customerPhone,
+        shippingAddress: orders.shippingAddress,
+        shippingDistrict: orders.shippingDistrict,
+        shippingCity: orders.shippingCity,
+        shippingRegion: orders.shippingRegion,
+        shippingReference: orders.shippingReference,
+        shippingZoneName: orders.shippingZoneName,
+        notes: orders.notes,
+        carrier: orders.carrier,
+        trackingNumber: orders.trackingNumber,
+        stockShortage: orders.stockShortage,
+        paidAt: orders.paidAt
+      })
+      .from(orders)
+      .where(inArray(orders.id, ids)),
+    db
+      .select({ orderId: orderItems.orderId, productName: orderItems.productName, format: orderItems.format, grind: orderItems.grind, quantity: orderItems.quantity })
+      .from(orderItems)
+      .where(inArray(orderItems.orderId, ids))
+      .orderBy(asc(orderItems.id))
+  ]);
+  const byId = new Map(orderRows.map(order => [order.id, { ...order, items: itemRows.filter(item => item.orderId === order.id) }]));
+  return ids.map(id => byId.get(id)).filter(order => order !== undefined);
 }

@@ -301,3 +301,7 @@
 .stock-list{list-style:none;margin:0;padding:0;display:grid}
 .stock-list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
 .stock-list li:last-child{border-bottom:0}
+
+/* Impresión en lote */
+.bulk-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:13px}
+.bulk-bar .btn[aria-disabled="true"]{opacity:.45;pointer-events:none}

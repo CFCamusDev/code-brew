@@ -20,6 +20,8 @@ const link = (changes: Record<string, string | undefined>) => {
   return `/admin/pedidos${query ? `?${query}` : ''}`;
 };
 const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+// En las colas de armado se pueden marcar pedidos para imprimir sus hojas de despacho en lote.
+const selectable = status === 'paid' || status === 'preparing';
 ---
 <AdminLayout title="Pedidos">
   <div class="admin-head">
@@ -41,15 +43,23 @@ const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
     ))}
   </nav>
 
+  {selectable && rows.length > 0 && (
+    <div class="bulk-bar">
+      <span id="selected-count">Ningún pedido seleccionado</span>
+      <a class="btn small" id="print-selected" href="/admin/despacho" aria-disabled="true">Imprimir hojas de despacho</a>
+    </div>
+  )}
+
   <div class="table-wrap">
     <table class="admin-table">
       <thead>
-        <tr><th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Destino</th><th class="num">Total</th><th>Estado</th></tr>
+        <tr>{selectable && <th><input type="checkbox" id="select-all" aria-label="Seleccionar todos" /></th>}<th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Destino</th><th class="num">Total</th><th>Estado</th></tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <tr><td class="empty-row" colspan="6">No hay pedidos con estos filtros.</td></tr>}
+        {rows.length === 0 && <tr><td class="empty-row" colspan={selectable ? 7 : 6}>No hay pedidos con estos filtros.</td></tr>}
         {rows.map(order => (
           <tr>
+            {selectable && <td><input type="checkbox" class="select-order" value={order.id} aria-label={`Seleccionar ${formatOrderNumber(order.number)}`} /></td>}
             <td><a class="row-link" href={`/admin/pedidos/${order.id}`}>{formatOrderNumber(order.number)}</a></td>
             <td>{formatDateTime(order.createdAt)}</td>
             <td>{order.customerName}<br /><small class="muted">{order.customerPhone}</small></td>
@@ -72,3 +82,26 @@ const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
     </nav>
   )}
 </AdminLayout>
+<script>
+  const boxes = [...document.querySelectorAll<HTMLInputElement>('.select-order')];
+  const all = document.getElementById('select-all') as HTMLInputElement | null;
+  const link = document.getElementById('print-selected') as HTMLAnchorElement | null;
+  const label = document.getElementById('selected-count');
+  const refresh = () => {
+    const ids = boxes.filter(box => box.checked).map(box => box.value);
+    if (link) {
+      link.href = `/admin/despacho?ids=${ids.join(',')}`;
+      link.setAttribute('aria-disabled', String(ids.length === 0));
+    }
+    if (label) label.textContent = ids.length ? `${ids.length} ${ids.length === 1 ? 'pedido seleccionado' : 'pedidos seleccionados'}` : 'Ningún pedido seleccionado';
+    if (all) all.checked = ids.length > 0 && ids.length === boxes.length;
+  };
+  boxes.forEach(box => box.addEventListener('change', refresh));
+  all?.addEventListener('change', () => {
+    boxes.forEach(box => (box.checked = all.checked));
+    refresh();
+  });
+  link?.addEventListener('click', event => {
+    if (link.getAttribute('aria-disabled') === 'true') event.preventDefault();
+  });
+</script>

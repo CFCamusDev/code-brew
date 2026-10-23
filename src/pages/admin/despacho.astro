@@ -1,0 +1,130 @@
+---
+import LogoMark from '../../components/LogoMark.astro';
+import { getDispatchSheets, MAX_DISPATCH_SHEETS } from '../../lib/server/admin/orders';
+import { isOrderId } from '../../lib/server/shop';
+import { formatDateTime, formatOrderNumber } from '../../lib/shop/format';
+
+export const prerender = false;
+
+// /admin/despacho?ids=<uuid>,<uuid>&formato=a4 — hojas para armar y rotular paquetes. Sin montos ni datos de pago.
+const params = Astro.url.searchParams;
+const ids = [...new Set((params.get('ids') ?? '').split(',').filter(isOrderId))].slice(0, MAX_DISPATCH_SHEETS);
+const format = params.get('formato') === 'a4' ? 'A4' : 'A5';
+const sheets = await getDispatchSheets(ids);
+if (!sheets.length) return new Response('No hay pedidos para imprimir', { status: 404 });
+
+const back = sheets.length === 1 ? `/admin/pedidos/${sheets[0].id}` : '/admin/pedidos';
+const otherFormat = new URLSearchParams(params);
+otherFormat.set('formato', format === 'A5' ? 'a4' : 'a5');
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{sheets.length === 1 ? `Despacho ${formatOrderNumber(sheets[0].number)}` : `Despacho · ${sheets.length} pedidos`}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
+    <style set:html={`@page { size: ${format}; margin: 10mm; }`}></style>
+  </head>
+  <body data-format={format}>
+    <div class="toolbar">
+      <a href={back}>← Volver</a>
+      <span>{sheets.length} {sheets.length === 1 ? 'hoja' : 'hojas'} · formato {format}</span>
+      <a href={`?${otherFormat}`}>Cambiar a {format === 'A5' ? 'A4' : 'A5'}</a>
+      <button type="button" id="print">Imprimir</button>
+    </div>
+
+    {sheets.map(order => (
+      <article class="sheet" data-order={order.id}>
+        <header>
+          <span class="brand"><LogoMark size={22} />codebrew</span>
+          <span class="number">{formatOrderNumber(order.number)}</span>
+        </header>
+
+        {order.stockShortage && <p class="warning">Revisar stock antes de armar: este pedido se pagó sin stock suficiente.</p>}
+
+        <section class="to">
+          <p class="label">Para</p>
+          <p class="name">{order.customerName}</p>
+          <p class="phone">Cel. {order.customerPhone.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')}</p>
+          <p>{order.shippingAddress}</p>
+          <p><strong>{order.shippingDistrict}</strong>, {order.shippingCity}, {order.shippingRegion}</p>
+          {order.shippingReference && <p>Ref.: {order.shippingReference}</p>}
+          <p class="zone">{order.shippingZoneName}{order.carrier && ` · ${order.carrier}`}{order.trackingNumber && ` · ${order.trackingNumber}`}</p>
+        </section>
+
+        <section>
+          <p class="label">Contenido</p>
+          <table>
+            <thead><tr><th class="qty">Cant.</th><th>Café</th><th>Molienda</th><th class="check">Listo</th></tr></thead>
+            <tbody>
+              {order.items.map(item => (
+                <tr>
+                  <td class="qty">{item.quantity}</td>
+                  <td>{item.productName} · {item.format}</td>
+                  <td>{item.grind}</td>
+                  <td class="check"><span class="box"></span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {order.notes && (
+          <section class="note">
+            <p class="label">Nota del cliente</p>
+            <p>{order.notes}</p>
+          </section>
+        )}
+
+        <footer>
+          <span>Pagado {order.paidAt ? formatDateTime(order.paidAt) : '—'}</span>
+          <span>Armó: ________ · Revisó: ________</span>
+        </footer>
+      </article>
+    ))}
+
+    <script>
+      document.getElementById('print')?.addEventListener('click', () => window.print());
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root { --ink: #203c32; --muted: #5f6b62; --line: #c9cdc0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e6dd; color: var(--ink); font: 13px/1.45 'DM Sans', Arial, sans-serif; }
+  .toolbar { position: sticky; top: 0; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px 16px; background: var(--ink); color: #f4f1e9; font-size: 14px; }
+  .toolbar a { color: inherit; }
+  .toolbar button { margin-left: auto; padding: 8px 16px; border: 0; border-radius: 4px; background: #d16c40; color: #fff; font: 600 14px inherit; cursor: pointer; }
+  .sheet { background: #fff; margin: 20px auto; padding: 12mm; width: min(148mm, calc(100% - 32px)); display: grid; gap: 14px; box-shadow: 0 2px 10px #0002; }
+  body[data-format="A4"] .sheet { width: min(210mm, calc(100% - 32px)); }
+  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+  .brand { display: inline-flex; align-items: center; gap: 6px; font: 800 18px Manrope, Arial, sans-serif; }
+  .number { font: 800 26px/1 Manrope, Arial, sans-serif; letter-spacing: -0.5px; }
+  .label { margin: 0 0 4px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  p { margin: 0; }
+  .to { border: 1.5px solid var(--ink); border-radius: 4px; padding: 10px 12px; display: grid; gap: 2px; font-size: 14px; }
+  .name { font: 700 18px/1.2 Manrope, Arial, sans-serif; }
+  .phone { font-weight: 700; }
+  .zone { margin-top: 4px; color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .qty { width: 40px; font: 700 15px Manrope, Arial, sans-serif; text-align: center; }
+  .check { width: 44px; text-align: center; }
+  .box { display: inline-block; width: 14px; height: 14px; border: 1.5px solid var(--ink); border-radius: 2px; }
+  .note { background: #f4f1e9; padding: 8px 10px; border-radius: 4px; }
+  .warning { padding: 8px 10px; border: 2px solid #b4532a; color: #b4532a; font-weight: 700; }
+  footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 11px; border-top: 1px dashed var(--line); padding-top: 8px; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .sheet { margin: 0; padding: 0; width: auto; box-shadow: none; break-after: page; }
+    .sheet:last-of-type { break-after: auto; }
+  }
+</style>

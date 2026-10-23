@@ -239,3 +239,32 @@ describe('inicio del panel', () => {
     expect(text).toContain('Agotado');
   });
 });
+
+describe('hoja de despacho', () => {
+  it('imprime varios pedidos sin montos ni datos de pago', async () => {
+    const first = await paidOrder();
+    const second = await paidOrder();
+    const sql = db();
+    const numbers = await sql`select number from orders where id in (${first}, ${second}) order by number`;
+    await sql.end();
+
+    const page = await api(`/admin/despacho?ids=${first},${second},no-es-un-id`, { cookie: operatorCookie });
+    expect(page.status).toBe(200);
+    expect(page.text.match(/class="sheet"/g)).toHaveLength(2);
+    for (const { number } of numbers) expect(page.text).toContain(`CB-${String(number).padStart(6, '0')}`);
+    expect(page.text).toContain(customer.address);
+    expect(page.text).not.toMatch(/S\/\s?\d/);
+  });
+
+  it('responde 404 sin pedidos válidos y exige sesión', async () => {
+    expect((await api('/admin/despacho?ids=abc', { cookie: adminCookie })).status).toBe(404);
+    expect((await api(`/admin/despacho?ids=${randomUUID()}`)).status).toBe(302);
+  });
+
+  it('la cola “por preparar” permite seleccionar pedidos para imprimir', async () => {
+    const page = await api('/admin/pedidos?estado=paid', { cookie: adminCookie });
+    expect(page.text).toContain('class="select-order"');
+    expect(page.text).toContain('Imprimir hojas de despacho');
+    expect((await api('/admin/pedidos?estado=delivered', { cookie: adminCookie })).text).not.toContain('class="select-order"');
+  });
+});
