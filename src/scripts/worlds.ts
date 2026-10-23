@@ -261,7 +261,9 @@ export function mountWorlds() {
         x.arc(384, 452, 4.5, 0, Math.PI * 2);
         x.fill();
         x.restore();
-        const labelX = 58, labelY = 540, labelW = 652, labelH = 475, labelR = 28;
+        // Etiqueta angosta (centrada, con buen margen a cada lado): así su contorno redondeado
+        // queda lejos del canto de la bolsa y no se deforma al girar en ángulos rasantes.
+        const labelX = 120, labelY = 540, labelW = 528, labelH = 475, labelR = 26;
         x.save();
         x.beginPath();
         x.roundRect(labelX, labelY, labelW, labelH, labelR);
@@ -313,44 +315,49 @@ export function mountWorlds() {
             x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
             x.fillRect((i * 127) % 768, (i * 71) % 1152, 2, 2);
         }
+        // Margen generoso: el contenido se mantiene lejos de los bordes para no deformarse
+        // por la perspectiva cuando la bolsa gira y esa zona queda casi de canto a la cámara.
+        const M = 120, R = 768 - M;
         x.textAlign = 'left';
         x.fillStyle = '#8a8372';
         x.font = '18px monospace';
-        x.fillText('// hotfix.js', 60, 90);
-        pillBadge(x, 650, 76, 'PIPELINE · STABLE');
+        x.fillText('// hotfix.js', M, 90);
+        pillBadge(x, 540, 76, 'PIPELINE · STABLE');
         x.fillStyle = '#213e31';
-        x.font = '38px Georgia';
-        wrapText(x, 'Hay bugs que no esperan al próximo sprint. Para esos, existe un hotfix.', 60, 165, 648, 46);
+        x.font = '36px Georgia';
+        wrapText(x, 'Hay bugs que no esperan al próximo sprint. Para esos, existe un hotfix.', M, 165, R - M, 44);
         x.fillStyle = '#4b564c';
-        x.font = '18px sans-serif';
-        wrapText(x, 'Cultivado en la ceja de selva de Rodríguez de Mendoza, Amazonas. Lavado, secado con paciencia y tostado medio-oscuro para un espresso de cuerpo alto, dulzor a chancaca y un final limpio de cacao.', 60, 330, 648, 27);
+        x.font = '17px sans-serif';
+        wrapText(x, 'Cultivado en la ceja de selva de Rodríguez de Mendoza, Amazonas. Lavado, secado con paciencia y tostado medio-oscuro para un espresso de cuerpo alto, dulzor a chancaca y un final limpio de cacao.', M, 330, R - M, 26);
         x.strokeStyle = '#21302730';
         x.lineWidth = 1;
-        x.beginPath(); x.moveTo(60, 455); x.lineTo(708, 455); x.stroke();
+        x.beginPath(); x.moveTo(M, 455); x.lineTo(R, 455); x.stroke();
+        const col2 = M + 280;
         x.font = 'bold 15px sans-serif';
         x.fillStyle = '#8a8372';
-        x.fillText('FICHA TÉCNICA', 60, 495);
-        x.fillText('PERFIL', 440, 495);
-        x.font = '17px sans-serif';
+        x.fillText('FICHA TÉCNICA', M, 495);
+        x.fillText('PERFIL', col2, 495);
+        x.font = '16px sans-serif';
         x.fillStyle = '#213e31';
-        const specs: [string, string][] = [['Proceso', 'Lavado'], ['Tueste', 'Medio-oscuro'], ['Altitud', '1 500-1 600 m s. n. m.'], ['Variedad', 'Caturra, Catuaí y Geisha']];
+        const specs: [string, string][] = [['Proceso', 'Lavado'], ['Tueste', 'Medio-oscuro'], ['Altitud', '1 500-1 600 msnm'], ['Variedad', 'Caturra, Catuaí']];
         specs.forEach(([k, v], i) => {
             x.fillStyle = '#8a8372';
-            x.fillText(k, 60, 530 + i * 34);
+            x.fillText(k, M, 530 + i * 34);
             x.fillStyle = '#213e31';
-            x.fillText(v, 170, 530 + i * 34);
+            x.fillText(v, M + 108, 530 + i * 34);
         });
         const profile: [string, number][] = [['cuerpo', .85], ['dulzor', .7], ['acidez', .35]];
+        const barX = col2 + 72, barW = R - barX;
         profile.forEach(([k, v], i) => {
             x.fillStyle = '#8a8372';
             x.font = '15px sans-serif';
-            x.fillText(k, 440, 530 + i * 34);
+            x.fillText(k, col2, 530 + i * 34);
             x.fillStyle = '#e4ded0';
-            x.fillRect(520, 518 + i * 34, 150, 10);
+            x.fillRect(barX, 518 + i * 34, barW, 10);
             x.fillStyle = '#d16c40';
-            x.fillRect(520, 518 + i * 34, 150 * v, 10);
+            x.fillRect(barX, 518 + i * 34, barW * v, 10);
         });
-        const codeX = 60, codeY = 660, codeW = 648, codeH = 230;
+        const codeX = M, codeY = 660, codeW = R - M, codeH = 210;
         x.fillStyle = '#1d3a2b';
         x.beginPath();
         x.roundRect(codeX, codeY, codeW, codeH, 14);
@@ -367,8 +374,8 @@ export function mountWorlds() {
             '  agua: "92-94 °C",',
             '});'
         ];
-        code.forEach((line, i) => x.fillText(line, codeX + 24, codeY + 76 + i * 28));
-        const qrX = 60, qrY = codeY + codeH + 36, qrSize = 92;
+        code.forEach((line, i) => x.fillText(line, codeX + 24, codeY + 72 + i * 26));
+        const qrX = M, qrY = codeY + codeH + 36, qrSize = 76;
         x.strokeStyle = '#21302755';
         x.lineWidth = 2;
         x.strokeRect(qrX, qrY, qrSize, qrSize);
@@ -379,18 +386,17 @@ export function mountWorlds() {
         x.textAlign = 'left';
         x.fillStyle = '#213e31';
         x.font = 'bold 16px sans-serif';
-        x.fillText('git log --origen', qrX + qrSize + 24, qrY + 28);
+        x.fillText('git log --origen', qrX + qrSize + 22, qrY + 26);
         x.fillStyle = '#4b564c';
-        x.font = '15px sans-serif';
-        wrapText(x, 'Escanea y conoce la finca, el lote y la fecha de tueste.', qrX + qrSize + 24, qrY + 54, 430, 22);
+        x.font = '14px sans-serif';
+        wrapText(x, 'Escanea y conoce la finca, el lote y la fecha de tueste.', qrX + qrSize + 22, qrY + 50, R - (qrX + qrSize + 22), 20);
         x.textAlign = 'center';
         x.fillStyle = '#4b564c';
-        x.font = '15px sans-serif';
-        x.fillText('Conservar en lugar fresco y seco.', 384, 1070);
-        x.fillText('Peso neto 250 g · Hecho en Perú', 384, 1096);
+        x.font = '14px sans-serif';
+        x.fillText('Conservar en lugar fresco y seco. Peso neto 250 g · Hecho en Perú', 384, 1074);
         x.fillStyle = '#8a8372';
         x.font = '13px sans-serif';
-        x.fillText('coffeecodebrew.com', 384, 1122);
+        x.fillText('coffeecodebrew.com', 384, 1100);
         const texture = remember(new THREE.CanvasTexture(c));
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
@@ -426,11 +432,11 @@ export function mountWorlds() {
         });
         x.textAlign = 'left';
         x.fillStyle = '#213e31';
-        x.font = 'bold 40px sans-serif';
-        ['GOOD', 'COFFEE.', 'BETTER', 'IDEAS.'].forEach((line, i) => x.fillText(line, 60, 540 + i * 54));
+        x.font = 'bold 38px sans-serif';
+        ['GOOD', 'COFFEE.', 'BETTER', 'IDEAS.'].forEach((line, i) => x.fillText(line, 78, 540 + i * 52));
         // Icono taza + llaves de código
         x.save();
-        x.translate(60, 790);
+        x.translate(78, 788);
         x.strokeStyle = '#213e31';
         x.lineWidth = 6;
         x.lineCap = 'round';
