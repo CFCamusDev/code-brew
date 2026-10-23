@@ -48,6 +48,11 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 
 - Primer usuario: `pnpm admin:create correo@dominio.com "Nombre" admin` (en Docker: `docker exec -it codebrew-app node scripts/admin/create-user.mjs correo@dominio.com "Nombre" admin`). Imprime una contraseña temporal; se cambia en **Mi cuenta**. Repetir el comando con un correo existente restablece su contraseña.
 - Roles: **operador** (pedidos, cambios de estado, stock y compras) y **administrador** (además precios, productos, envíos, reembolsos, borrar compras y usuarios).
+- Inicio (`/admin`): ventas de hoy y del mes, pedidos por preparar y por despachar, pagados sin stock, pedidos sin pagar y stock bajo.
+- Hoja de despacho imprimible (A5/A4) por pedido o en lote desde las colas "por preparar" y "por despachar" (`/admin/despacho?ids=…`).
+- Exportación CSV para Excel de pedidos (con los filtros y fechas de la lista), compras del mes y movimientos de stock.
+- Clientes (`/admin/clientes`): agrupados por correo, con total comprado, última compra, cafés favoritos y pedidos.
+- Pedidos sin pagar se cancelan solos a las 48 h, salvo un código de PagoEfectivo o billetera vigente: tarea `POST /api/cron/pedidos-abandonados` con `Authorization: Bearer $CRON_SECRET`, llamada cada hora por el workflow *Tareas programadas* (secreto `CRON_SECRET` en GitHub, mismo valor que en la stack). Un administrador también puede ejecutarla desde el inicio.
 - Pedidos: filtros por estado, búsqueda, detalle con pagos e historial; flujo pagado → en preparación → enviado (transportista y seguimiento, correo al cliente) → entregado. Reembolsos por Culqi con reposición de stock.
 - Productos y stock: precios y disponibilidad se reflejan al instante en la landing; cada cambio de stock queda en `stock_movements`.
 - Envíos: tarifa base por zona, envío gratis por bolsas o subtotal y tarifas por departamento.

@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getDashboardSummary, LOW_STOCK_THRESHOLD } from '../../lib/server/admin/dashboard';
+import { ABANDONED_CANCEL_AFTER_HOURS } from '../../lib/server/admin/orders';
 import { formatPEN } from '../../lib/shop/format';
 
 export const prerender = false;
@@ -48,6 +49,12 @@ const queues = [
     ))}
   </section>
 
+  <p class="muted queue-note">
+    Los pedidos sin pagar se cancelan solos a las {ABANDONED_CANCEL_AFTER_HOURS} h (salvo un código de PagoEfectivo o billetera vigente).
+    {admin.role === 'admin' && <button type="button" class="btn ghost small" id="cancel-abandoned">Cancelar abandonados ahora</button>}
+    <span id="cancel-result" role="status"></span>
+  </p>
+
   <section class="admin-card" style="margin-top:20px">
     <div class="card-head">
       <h2>Stock bajo (≤ {LOW_STOCK_THRESHOLD})</h2>
@@ -67,3 +74,24 @@ const queues = [
     )}
   </section>
 </AdminLayout>
+<script>
+  const button = document.getElementById('cancel-abandoned') as HTMLButtonElement | null;
+  const result = document.getElementById('cancel-result');
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    const response = await fetch('/api/admin/tareas/cancelar-abandonados', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    }).catch(() => null);
+    const data = await response?.json().catch(() => ({}));
+    if (!response?.ok) {
+      if (result) result.textContent = data?.error ?? 'No se pudo completar.';
+      button.disabled = false;
+      return;
+    }
+    if (result) result.textContent = data.cancelled ? `${data.cancelled} pedidos cancelados. Actualizando…` : 'No había pedidos para cancelar.';
+    if (data.cancelled) setTimeout(() => window.location.reload(), 800);
+    else button.disabled = false;
+  });
+</script>

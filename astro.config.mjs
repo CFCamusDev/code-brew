@@ -22,7 +22,9 @@ export default defineConfig({
       RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       EMAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
       ADMIN_EMAIL: envField.string({ context: 'server', access: 'secret', optional: true }),
-      SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true })
+      SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Token para tareas programadas (Authorization: Bearer …), p. ej. cancelar pedidos abandonados.
+      CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true })
     }
   },
   server: {

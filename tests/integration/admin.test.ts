@@ -357,3 +357,67 @@ describe('clientes', () => {
     expect((await api('/admin/clientes/nadie%40codebrew.test', { cookie: adminCookie })).status).toBe(404);
   });
 });
+
+describe('pedidos abandonados', () => {
+  const secret = process.env.CRON_SECRET;
+  const cron = (token?: string) =>
+    api('/api/cron/pedidos-abandonados', { method: 'POST', body: {}, headers: token ? { Authorization: `Bearer ${token}` } : {} });
+
+  async function oldPendingOrder(withLiveCulqiOrder = false) {
+    const created = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const sql = db();
+    try {
+      await sql`update orders set created_at = now() - interval '49 hours' where id = ${created.json.id}`;
+      if (withLiveCulqiOrder) {
+        await sql`
+          insert into payments (order_id, provider_reference, method, status, amount_cents, expires_at)
+          values (${created.json.id}, ${`ord_test_${randomUUID()}`}, 'order', 'pending', 4900, now() + interval '6 hours')`;
+      }
+    } finally {
+      await sql.end();
+    }
+    return created.json.id as string;
+  }
+
+  const statusOf = async (id: string) => {
+    const sql = db();
+    try {
+      const [order] = await sql`select status from orders where id = ${id}`;
+      return order.status as string;
+    } finally {
+      await sql.end();
+    }
+  };
+
+  it.runIf(secret)('la tarea exige el token', async () => {
+    expect((await cron()).status).toBe(401);
+    expect((await cron('adivinando')).status).toBe(401);
+  });
+
+  it.runIf(secret)('cancela pendientes de más de 48 h y respeta códigos de pago vigentes, una sola vez', async () => {
+    const abandoned = await oldPendingOrder();
+    const withCode = await oldPendingOrder(true);
+    const recent = (await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } })).json.id;
+
+    const first = await cron(secret);
+    expect(first.status).toBe(200);
+    expect(first.json.cancelled).toBeGreaterThanOrEqual(1);
+    expect(await statusOf(abandoned)).toBe('cancelled');
+    expect(await statusOf(withCode)).toBe('pending');
+    expect(await statusOf(recent)).toBe('pending');
+
+    expect((await cron(secret)).json.cancelled).toBe(0);
+    const sql = db();
+    const events = await sql`select note from order_events where order_id = ${abandoned}`;
+    await sql.end();
+    expect(events).toHaveLength(1);
+    expect(events[0].note).toContain('Cancelado automáticamente');
+  });
+
+  it('el botón manual es solo para administradores', async () => {
+    expect((await api('/api/admin/tareas/cancelar-abandonados', { body: {}, cookie: operatorCookie })).status).toBe(403);
+    const manual = await api('/api/admin/tareas/cancelar-abandonados', { body: {}, cookie: adminCookie });
+    expect(manual.status).toBe(200);
+    expect(typeof manual.json.cancelled).toBe('number');
+  });
+});
