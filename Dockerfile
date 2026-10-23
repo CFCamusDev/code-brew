@@ -10,6 +10,9 @@ RUN pnpm install --frozen-lockfile
 
 # Copiar el código fuente y construir (landing prerenderizada + servidor Node)
 COPY . .
+ARG PUBLIC_ANALYTICS_ENV=disabled
+ARG PUBLIC_GA4_ID=G-YMMJ7V30SZ
+ENV PUBLIC_ANALYTICS_ENV=$PUBLIC_ANALYTICS_ENV PUBLIC_GA4_ID=$PUBLIC_GA4_ID
 RUN pnpm build
 
 # Stage 2: solo dependencias de producción

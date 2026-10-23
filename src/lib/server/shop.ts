@@ -208,7 +208,10 @@ export async function getOrder(id: string) {
   const db = getDb();
   const [order] = await db.select().from(orders).where(eq(orders.id, id));
   if (!order) return undefined;
-  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id)).orderBy(asc(orderItems.id));
+  const rows = await db.select({ item: orderItems, sku: productVariants.sku }).from(orderItems)
+    .innerJoin(productVariants, eq(productVariants.id, orderItems.variantId))
+    .where(eq(orderItems.orderId, id)).orderBy(asc(orderItems.id));
+  const items = rows.map(row => ({ ...row.item, sku: row.sku }));
   return { ...order, items };
 }
 

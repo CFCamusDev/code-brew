@@ -41,6 +41,7 @@ const profiles = [
 </section>
 <script>
   import { gsap } from 'gsap';
+  import { track } from '../lib/analytics';
   import { addToCart, cartOpen } from '../lib/shop/cart';
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const choices = document.querySelectorAll<HTMLButtonElement>('.blend-choice');
@@ -76,7 +77,17 @@ const profiles = [
     const link=card.querySelector<HTMLAnchorElement>('.whatsapp-order')!;
     const add=card.querySelector<HTMLButtonElement>('.add-to-cart')!;
     const update=()=>{const available=variant.selectedOptions[0].dataset.available!=='false';add.disabled=!available;add.firstChild!.textContent=available?'Este es mi café ':'Agotado por ahora ';add.querySelector('span')!.textContent=available?'+':'';const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
+    const view = () => {
+      const option = variant.selectedOptions[0];
+      track('view_item', {value:Number(option.dataset.price),items:[{item_id:option.dataset.sku!,item_name:card.dataset.product!,price:Number(option.dataset.price),quantity:1}]});
+    };
+    let seen = '';
+    const observer = new IntersectionObserver(entries => {
+      if(entries.some(e=>e.isIntersecting) && !card.hidden && seen !== variant.value) { seen=variant.value; view(); }
+    }, {threshold:.4});
+    observer.observe(card);
+    variant.addEventListener('change',()=>{if(!card.hidden){seen=variant.value;view();}});
     variant.addEventListener('change',update);grind.addEventListener('change',update);
-    add.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value);cartOpen.set(true);});
+    add.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value,1,Number(variant.selectedOptions[0].dataset.price));cartOpen.set(true);});
   });
 </script>
