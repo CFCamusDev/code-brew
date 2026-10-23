@@ -1,0 +1,67 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listCustomers, type CustomerSort } from '../../../lib/server/admin/customers';
+import { formatDateTime, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const params = Astro.url.searchParams;
+const q = params.get('q')?.trim().slice(0, 100) || undefined;
+const sort: CustomerSort = params.get('orden') === 'total' ? 'total' : 'reciente';
+const page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
+const { rows, total, pages } = await listCustomers({ q, sort, page });
+
+const link = (changes: Record<string, string | undefined>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(changes)) value ? next.set(key, value) : next.delete(key);
+  if (!('pagina' in changes)) next.delete('pagina');
+  const query = next.toString();
+  return `/admin/clientes${query ? `?${query}` : ''}`;
+};
+---
+<AdminLayout title="Clientes">
+  <div class="admin-head">
+    <div>
+      <h1>Clientes</h1>
+      <p>{total} {total === 1 ? 'cliente' : 'clientes'}{q ? ` · “${q}”` : ''}. Se agrupan por correo; compran sin crear cuenta.</p>
+    </div>
+    <form class="filters" method="get" action="/admin/clientes">
+      <input type="hidden" name="orden" value={sort} />
+      <input type="search" name="q" value={q} placeholder="Nombre, correo o celular" aria-label="Buscar clientes" />
+      <button class="btn ghost" type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <nav class="status-tabs" aria-label="Ordenar">
+    <a href={link({ orden: undefined })} aria-current={sort === 'reciente' ? 'true' : undefined}>Compra más reciente</a>
+    <a href={link({ orden: 'total' })} aria-current={sort === 'total' ? 'true' : undefined}>Mayor total comprado</a>
+  </nav>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Cliente</th><th>Celular</th><th class="num">Pedidos pagados</th><th class="num">Total comprado</th><th>Última compra</th></tr></thead>
+      <tbody>
+        {rows.length === 0 && <tr><td class="empty-row" colspan="5">No hay clientes con esta búsqueda.</td></tr>}
+        {rows.map(customer => (
+          <tr>
+            <td>
+              <a class="row-link" href={`/admin/clientes/${encodeURIComponent(customer.email)}`}>{customer.name}</a><br />
+              <small class="muted">{customer.email}</small>
+            </td>
+            <td>{customer.phone}</td>
+            <td class="num">{customer.paidOrders}</td>
+            <td class="num">{formatPEN(customer.totalCents)}</td>
+            <td>{customer.lastPurchase ? formatDateTime(customer.lastPurchase) : <span class="muted">Sin compras pagadas</span>}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {pages > 1 && (
+    <nav class="pagination" aria-label="Páginas">
+      {page > 1 && <a class="btn ghost small" href={link({ pagina: String(page - 1) })}>← Anterior</a>}
+      <span>Página {page} de {pages}</span>
+      {page < pages && <a class="btn ghost small" href={link({ pagina: String(page + 1) })}>Siguiente →</a>}
+    </nav>
+  )}
+</AdminLayout>
