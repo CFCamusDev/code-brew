@@ -17,19 +17,10 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_PE" />
-    {import.meta.env.PROD && <>
-      <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-YMMJ7V30SZ"></script>
-      <script is:inline>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-YMMJ7V30SZ');
-        document.addEventListener('click', function (event) {
-          var link = event.target instanceof Element ? event.target.closest('a[href*="wa.me"]') : null;
-          if (link) gtag('event', 'whatsapp_click', { link_url: link.href, link_text: link.textContent.trim().slice(0, 100) });
-        });
-      </script>
-    </>}
+    <script>
+      import { initAnalytics } from '../lib/analytics';
+      initAnalytics();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

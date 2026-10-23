@@ -26,10 +26,20 @@ if (!order) return new Response('Pedido no encontrado', { status: 404 });
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 const number = formatOrderNumber(order.number);
+const purchase = ['paid','preparing','shipped','delivered'].includes(order.status) ? {
+  transaction_id:number, value:order.totalCents/100, shipping:order.shippingCents/100,
+  items:order.items.map(item=>({item_id:item.sku,item_name:item.productName,price:item.unitPriceCents/100,quantity:item.quantity}))
+} : null;
 const whatsapp = getWhatsAppUrl(`¡Hola CodeBrew! Acabo de registrar el pedido ${number} por ${formatPEN(order.totalCents)}. ¿Cómo completo el pago?`);
 ---
 <Layout title={`Pedido ${number} — CodeBrew`} description="Resumen de tu pedido CodeBrew." noindex>
   <ShopHeader />
+  {purchase && <div hidden id="purchase-analytics" data-purchase={JSON.stringify(purchase)} />}
+  <script>
+    import { trackPurchase } from '../../lib/analytics';
+    const payload = document.getElementById('purchase-analytics')?.dataset.purchase;
+    if(payload) void trackPurchase(JSON.parse(payload));
+  </script>
   <main id="main-content" class="shop-main order-page">
     <p class="eyebrow">PEDIDO {number}</p>
     <h1>{order.status === 'pending' ? '¡Pedido registrado!' : order.status === 'paid' ? '¡Gracias por tu compra!' : `Pedido ${number}`}</h1>
