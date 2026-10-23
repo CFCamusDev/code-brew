@@ -5,14 +5,14 @@ import { useForm, type FieldError } from 'react-hook-form';
 import { cartLines, clearCart, removeFromCart } from '../../lib/shop/cart';
 import { customerSchema, REGIONS, type Customer, type CustomerForm, type Quote } from '../../lib/shop/checkout';
 import { formatPEN } from '../../lib/shop/format';
+import { isFreeShipping } from '../../lib/shop/shipping';
 import '../../styles/shop.css';
 
 const ZONE_REGION: Record<string, string> = { lima: 'Lima', callao: 'Callao' };
 
-// Misma regla que isFreeShipping en el servidor; el total que se cobra siempre lo recalcula el servidor.
-const isFree = (zone: Quote['zones'][number], quote: Quote) =>
-  (zone.freeFromCents !== null && quote.subtotalCents >= zone.freeFromCents) ||
-  (zone.freeFromBags !== null && quote.bags >= zone.freeFromBags);
+
+// Vista previa con la misma regla que usa el servidor; el total que se cobra siempre lo recalcula el servidor.
+const isFree = (zone: Quote['zones'][number], quote: Quote) => isFreeShipping(zone, quote.subtotalCents, quote.bags);
 
 export default function CheckoutApp() {
   const lines = useStore(cartLines);

@@ -54,6 +54,30 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 - Compras y gastos por mes y categoría.
 - Seguridad: contraseñas con scrypt, sesiones en cookie HttpOnly/SameSite=Lax (en BD solo el hash del token), límite de 5 intentos de login por IP y correo cada 15 minutos, acciones solo por JSON.
 
+## Pruebas
+
+- `pnpm typecheck`: tipos de todo el proyecto (incluidas las pruebas).
+- `pnpm test`: pruebas unitarias (`tests/unit`), sin base de datos.
+- `pnpm test:integration`: pruebas por HTTP contra un servidor levantado (`tests/integration`). Necesitan `DATABASE_URL` y `INTEGRATION_BASE_URL`, y modifican datos (stock, precios, usuarios de prueba), así que usa una base aparte:
+
+```bash
+docker exec codebrew-db-dev psql -U codebrew -c "create database codebrew_test"
+export DATABASE_URL=postgres://codebrew:codebrew@localhost:5434/codebrew_test
+pnpm db:migrate && pnpm db:seed && pnpm build
+CULQI_WEBHOOK_SECRET=ci-secreto PORT=4398 node dist/server/entry.mjs &   # sin llaves de Culqi ni Resend
+INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto pnpm test:integration
+```
+
+## CI / CD (GitHub Actions)
+
+- **CI** (`.github/workflows/ci.yml`) corre en cada PR y en cada push a `main` con tres verificaciones: *Tipos, pruebas unitarias y build*, *Pruebas de integración (PostgreSQL)* e *Imagen Docker*.
+- **Deploy** (`.github/workflows/deploy.yml`): cuando el CI de `main` termina bien, llama al webhook de la stack de Portainer (secreto `PORTAINER_WEBHOOK_URL`) y espera a que `/api/health` responda en `SITE_URL` (variable del repo; por defecto `https://coffeecodebrew.com`). Sin el secreto no despliega. También se puede lanzar a mano desde *Actions*.
+- **Protección de `main`** (la aplica quien administra el repo): exige las tres verificaciones del CI, una aprobación y conversaciones resueltas antes de fusionar.
+
+```bash
+gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .github/branch-protection.json
+```
+
 ## Producción (Docker / Portainer)
 
 `docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.

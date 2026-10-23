@@ -10,7 +10,12 @@ export function formatOrderNumber(number: number): string {
   return `CB-${String(number).padStart(6, '0')}`;
 }
 
-const dateTime = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', dateStyle: 'short', timeStyle: 'short' });
+const dateTime = new Intl.DateTimeFormat('es-PE', {
+  timeZone: 'America/Lima',
+  dateStyle: 'short',
+  timeStyle: 'short',
+  hourCycle: 'h23'
+});
 
 /** Fecha y hora de Lima: "22/10/26, 14:05" */
 export function formatDateTime(date: Date | string): string {
