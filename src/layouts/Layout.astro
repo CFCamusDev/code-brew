@@ -56,25 +56,14 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
             document.documentElement.classList.add('app-ready');
           }
         }
-        // Espera a que las fuentes (Google Fonts) ya se puedan pintar, no solo a que el HTML
-        // esté parseado: con DOMContentLoaded + 250ms a veces se revelaba la página antes de
-        // que el CSS/las fuentes terminaran de aplicarse, mostrando un instante sin estilo.
-        function ready() {
-          if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(show, show);
-          } else {
-            show();
-          }
-        }
-        if (document.readyState === 'complete') {
-          requestAnimationFrame(ready);
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+          requestAnimationFrame(show);
         } else {
-          window.addEventListener('load', function() {
-            requestAnimationFrame(ready);
+          document.addEventListener('DOMContentLoaded', function() {
+            requestAnimationFrame(show);
           });
         }
-        // Red de seguridad: nunca dejar la página en blanco más de ~1.2 s aunque algo falle.
-        setTimeout(show, 1200);
+        setTimeout(show, 250);
       })();
     </script>
   </head>
