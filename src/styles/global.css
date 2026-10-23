@@ -1561,7 +1561,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   left:100%;
   width:25%;
   height:100%;
-  background:#1d2822 url('/assets/brand/hotfix-side.webp') center / 100% 100%;
+  background:linear-gradient(90deg, #d8d0b8, #e9e2cd);
   transform-origin:left;
   transform:rotateY(90deg);
   border-radius:0 6px 6px 0;

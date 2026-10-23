@@ -65,6 +65,22 @@ export function mountWorlds() {
         group.add(mesh);
         return group;
     }
+    function wrapText(x: CanvasRenderingContext2D, text: string, left: number, top: number, maxWidth: number, lineHeight: number) {
+        const words = text.split(' ');
+        let line = '', y = top;
+        for (const word of words) {
+            const test = line ? `${line} ${word}` : word;
+            if (x.measureText(test).width > maxWidth && line) {
+                x.fillText(line, left, y);
+                line = word;
+                y += lineHeight;
+            }
+            else {
+                line = test;
+            }
+        }
+        if (line) x.fillText(line, left, y);
+    }
     function packageTexture(label: string, color: string) {
         const c = document.createElement('canvas');
         c.width = 768;
@@ -195,6 +211,244 @@ export function mountWorlds() {
         texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
         return texture;
     }
+    function pillBadge(x: CanvasRenderingContext2D, cx: number, cy: number, text: string) {
+        x.save();
+        x.font = 'bold 16px sans-serif';
+        const w = x.measureText(text).width + 44;
+        x.fillStyle = '#d16c401a';
+        x.strokeStyle = '#d16c40';
+        x.lineWidth = 1.5;
+        x.beginPath();
+        x.roundRect(cx - w / 2, cy - 20, w, 40, 20);
+        x.fill();
+        x.stroke();
+        x.fillStyle = '#b8552b';
+        x.textAlign = 'center';
+        x.fillText(text, cx, cy + 6);
+        x.restore();
+    }
+    function hotfixFrontTexture() {
+        const c = document.createElement('canvas');
+        c.width = 768;
+        c.height = 1152;
+        const x = c.getContext('2d')!;
+        x.fillStyle = '#eee8da';
+        x.fillRect(0, 0, 768, 1152);
+        for (let i = 0; i < 6000; i++) {
+            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
+            x.fillRect((i * 127) % 768, (i * 71) % 1152, 2, 2);
+        }
+        x.textAlign = 'center';
+        x.fillStyle = '#213e31';
+        x.font = 'bold 86px Georgia';
+        x.fillText('codebrew', 384, 340);
+        x.font = '28px Georgia';
+        x.fillText('®', 384 + x.measureText('codebrew').width / 2 + 16, 310);
+        x.font = '19px sans-serif';
+        x.fillText('C O F F E E  F O R  D E V E L O P E R S', 384, 390);
+        x.save();
+        x.fillStyle = '#00000014';
+        x.beginPath();
+        x.arc(384, 452, 30, 0, Math.PI * 2);
+        x.fill();
+        x.strokeStyle = '#21302722';
+        x.lineWidth = 3;
+        x.beginPath();
+        x.arc(384, 452, 24, 0, Math.PI * 2);
+        x.stroke();
+        x.fillStyle = '#21302735';
+        x.beginPath();
+        x.arc(384, 452, 4.5, 0, Math.PI * 2);
+        x.fill();
+        x.restore();
+        const labelX = 58, labelY = 540, labelW = 652, labelH = 475, labelR = 28;
+        x.save();
+        x.beginPath();
+        x.roundRect(labelX, labelY, labelW, labelH, labelR);
+        x.clip();
+        x.fillStyle = '#1d3a2b';
+        x.fillRect(labelX, labelY, labelW, labelH);
+        x.strokeStyle = '#e6e2bc35';
+        x.lineWidth = 1.5;
+        for (let j = 0; j < 13; j++) {
+            x.beginPath();
+            for (let i = 0; i < 680; i += 6) {
+                const y = 565 + j * 36 + Math.sin(i * .013 + j * .43) * 18;
+                x.lineTo(45 + i, y);
+            }
+            x.stroke();
+        }
+        x.restore();
+        pillBadge(x, 384, labelY - 8, 'PIPELINE · STABLE');
+        x.fillStyle = '#f5efdb';
+        x.font = '76px Georgia';
+        const headline = 'Hotfix';
+        const headW = x.measureText(headline).width;
+        x.fillText(headline, 384 - 14, 735);
+        x.fillStyle = '#d16c40';
+        x.fillRect(384 + headW / 2 - 10, 672, 5, 72);
+        x.fillStyle = '#f5efdb';
+        x.font = '20px sans-serif';
+        x.fillText('A M A Z O N A S  ·  P E R Ú', 384, 800);
+        x.font = '17px sans-serif';
+        x.fillText('ESPRESSO · TUESTE MEDIO-OSCURO', 384, 890);
+        x.font = '24px sans-serif';
+        x.fillText('250 g', 384, 960);
+        x.fillStyle = '#344737';
+        x.font = '12px sans-serif';
+        x.fillText('B U E N  C A F É .  M E J O R  C Ó D I G O .', 384, 1075);
+        const texture = remember(new THREE.CanvasTexture(c));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+        return texture;
+    }
+    function hotfixBackTexture() {
+        const c = document.createElement('canvas');
+        c.width = 768;
+        c.height = 1152;
+        const x = c.getContext('2d')!;
+        x.fillStyle = '#eee8da';
+        x.fillRect(0, 0, 768, 1152);
+        for (let i = 0; i < 6000; i++) {
+            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
+            x.fillRect((i * 127) % 768, (i * 71) % 1152, 2, 2);
+        }
+        x.textAlign = 'left';
+        x.fillStyle = '#8a8372';
+        x.font = '18px monospace';
+        x.fillText('// hotfix.js', 60, 90);
+        pillBadge(x, 650, 76, 'PIPELINE · STABLE');
+        x.fillStyle = '#213e31';
+        x.font = '38px Georgia';
+        wrapText(x, 'Hay bugs que no esperan al próximo sprint. Para esos, existe un hotfix.', 60, 165, 648, 46);
+        x.fillStyle = '#4b564c';
+        x.font = '18px sans-serif';
+        wrapText(x, 'Cultivado en la ceja de selva de Rodríguez de Mendoza, Amazonas. Lavado, secado con paciencia y tostado medio-oscuro para un espresso de cuerpo alto, dulzor a chancaca y un final limpio de cacao.', 60, 330, 648, 27);
+        x.strokeStyle = '#21302730';
+        x.lineWidth = 1;
+        x.beginPath(); x.moveTo(60, 455); x.lineTo(708, 455); x.stroke();
+        x.font = 'bold 15px sans-serif';
+        x.fillStyle = '#8a8372';
+        x.fillText('FICHA TÉCNICA', 60, 495);
+        x.fillText('PERFIL', 440, 495);
+        x.font = '17px sans-serif';
+        x.fillStyle = '#213e31';
+        const specs: [string, string][] = [['Proceso', 'Lavado'], ['Tueste', 'Medio-oscuro'], ['Altitud', '1 500-1 600 m s. n. m.'], ['Variedad', 'Caturra, Catuaí y Geisha']];
+        specs.forEach(([k, v], i) => {
+            x.fillStyle = '#8a8372';
+            x.fillText(k, 60, 530 + i * 34);
+            x.fillStyle = '#213e31';
+            x.fillText(v, 170, 530 + i * 34);
+        });
+        const profile: [string, number][] = [['cuerpo', .85], ['dulzor', .7], ['acidez', .35]];
+        profile.forEach(([k, v], i) => {
+            x.fillStyle = '#8a8372';
+            x.font = '15px sans-serif';
+            x.fillText(k, 440, 530 + i * 34);
+            x.fillStyle = '#e4ded0';
+            x.fillRect(520, 518 + i * 34, 150, 10);
+            x.fillStyle = '#d16c40';
+            x.fillRect(520, 518 + i * 34, 150 * v, 10);
+        });
+        const codeX = 60, codeY = 660, codeW = 648, codeH = 230;
+        x.fillStyle = '#1d3a2b';
+        x.beginPath();
+        x.roundRect(codeX, codeY, codeW, codeH, 14);
+        x.fill();
+        x.font = '16px monospace';
+        x.fillStyle = '#8fae9c';
+        x.fillText('// receta sugerida · espresso', codeX + 24, codeY + 38);
+        x.fillStyle = '#f5efdb';
+        const code = [
+            'const hotfix = brew({',
+            '  dosis: "18 g",',
+            '  rendimiento: "36 g",',
+            '  tiempo: "25-30 s",',
+            '  agua: "92-94 °C",',
+            '});'
+        ];
+        code.forEach((line, i) => x.fillText(line, codeX + 24, codeY + 76 + i * 28));
+        const qrX = 60, qrY = codeY + codeH + 36, qrSize = 92;
+        x.strokeStyle = '#21302755';
+        x.lineWidth = 2;
+        x.strokeRect(qrX, qrY, qrSize, qrSize);
+        x.fillStyle = '#21302740';
+        x.font = '11px sans-serif';
+        x.textAlign = 'center';
+        x.fillText('[QR]', qrX + qrSize / 2, qrY + qrSize / 2 + 4);
+        x.textAlign = 'left';
+        x.fillStyle = '#213e31';
+        x.font = 'bold 16px sans-serif';
+        x.fillText('git log --origen', qrX + qrSize + 24, qrY + 28);
+        x.fillStyle = '#4b564c';
+        x.font = '15px sans-serif';
+        wrapText(x, 'Escanea y conoce la finca, el lote y la fecha de tueste.', qrX + qrSize + 24, qrY + 54, 430, 22);
+        x.textAlign = 'center';
+        x.fillStyle = '#4b564c';
+        x.font = '15px sans-serif';
+        x.fillText('Conservar en lugar fresco y seco.', 384, 1070);
+        x.fillText('Peso neto 250 g · Hecho en Perú', 384, 1096);
+        x.fillStyle = '#8a8372';
+        x.font = '13px sans-serif';
+        x.fillText('coffeecodebrew.com', 384, 1122);
+        const texture = remember(new THREE.CanvasTexture(c));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+        return texture;
+    }
+    function hotfixSideTexture() {
+        const c = document.createElement('canvas');
+        c.width = 320;
+        c.height = 1152;
+        const x = c.getContext('2d')!;
+        x.fillStyle = '#eee8da';
+        x.fillRect(0, 0, 320, 1152);
+        for (let i = 0; i < 2600; i++) {
+            x.fillStyle = i % 2 ? '#ffffff12' : '#837d690d';
+            x.fillRect((i * 97) % 320, (i * 53) % 1152, 2, 2);
+        }
+        // Traza de circuito vertical tipo PCB, con nodos en los extremos.
+        x.strokeStyle = '#21302755';
+        x.lineWidth = 2;
+        x.beginPath();
+        x.moveTo(160, 90);
+        x.lineTo(160, 420);
+        x.lineTo(190, 460);
+        x.lineTo(190, 760);
+        x.lineTo(150, 820);
+        x.lineTo(150, 1060);
+        x.stroke();
+        x.fillStyle = '#21302770';
+        [[160, 90], [190, 460], [150, 1060]].forEach(([cx, cy]) => {
+            x.beginPath();
+            x.arc(cx, cy, 5, 0, Math.PI * 2);
+            x.fill();
+        });
+        x.textAlign = 'left';
+        x.fillStyle = '#213e31';
+        x.font = 'bold 40px sans-serif';
+        ['GOOD', 'COFFEE.', 'BETTER', 'IDEAS.'].forEach((line, i) => x.fillText(line, 60, 540 + i * 54));
+        // Icono taza + llaves de código
+        x.save();
+        x.translate(60, 790);
+        x.strokeStyle = '#213e31';
+        x.lineWidth = 6;
+        x.lineCap = 'round';
+        x.beginPath();
+        x.moveTo(8, 10); x.lineTo(0, 22); x.lineTo(8, 34);
+        x.moveTo(44, 10); x.lineTo(52, 22); x.lineTo(44, 34);
+        x.stroke();
+        x.lineWidth = 5;
+        x.strokeRect(2, 46, 48, 34);
+        x.beginPath();
+        x.arc(55, 58, 10, -Math.PI / 2, Math.PI / 2);
+        x.stroke();
+        x.restore();
+        const texture = remember(new THREE.CanvasTexture(c));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+        return texture;
+    }
     const pouchGeometry = remember(new THREE.BoxGeometry(2.25, 3.55, .57, 28, 40, 6));
     const pos = pouchGeometry.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -263,24 +517,11 @@ export function mountWorlds() {
     const frontOrange = remember(new THREE.MeshStandardMaterial({ map: packageTexture('Espresso', '#9e563c'), roughness: .88 }));
     const backGreen = remember(new THREE.MeshStandardMaterial({ map: backTexture('Monteverde', '#2c523b'), roughness: .88 }));
     const backOrange = remember(new THREE.MeshStandardMaterial({ map: backTexture('Espresso', '#9e563c'), roughness: .88 }));
-    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#1d2822', roughness: .88 }));
-    const textureLoader = new THREE.TextureLoader();
-    function printedMaterial(path: string) {
-        const material = remember(new THREE.MeshStandardMaterial({ color: '#1d2822', roughness: .88 }));
-        const texture = remember(textureLoader.load(path, loaded => {
-            if (disposed) { loaded.dispose(); return; }
-            material.color.set('#ffffff');
-            material.map = loaded;
-            material.needsUpdate = true;
-            request();
-        }));
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        return material;
-    }
-    const hotfixFront = printedMaterial('/assets/brand/hotfix-front.webp');
-    const hotfixBack = printedMaterial('/assets/brand/hotfix-back.webp');
-    const hotfixSide = printedMaterial('/assets/brand/hotfix-side.webp');
+    // Cuerpo crema (igual que el resto de la línea) en vez del verde oscuro anterior.
+    const hotfixBody = remember(new THREE.MeshStandardMaterial({ color: '#e9e2cd', roughness: .85, metalness: .02 }));
+    const hotfixFront = remember(new THREE.MeshStandardMaterial({ map: hotfixFrontTexture(), roughness: .85 }));
+    const hotfixBack = remember(new THREE.MeshStandardMaterial({ map: hotfixBackTexture(), roughness: .85 }));
+    const hotfixSide = remember(new THREE.MeshStandardMaterial({ map: hotfixSideTexture(), roughness: .85 }));
     const sealGeometry = remember(new THREE.BoxGeometry(2.02, .035, .22));
     const valveGeometry = remember(new THREE.CylinderGeometry(.083, .083, .02, 20));
     function pouch(orange = false, hotfix = false) {
@@ -310,11 +551,11 @@ export function mountWorlds() {
             seal.position.set(0, 1.49 + i * .055, .17);
             group.add(seal);
         }
-        // Alineada con el anillo impreso en la textura frontal (misma posición que el círculo dibujado en packageTexture).
+        // Alineada con el anillo impreso en la textura frontal (misma posición que el círculo dibujado en el canvas).
         const valve = new THREE.Mesh(valveGeometry, valveMaterial);
         valve.rotation.x = Math.PI / 2;
-        valve.position.set(0, .38, .345);
-        if (!hotfix) group.add(valve);
+        valve.position.set(0, hotfix ? .39 : .38, hotfix ? .49 : .345);
+        group.add(valve);
         return group;
     }
     const states = hosts.map(host => {
@@ -457,9 +698,6 @@ export function mountWorlds() {
         for (const s of states) {
             const r = s.host.getBoundingClientRect();
             if (r.bottom < 0 || r.top > innerHeight || r.width === 0)
-                continue;
-            // Keep the styled preview until all printed faces are available.
-            if (s.kind === 'hero' && (!hotfixFront.map || !hotfixBack.map || !hotfixSide.map))
                 continue;
             s.camera.aspect = r.width / r.height;
             s.camera.position.z = 8.7 * Math.max(1, (s.kind === 'origin' ? 1.15 : .82) / s.camera.aspect);
