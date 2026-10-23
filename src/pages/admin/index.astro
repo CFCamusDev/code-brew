@@ -1,31 +1,55 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getDashboardSummary, LOW_STOCK_THRESHOLD } from '../../lib/server/admin/dashboard';
+import BarList from '../../components/admin/charts/BarList.astro';
+import DailySalesChart from '../../components/admin/charts/DailySalesChart.astro';
+import {
+  getDashboardSummary,
+  getPerformance,
+  LOW_STOCK_THRESHOLD,
+  PERFORMANCE_RANGES,
+  type PerformanceRange
+} from '../../lib/server/admin/dashboard';
 import { ABANDONED_CANCEL_AFTER_HOURS } from '../../lib/server/admin/orders';
 import { formatPEN } from '../../lib/shop/format';
 
 export const prerender = false;
 
-const summary = await getDashboardSummary();
+const rangeParam = Number(Astro.url.searchParams.get('rango'));
+const range: PerformanceRange = (PERFORMANCE_RANGES as readonly number[]).includes(rangeParam) ? (rangeParam as PerformanceRange) : 30;
+const [summary, performance] = await Promise.all([getDashboardSummary(), getPerformance(range)]);
 const admin = Astro.locals.admin!;
 const today = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+
+/** Variación porcentual contra un periodo anterior; null si no hay base para comparar. */
+const delta = (current: number, previous: number) => (previous > 0 ? Math.round(((current - previous) / previous) * 100) : null);
+const monthDelta = delta(summary.monthCents, summary.prevMonthToDateCents);
+const rangeDelta = delta(performance.totalCents, performance.previousCents);
+const trend = (value: number | null) => (value === null ? undefined : value > 0 ? 'up' : value < 0 ? 'down' : 'flat');
+const signed = (value: number) => `${value > 0 ? '+' : ''}${value}%`;
 
 const queues = [
   { key: 'toPrepare', label: 'Por preparar', hint: 'Pagados, aún sin armar', href: '/admin/pedidos?estado=paid', value: summary.toPrepare },
   { key: 'toShip', label: 'Por despachar', hint: 'En preparación', href: '/admin/pedidos?estado=preparing', value: summary.toShip },
   { key: 'stockAlerts', label: 'Pagados sin stock', hint: 'Revisar inventario antes de armar', href: '/admin/pedidos?estado=paid', value: summary.stockAlerts, warn: true },
-  { key: 'abandoned', label: 'Sin pagar hace +24 h', hint: 'Pedidos abandonados', href: '/admin/pedidos?estado=pending', value: summary.abandoned }
+  { key: 'abandoned', label: 'Sin pagar hace +24 h', hint: `Se cancelan solos a las ${ABANDONED_CANCEL_AFTER_HOURS} h`, href: '/admin/pedidos?estado=pending', value: summary.abandoned }
 ];
+const pending = queues.slice(0, 2).reduce((sum, queue) => sum + queue.value, 0);
+const paymentTotal = performance.paymentMix.reduce((sum, row) => sum + row.cents, 0);
 ---
 <AdminLayout title="Inicio">
   <div class="admin-head">
     <div>
+      <p class="eyebrow" style="text-transform:capitalize">{today}</p>
       <h1>Hola, {admin.name.split(' ')[0]}</h1>
-      <p style="text-transform:capitalize">{today}</p>
+      <p>{pending ? `Tienes ${pending} ${pending === 1 ? 'pedido' : 'pedidos'} por preparar o despachar.` : 'No hay pedidos esperando armado ni despacho.'}</p>
+    </div>
+    <div class="head-actions">
+      <a class="btn ghost" href={`/api/admin/export/pedidos?desde=${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date()).slice(0, 7)}-01`}>Exportar el mes</a>
+      <a class="btn" href="/admin/pedidos?estado=paid">Ver por preparar</a>
     </div>
   </div>
 
-  <section class="kpi-grid" aria-label="Ventas">
+  <section class="bento" aria-label="Ventas">
     <article class="kpi">
       <span class="kpi-label">Ventas de hoy</span>
       <strong class="kpi-value" data-kpi="todayCents" data-value={summary.todayCents}>{formatPEN(summary.todayCents)}</strong>
@@ -34,44 +58,121 @@ const queues = [
     <article class="kpi">
       <span class="kpi-label">Ventas del mes</span>
       <strong class="kpi-value" data-kpi="monthCents" data-value={summary.monthCents}>{formatPEN(summary.monthCents)}</strong>
-      <span class="kpi-sub"><b data-kpi="monthOrders" data-value={summary.monthOrders}>{summary.monthOrders}</b> pedidos · ticket promedio {formatPEN(summary.monthAverageCents)}</span>
+      <span class="kpi-sub">
+        {monthDelta === null ? 'Sin ventas el mes pasado para comparar' : <><span class="kpi-delta" data-trend={trend(monthDelta)}>{signed(monthDelta)}</span> vs. mismo tramo del mes pasado</>}
+      </span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-label">Ticket promedio</span>
+      <strong class="kpi-value">{formatPEN(summary.monthAverageCents)}</strong>
+      <span class="kpi-sub">Por pedido pagado este mes</span>
+    </article>
+    <article class="kpi">
+      <span class="kpi-label">Pedidos del mes</span>
+      <strong class="kpi-value"><span data-kpi="monthOrders" data-value={summary.monthOrders}>{summary.monthOrders}</span></strong>
+      <span class="kpi-sub">Pagados, en preparación, enviados o entregados</span>
     </article>
   </section>
 
-  <h2 class="section-title">Para atender</h2>
-  <section class="queue-grid" aria-label="Pedidos para atender">
-    {queues.map(queue => (
-      <a class="queue" href={queue.href} data-attention={queue.value > 0 ? (queue.warn ? 'warn' : 'yes') : undefined}>
-        <strong data-kpi={queue.key} data-value={queue.value}>{queue.value}</strong>
-        <span>{queue.label}</span>
-        <small>{queue.hint}</small>
-      </a>
-    ))}
-  </section>
-
-  <p class="muted queue-note">
-    Los pedidos sin pagar se cancelan solos a las {ABANDONED_CANCEL_AFTER_HOURS} h (salvo un código de PagoEfectivo o billetera vigente).
-    {admin.role === 'admin' && <button type="button" class="btn ghost small" id="cancel-abandoned">Cancelar abandonados ahora</button>}
-    <span id="cancel-result" role="status"></span>
-  </p>
-
-  <section class="admin-card" style="margin-top:20px">
-    <div class="card-head">
-      <h2>Stock bajo (≤ {LOW_STOCK_THRESHOLD})</h2>
-      <a class="btn ghost small" href="/admin/productos">Ir a productos</a>
+  <div class="section-row">
+    <div>
+      <h2>Rendimiento</h2>
+      <p>Últimos {range} días, en hora de Lima</p>
     </div>
-    {summary.lowStock.length === 0 ? (
-      <p class="muted" data-kpi="lowStock" data-value="0">Todo el café activo tiene más de {LOW_STOCK_THRESHOLD} unidades.</p>
-    ) : (
-      <ul class="stock-list" data-kpi="lowStock" data-value={summary.lowStock.length}>
-        {summary.lowStock.map(item => (
-          <li>
-            <span>{item.productName} · {item.format}</span>
-            <span class="badge" data-status={item.stock === 0 ? 'pending' : 'preparing'}>{item.stock === 0 ? 'Agotado' : `Quedan ${item.stock}`}</span>
-          </li>
+    <nav class="seg" aria-label="Rango de los gráficos">
+      {PERFORMANCE_RANGES.map(days => (
+        <a href={days === 30 ? '/admin' : `/admin?rango=${days}`} aria-current={days === range ? 'true' : undefined}>{days} días</a>
+      ))}
+    </nav>
+  </div>
+
+  <section class="bento">
+    <article class="panel span-8">
+      <div class="panel-head">
+        <div>
+          <h2>Ventas por día</h2>
+          <div class="chart-total">
+            <strong>{formatPEN(performance.totalCents)}</strong>
+            <span>
+              {performance.totalOrders} pedidos
+              {rangeDelta !== null && <> · <span class="kpi-delta" data-trend={trend(rangeDelta)}>{signed(rangeDelta)}</span> vs. {range} días anteriores</>}
+            </span>
+          </div>
+        </div>
+      </div>
+      <DailySalesChart series={performance.series} />
+    </article>
+
+    <article class="panel span-4">
+      <div class="panel-head">
+        <div><h2>Para atender</h2><p>Accesos a cada cola de pedidos</p></div>
+      </div>
+      <div class="queue-list">
+        {queues.map(queue => (
+          <a class="queue" href={queue.href} data-attention={queue.value > 0 ? (queue.warn ? 'warn' : 'yes') : undefined}>
+            <span>{queue.label}</span>
+            <small>{queue.hint}</small>
+            <strong data-kpi={queue.key} data-value={queue.value}>{queue.value}</strong>
+          </a>
         ))}
-      </ul>
-    )}
+      </div>
+      {admin.role === 'admin' && (
+        <p class="queue-note muted">
+          <button type="button" class="btn ghost small" id="cancel-abandoned">Cancelar abandonados ahora</button>
+          <span id="cancel-result" role="status"></span>
+        </p>
+      )}
+    </article>
+
+    <article class="panel span-4">
+      <div class="panel-head">
+        <div><h2>Más vendidos</h2><p>Unidades en {range} días</p></div>
+        <a href="/admin/productos">Productos</a>
+      </div>
+      <BarList
+        empty="Aún no hay ventas en este rango."
+        items={performance.topProducts.map(product => ({
+          label: product.name,
+          value: product.units,
+          display: `${product.units} u.`,
+          detail: formatPEN(product.cents)
+        }))}
+      />
+    </article>
+
+    <article class="panel span-4">
+      <div class="panel-head">
+        <div><h2>Medios de pago</h2><p>Por monto cobrado en {range} días</p></div>
+      </div>
+      <BarList
+        empty="Sin pagos en este rango."
+        items={performance.paymentMix.map(row => ({
+          label: `${row.label} · ${row.orders} ${row.orders === 1 ? 'pedido' : 'pedidos'}`,
+          value: row.cents,
+          display: formatPEN(row.cents),
+          detail: `${Math.round((row.cents / paymentTotal) * 100)}%`
+        }))}
+      />
+    </article>
+
+    <article class="panel span-4">
+      <div class="panel-head">
+        <div><h2>Stock bajo</h2><p>Presentaciones activas con {LOW_STOCK_THRESHOLD} o menos</p></div>
+        <a href="/admin/productos">Ajustar</a>
+      </div>
+      {summary.lowStock.length === 0 ? (
+        <p class="empty-chart" data-kpi="lowStock" data-value="0">Todo el café activo tiene más de {LOW_STOCK_THRESHOLD} unidades.</p>
+      ) : (
+        <ul class="stock-list" data-kpi="lowStock" data-value={summary.lowStock.length}>
+          {summary.lowStock.map(item => (
+            <li>
+              <span>{item.productName} · {item.format}</span>
+              <span class="badge" data-status={item.stock === 0 ? 'pending' : 'preparing'}>{item.stock === 0 ? 'Agotado' : `Quedan ${item.stock}`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
   </section>
 </AdminLayout>
 <script>

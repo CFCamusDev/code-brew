@@ -178,7 +178,7 @@ function VariantRow({ variant, canEdit }: { variant: Variant; canEdit: boolean }
         )}
       </td>
       <td className="num">
-        <strong style={{ color: stock === 0 ? '#b4532a' : undefined }}>{stock}</strong>
+        <strong style={{ color: stock === 0 ? 'var(--danger)' : undefined }}>{stock}</strong>
       </td>
       <td>
         <div className="actions" style={{ flexWrap: 'nowrap' }}>

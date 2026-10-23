@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { formatDateTime } from '../../lib/shop/format';
 import { adminPost } from './request';
 
 interface User {
@@ -8,14 +7,15 @@ interface User {
   name: string;
   role: 'admin' | 'operator';
   active: boolean;
-  lastLoginAt: string | Date | null;
+  /** Ya formateado en el servidor: formatear en la isla daba textos distintos al hidratar (parpadeo). */
+  lastLogin: string | null;
 }
 
 const ROLE = { admin: 'Administrador', operator: 'Operador' } as const;
 
 function TemporaryPassword({ email, password }: { email: string; password: string }) {
   return (
-    <div className="alert" role="status" style={{ borderColor: 'var(--ink)', background: '#203c3210' }}>
+    <div className="alert" role="status" style={{ background: 'var(--glass-strong)' }}>
       Contraseña temporal para <strong>{email}</strong>: <code style={{ fontSize: 15 }}>{password}</code>
       <br />
       <small>Cópiala ahora: no se volverá a mostrar. Pídele que la cambie en «Mi cuenta» al entrar.</small>
@@ -72,7 +72,7 @@ function UserRow({ user, isSelf, onPassword }: { user: User; isSelf: boolean; on
           <input type="checkbox" checked={form.active} disabled={isSelf} onChange={e => setForm({ ...form, active: e.target.checked })} /> Activo
         </label>
       </td>
-      <td>{user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Nunca'}</td>
+      <td>{user.lastLogin ?? 'Nunca'}</td>
       <td>
         <div className="actions" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
           <button type="button" className="btn small" onClick={save} disabled={busy || !changed}>
