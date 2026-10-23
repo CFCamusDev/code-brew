@@ -15,7 +15,7 @@ const ROLE = { admin: 'Administrador', operator: 'Operador' } as const;
 
 function TemporaryPassword({ email, password }: { email: string; password: string }) {
   return (
-    <div className="alert" role="status" style={{ borderColor: 'var(--ink)', background: '#203c3210' }}>
+    <div className="alert" role="status" style={{ background: 'var(--glass-strong)' }}>
       Contraseña temporal para <strong>{email}</strong>: <code style={{ fontSize: 15 }}>{password}</code>
       <br />
       <small>Cópiala ahora: no se volverá a mostrar. Pídele que la cambie en «Mi cuenta» al entrar.</small>
