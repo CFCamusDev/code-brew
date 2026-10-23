@@ -10,6 +10,14 @@ export function formatOrderNumber(number: number): string {
   return `CB-${String(number).padStart(6, '0')}`;
 }
 
+/** "CB-000123", "cb-123" o "123" → 123. null si no es un número de pedido válido. */
+export function parseOrderNumber(input: string): number | null {
+  const match = input.trim().match(/^(?:cb-?)?0*(\d+)$/i);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
 const dateTime = new Intl.DateTimeFormat('es-PE', {
   timeZone: 'America/Lima',
   dateStyle: 'short',
