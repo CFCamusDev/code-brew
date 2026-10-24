@@ -4,6 +4,6 @@ dist
 .git
 .github
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 npm-debug.log
