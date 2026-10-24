@@ -282,7 +282,7 @@ export function mountWorlds() {
         const floaters: THREE.Group[] = [];
         let heroBag: THREE.Group | undefined;
         if (kind === 'hero' || kind === 'team') {
-            const bag = pouch(false, kind === 'hero');
+            const bag = pouch(false, true);
             if (kind === 'hero') heroBag = bag;
             bag.rotation.set(.06, -.24, -.13);
             if (kind === 'hero') {
@@ -291,11 +291,12 @@ export function mountWorlds() {
             }
             root.add(bag);
             if (kind === 'team') {
-                bag.position.x = -.7;
+                // Separate the full pouch volumes; overlapping solids looked see-through.
+                bag.position.set(-.78, 0, .65);
                 bag.rotation.z = .16;
-                const second = pouch(true);
-                second.position.set(.8, .1, -.4);
-                second.rotation.set(0, -.25, -.16);
+                const second = pouch(false, true);
+                second.position.set(.88, .1, -1.05);
+                second.rotation.set(0, Math.PI + .25, -.16);
                 root.add(second);
                 root.scale.setScalar(.8);
             }
@@ -409,8 +410,8 @@ export function mountWorlds() {
 
                 });
             }
+            if ((s.kind === 'hero' || s.kind === 'team') && ![hotfixFront, hotfixBack, hotfixLeft, hotfixRight].every(m => m.map?.image)) continue;
             if (s.kind === 'hero') {
-                if (![hotfixFront, hotfixBack, hotfixLeft, hotfixRight].every(m => m.map?.image)) continue;
                 // Frame the pouch independently: falling beans must never zoom it out.
                 const tanY = Math.tan(THREE.MathUtils.degToRad(35 / 2));
                 s.camera.position.z = .7 + Math.max(3.02 / tanY, 2.2 / (tanY * s.camera.aspect));

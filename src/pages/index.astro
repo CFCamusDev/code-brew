@@ -7,6 +7,7 @@ import Products from '../components/Products.astro';
 import LogoMark from '../components/LogoMark.astro';
 import WorldStage from '../components/WorldStage.astro';
 import Experience from '../components/Experience.astro';
+import RitualVideo from '../components/RitualVideo.astro';
 import OriginMap from '../components/OriginMap.astro';
 import { getWhatsAppUrl } from '../data/config';
 
@@ -75,10 +76,7 @@ const questions = [
 <p>No necesitas ser barista.<br />Solo encontrar tu forma de disfrutarlo.</p>
 </div>
 <div class="ritual-grid">
-<div class="ritual-image">
-<WorldStage kind="ritual" label="Taza de café verde con plato y vapor en 3D" />
-<span class="image-label">// take a coffee break</span>
-</div>
+<RitualVideo />
 <div class="ritual-steps">
 <article>
 <span>01</span>
@@ -107,7 +105,7 @@ const questions = [
 </div>
 </section>
     <section id="empresas" class="team-section">
-<WorldStage kind="team" label="Dos empaques conceptuales de café CodeBrew en 3D" />
+<WorldStage kind="team" label="Empaques Codebrew Hotfix: frente y reverso en 3D" />
 <div class="team-copy">
 <p class="eyebrow">PARA EQUIPOS QUE CONSTRUYEN</p>
 <h2>El mejor perk.<br />
