@@ -1,5 +1,5 @@
 # Stage 1: dependencias y build de la aplicación Astro
-FROM node:22-alpine AS builder
+FROM node:22.23.4-alpine AS builder
 
 WORKDIR /app
 RUN corepack enable
@@ -16,7 +16,7 @@ ENV PUBLIC_ANALYTICS_ENV=$PUBLIC_ANALYTICS_ENV PUBLIC_GA4_ID=$PUBLIC_GA4_ID
 RUN pnpm build
 
 # Stage 2: solo dependencias de producción
-FROM node:22-alpine AS prod-deps
+FROM node:22.23.4-alpine AS prod-deps
 
 WORKDIR /app
 RUN corepack enable
@@ -28,7 +28,7 @@ FROM nginx:alpine AS web
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Stage 3: servidor Node de producción (etapa por defecto)
-FROM node:22-alpine AS runner
+FROM node:22.23.4-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production \
