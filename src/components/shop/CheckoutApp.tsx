@@ -1,6 +1,7 @@
+import { track, quoteAnalytics } from '../../lib/analytics';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useStore } from '@nanostores/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, type FieldError } from 'react-hook-form';
 import { cartLines, clearCart, removeFromCart } from '../../lib/shop/cart';
 import { customerSchema, REGIONS, type Customer, type CustomerForm, type Quote } from '../../lib/shop/checkout';
@@ -31,6 +32,13 @@ export default function CheckoutApp() {
     resolver: zodResolver(customerSchema),
     defaultValues: { zone: '', region: '' }
   });
+  const began = useRef(false);
+  useEffect(() => {
+    if (quote?.lines.length && !quote.issues.length && !began.current) {
+      began.current = true;
+      track('begin_checkout', quoteAnalytics(quote));
+    }
+  }, [quote]);
   const zone = watch('zone');
   const region = watch('region');
 
@@ -64,6 +72,7 @@ export default function CheckoutApp() {
 
   const onSubmit = async (customer: Customer) => {
     setSubmitError(null);
+    if (quote && !quote.issues.length) track('add_shipping_info', {...quoteAnalytics(quote),shipping_tier:quote.zones.find(z=>z.slug===customer.zone)?.name ?? 'delivery'});
     try {
       const response = await fetch('/api/orders', {
         method: 'POST',

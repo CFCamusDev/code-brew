@@ -1,3 +1,4 @@
+import { track } from '../analytics';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, computed } from 'nanostores';
 import catalog from '../../data/catalog.json';
@@ -46,13 +47,19 @@ export function describeSku(sku: string) {
   return variants.get(sku);
 }
 
-export function addToCart(sku: string, grind: string, quantity = 1) {
+export function addToCart(sku: string, grind: string, quantity = 1, unitPrice?: number) {
   const lines = cartLines.get();
   const existing = lines.find(line => line.sku === sku && line.grind === grind);
   if (existing) {
     setQuantity(sku, grind, existing.quantity + quantity);
   } else if (lines.length < MAX_LINES) {
     cartLines.set([...lines, { sku, grind, quantity: Math.min(quantity, MAX_QUANTITY) }]);
+  }
+  const added = (cartLines.get().find(l=>l.sku===sku && l.grind===grind)?.quantity ?? 0) - (existing?.quantity ?? 0);
+  const product = describeSku(sku);
+  if(added > 0 && product) {
+    const price = unitPrice ?? product.price;
+    track('add_to_cart', {value:price*added,items:[{item_id:sku,item_name:product.productName,price,quantity:added}]});
   }
 }
 

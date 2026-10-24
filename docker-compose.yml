@@ -17,6 +17,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        PUBLIC_ANALYTICS_ENV: ${PUBLIC_ANALYTICS_ENV:-disabled}
+        PUBLIC_GA4_ID: ${PUBLIC_GA4_ID:-G-YMMJ7V30SZ}
     container_name: codebrew-app
     restart: unless-stopped
     environment:

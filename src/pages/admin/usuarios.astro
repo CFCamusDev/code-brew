@@ -2,12 +2,13 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import UsersManager from '../../components/admin/UsersManager';
 import { listUsers } from '../../lib/server/admin/users';
+import { formatDateTime } from '../../lib/shop/format';
 
 export const prerender = false;
 
 const admin = Astro.locals.admin!;
 if (admin.role !== 'admin') return Astro.redirect('/admin');
-const users = await listUsers();
+const users = (await listUsers()).map(({ lastLoginAt, ...user }) => ({ ...user, lastLogin: lastLoginAt ? formatDateTime(lastLoginAt) : null }));
 ---
 <AdminLayout title="Usuarios">
   <div class="admin-head">

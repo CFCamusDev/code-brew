@@ -37,14 +37,19 @@ const selectable = status === 'paid' || status === 'preparing';
       <h1>Pedidos</h1>
       <p>{total} {total === 1 ? 'pedido' : 'pedidos'}{status ? ` · ${STATUS_LABEL[status]}` : ''}{q ? ` · “${q}”` : ''}{rangeLabel && ` · ${rangeLabel}`}</p>
     </div>
+    <div class="head-actions">
+      <a class="btn ghost" href={`/api/admin/export/pedidos?${exportQuery}`}>Exportar CSV</a>
+    </div>
+  </div>
+
+  <div class="toolbar">
     <form class="filters" method="get" action="/admin/pedidos">
       {status && <input type="hidden" name="estado" value={status} />}
-      <input type="search" name="q" value={q} placeholder="N.º, nombre, correo o celular" aria-label="Buscar pedidos" />
+      <input type="search" name="q" value={q} placeholder="Buscar por n.º, nombre, correo o celular" aria-label="Buscar pedidos" />
       <label class="date-field">Desde<input type="date" name="desde" value={from} /></label>
       <label class="date-field">Hasta<input type="date" name="hasta" value={to} /></label>
-      <button class="btn ghost" type="submit">Filtrar</button>
+      <button class="btn" type="submit">Filtrar</button>
       {(from || to || q) && <a class="btn ghost" href={status ? `/admin/pedidos?estado=${status}` : '/admin/pedidos'}>Limpiar</a>}
-      <a class="btn" href={`/api/admin/export/pedidos?${exportQuery}`}>Exportar CSV</a>
     </form>
   </div>
 

@@ -191,12 +191,27 @@ export function isOrderId(id: string | undefined): id is string {
   return !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
+/**
+ * Busca el id de un pedido por su número + correo (verificación mínima para que un
+ * número correlativo no sirva para ver pedidos ajenos). Para "¿Dónde está mi pedido?".
+ */
+export async function findOrderIdByNumberAndEmail(number: number, email: string) {
+  const [order] = await getDb()
+    .select({ id: orders.id })
+    .from(orders)
+    .where(and(eq(orders.number, number), eq(orders.customerEmail, email.trim().toLowerCase())));
+  return order?.id;
+}
+
 /** Pedido con sus líneas, para la página de confirmación. */
 export async function getOrder(id: string) {
   const db = getDb();
   const [order] = await db.select().from(orders).where(eq(orders.id, id));
   if (!order) return undefined;
-  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id)).orderBy(asc(orderItems.id));
+  const rows = await db.select({ item: orderItems, sku: productVariants.sku }).from(orderItems)
+    .innerJoin(productVariants, eq(productVariants.id, orderItems.variantId))
+    .where(eq(orderItems.orderId, id)).orderBy(asc(orderItems.id));
+  const items = rows.map(row => ({ ...row.item, sku: row.sku }));
   return { ...order, items };
 }
 

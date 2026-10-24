@@ -17,20 +17,13 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_PE" />
-    {import.meta.env.PROD && <>
-      <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-YMMJ7V30SZ"></script>
-      <script is:inline>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-YMMJ7V30SZ');
-        document.addEventListener('click', function (event) {
-          var link = event.target instanceof Element ? event.target.closest('a[href*="wa.me"]') : null;
-          if (link) gtag('event', 'whatsapp_click', { link_url: link.href, link_text: link.textContent.trim().slice(0, 100) });
-        });
-      </script>
-    </>}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      import { initAnalytics } from '../lib/analytics';
+      initAnalytics();
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -56,14 +49,25 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
             document.documentElement.classList.add('app-ready');
           }
         }
-        if (document.readyState === 'interactive' || document.readyState === 'complete') {
-          requestAnimationFrame(show);
+        // Espera a que las fuentes (Google Fonts) ya se puedan pintar, no solo a que el HTML
+        // esté parseado: con DOMContentLoaded + 250ms a veces se revelaba la página antes de
+        // que el CSS/las fuentes terminaran de aplicarse, mostrando un instante sin estilo.
+        function ready() {
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(show, show);
+          } else {
+            show();
+          }
+        }
+        if (document.readyState === 'complete') {
+          requestAnimationFrame(ready);
         } else {
-          document.addEventListener('DOMContentLoaded', function() {
-            requestAnimationFrame(show);
+          window.addEventListener('load', function() {
+            requestAnimationFrame(ready);
           });
         }
-        setTimeout(show, 250);
+        // Red de seguridad: nunca dejar la página en blanco más de ~1.2 s aunque algo falle.
+        setTimeout(show, 1200);
       })();
     </script>
   </head>

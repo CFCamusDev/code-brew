@@ -7,6 +7,7 @@ export default defineConfig({
   // Las páginas se prerenderizan por defecto (p. ej. /checkout). Las que llevan `export const prerender = false`
   // (landing con precios en vivo, pedidos, API y panel) se renderizan en el servidor.
   output: 'static',
+  compressHTML: true,
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
   env: {
