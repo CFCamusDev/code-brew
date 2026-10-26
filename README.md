@@ -1,12 +1,12 @@
-# CodeBrew — immersive prototype
+# CodeBrew — 1.0.0
 
-Web en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing se prerenderiza como HTML estático; las rutas de API, checkout y administración se ejecutan en un servidor Node con PostgreSQL. Los componentes interactivos se escriben como islas React.
+Tienda en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing con precios en vivo, los pedidos, las API y la administración se ejecutan en un servidor Node con PostgreSQL. Las rutas marcadas para prerenderizado se generan como HTML estático. Los componentes interactivos se escriben como islas React.
 
 ## Desarrollo
 
-El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
+El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.0.0.md` para la preparación y comprobaciones de producción.
 
-- `pnpm install`
+- `pnpm install --frozen-lockfile`
 - `cp .env.example .env`
 - `pnpm db:up` levanta PostgreSQL de desarrollo en Docker (puerto 5434).
 - `pnpm db:migrate` aplica las migraciones y `pnpm db:seed` carga el catálogo inicial.
@@ -14,6 +14,7 @@ El proyecto usa **pnpm** (`corepack enable` si aún no lo tienes).
 - Puerto alternativo: `pnpm exec astro dev --host 127.0.0.1 --port 4321`.
 - `pnpm build` genera `dist/client` (estático) y `dist/server` (servidor Node).
 - `pnpm preview` sirve la compilación.
+- `pnpm start` arranca el servidor de producción ya compilado; las variables deben estar exportadas en el entorno (Docker las inyecta).
 - `pnpm exec tsc --noEmit` comprueba los módulos TypeScript.
 
 ## Base de datos
@@ -75,7 +76,7 @@ INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto pnpm 
 
 ## CI / CD (GitHub Actions)
 
-- **CI** (`.github/workflows/ci.yml`) corre en cada PR y en cada push a `main` con tres verificaciones: *Tipos, pruebas unitarias y build*, *Pruebas de integración (PostgreSQL)* e *Imagen Docker*.
+- **CI** (`.github/workflows/ci.yml`) corre en cada PR y en cada push a `main`, `develop` y `release/**` con tres verificaciones: *Tipos, pruebas unitarias y build*, *Pruebas de integración (PostgreSQL)* e *Imagen Docker*.
 - **Deploy** (`.github/workflows/deploy.yml`): cuando el CI de `main` termina bien, llama al webhook de la stack de Portainer (secreto `PORTAINER_WEBHOOK_URL`) y espera a que `/api/health` responda en `SITE_URL` (variable del repo; por defecto `https://coffeecodebrew.com`). Sin el secreto no despliega. También se puede lanzar a mano desde *Actions*.
 - **Protección de `main`** (la aplica quien administra el repo): exige las tres verificaciones del CI, una aprobación y conversaciones resueltas antes de fusionar.
 
@@ -91,7 +92,7 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 
 - Portada con bolsa y granos 3D, respuesta al cursor y rotación vinculada al scroll.
 - Selector de cuatro perfiles con PNG transparentes, transiciones GSAP, formato, molienda y precio.
-- Relieve interpretativo del origen, taza y pack para equipos modelados con geometría procedural Three.js.
+- Mapa de origen de Rodríguez de Mendoza, taza y pack para equipos con escenas Three.js.
 - Un renderizador WebGL compartido; viewport y scissor delimitan cada escena a su sección.
 - Animaciones de entrada y progreso de lectura con GSAP / ScrollTrigger.
 - Botón de pausa que conserva la escena, posición de lectura y selección de producto.
@@ -115,8 +116,8 @@ Los tres originales generados con transparencia real están en `src/assets/demo/
 
 Los empaques son **conceptuales**, no fotografías del producto definitivo. La página lo indica junto al selector. Para reemplazarlos, cambia estos PNG manteniendo encuadre vertical, transparencia y proporciones semejantes, o actualiza sus importaciones en `Products.astro` y `WorldStage.astro`.
 
-La bolsa 3D tiene una etiqueta generada en `packageTexture()` dentro de `worlds.ts`. Al disponer del packaging real, actualizar esa textura y, si se requiere fidelidad fotográfica de pliegues y materiales, sustituir el modelo procedural por un GLB del producto. El terreno es una interpretación gráfica, no cartografía real.
+Las texturas y geometrías de la bolsa 3D se configuran en `worlds.ts` y sus módulos asociados. Al cambiar el packaging, actualizar sus recursos y, si se requiere fidelidad fotográfica de pliegues y materiales, sustituir el modelo procedural por un GLB del producto.
 
-Stock, pago y envío se coordinan por WhatsApp. La web no procesa pagos. La integración GA4 anterior se mantiene solo en producción. No se ha desplegado esta reconstrucción en hosting.
+La tienda procesa pedidos y permite pagos por Culqi cuando sus llaves están configuradas; ofrece WhatsApp como alternativa. GA4 solo se activa en compilaciones de producción con `PUBLIC_ANALYTICS_ENV=production`.
 
 Los componentes antiguos no importados permanecen como referencia y no forman parte de la página activa.

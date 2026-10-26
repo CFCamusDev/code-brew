@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
 
 # Un nuevo push cancela la ejecución anterior de la misma rama o PR.
 concurrency:
@@ -23,9 +23,11 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.23.4'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Auditoría de dependencias
+        run: pnpm audit --audit-level=high
       - name: Revisión de tipos
         run: pnpm typecheck
       - name: Pruebas unitarias
@@ -62,7 +64,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.23.4'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
