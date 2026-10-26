@@ -1,10 +1,10 @@
-# CodeBrew — 1.0.0
+# CodeBrew — 1.1.0
 
 Tienda en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing con precios en vivo, los pedidos, las API y la administración se ejecutan en un servidor Node con PostgreSQL. Las rutas marcadas para prerenderizado se generan como HTML estático. Los componentes interactivos se escriben como islas React.
 
 ## Desarrollo
 
-El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.0.0.md` para la preparación y comprobaciones de producción.
+El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.1.0.md` para la preparación y comprobaciones de producción.
 
 - `pnpm install --frozen-lockfile`
 - `cp .env.example .env`
@@ -63,6 +63,8 @@ El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**
 ## Pruebas
 
 - `pnpm typecheck`: tipos de todo el proyecto (incluidas las pruebas).
+- `pnpm config:check`: valida la configuración local sin mostrar secretos ni contactar servicios externos. El contenedor ejecuta esta validación antes de migrar.
+- `pnpm test:docker`: construye y levanta la stack completa con PostgreSQL desechable, espera a que esté saludable y ejecuta tipos, pruebas unitarias e integración a través de Nginx. Requiere Docker Compose 2.24.4 o posterior. No usa el `.env` local ni las llaves reales; elimina sus contenedores y volúmenes al terminar. `--keep` conserva la stack para diagnóstico.
 - `pnpm test`: pruebas unitarias (`tests/unit`), sin base de datos.
 - `pnpm test:integration`: pruebas por HTTP contra un servidor levantado (`tests/integration`). Necesitan `DATABASE_URL` y `INTEGRATION_BASE_URL`, y modifican datos (stock, precios, usuarios de prueba), así que usa una base aparte:
 
