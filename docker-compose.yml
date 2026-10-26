@@ -10,7 +10,8 @@ services:
     ports:
       - "${PORT:-8025}:80"
     depends_on:
-      - codebrew-app
+      codebrew-app:
+        condition: service_healthy
 
   codebrew-app:
     build:
