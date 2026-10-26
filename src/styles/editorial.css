@@ -1,0 +1,368 @@
+/* Sistema editorial de la tienda: tipografía clásica + vidrio translúcido + detalles de código.
+   Se carga después de global.css y solo ajusta lo necesario; las estructuras siguen allí. */
+
+:root{
+  --font-display:'EB Garamond','Cormorant Garamond',Garamond,Georgia,serif;
+  --font-body:'Geist','DM Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace;
+  font-family:var(--font-body);
+
+  /* Vidrio sobre fondo claro */
+  --glass:rgba(250,248,243,.44);
+  --glass-strong:rgba(250,248,243,.72);
+  --glass-edge:rgba(255,255,255,.7);
+  --glass-highlight:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 1px rgba(255,255,255,.28);
+  /* Vidrio sobre fondo oscuro */
+  --glass-dark:rgba(250,248,243,.06);
+  --glass-dark-strong:rgba(12,24,19,.55);
+  --glass-dark-edge:rgba(255,255,255,.14);
+  --glass-dark-highlight:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.04);
+  --shadow-soft:0 1px 2px rgba(32,60,50,.05),0 22px 48px -22px rgba(32,60,50,.32);
+  --blur:blur(22px) saturate(170%);
+  --radius-xl:30px;
+  --radius-lg:22px;
+  --radius-md:14px;
+  --gutter:clamp(16px,5.5vw,96px);
+}
+
+/* ---------- Fondo continuo: una sola luz detrás de toda la página ---------- */
+body{
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(42vw 42vw at 92% 8%,rgba(209,108,64,.16),transparent 70%),
+    radial-gradient(50vw 50vw at 0% 62%,rgba(67,105,82,.16),transparent 70%),
+    radial-gradient(36vw 36vw at 70% 100%,rgba(184,147,80,.16),transparent 70%),
+    var(--cream);
+}
+.catalog,.blend-section,.origin-section,.closing,.manifesto,.faq-section,.ritual-section{background:transparent}
+
+/* ---------- Tipografía ---------- */
+h1,h2,h3{font-family:var(--font-display);font-weight:500;text-wrap:balance}
+h2{font-size:clamp(42px,5.2vw,76px);line-height:1.02;letter-spacing:-.018em}
+.wordmark{font-family:var(--font-body);font-weight:700;letter-spacing:-.045em}
+.serif-word{font-family:var(--font-display);font-style:italic;font-weight:400;letter-spacing:-.01em}
+.eyebrow{font:600 11px/1.6 var(--font-body);letter-spacing:.18em;text-transform:uppercase}
+p{text-wrap:pretty}
+
+.hero h1{font-size:clamp(70px,8.8vw,136px);line-height:.9;letter-spacing:-.025em;font-weight:500;margin-bottom:clamp(30px,3vw,44px);padding-bottom:.06em}
+.hero-description{font-size:16px;line-height:1.65;max-width:420px}
+.manifesto h2{font-size:clamp(32px,3.6vw,54px);line-height:1.15;letter-spacing:-.012em;font-weight:400}
+.manifesto h2 span{font-style:italic;color:#6f7d6c}
+.manifesto>p:not(.eyebrow){font-size:17px;line-height:1.7;max-width:640px}
+.manifesto-code,.image-label{font-family:var(--font-mono);font-size:12px}
+.section-heading>p{font-size:15px;line-height:1.6}
+.origin-copy>p:not(.eyebrow){font-size:16px;line-height:1.7;max-width:460px}
+.origin-facts dt{font-size:11px;letter-spacing:.16em}
+.origin-facts dd{font-family:var(--font-display);font-size:21px;line-height:1.2}
+.ritual-steps h3{font-size:clamp(24px,2.2vw,30px);font-weight:500;letter-spacing:-.01em}
+.ritual-steps p{font-size:15px;line-height:1.65;max-width:420px}
+.ritual-steps article>span{font-family:var(--font-mono);font-size:12px}
+.faq-section>div>p:not(.eyebrow){font-size:15px}
+.faq-list summary{font-family:var(--font-display);font-size:clamp(19px,1.6vw,23px);line-height:1.3}
+.faq-list details p{font-size:15px;line-height:1.7}
+.catalog-note{font-size:13px}
+.site-header nav{font-size:13px}
+.announcement{font-size:11px;letter-spacing:.08em}
+.text-link{font-size:13px}
+.blend-info h3{font-size:clamp(34px,3.4vw,52px);letter-spacing:-.015em}
+.blend-description{font-size:15px;line-height:1.65}
+.blend-info .product-options label{font-size:12px}
+.blend-info .product-options select{font-size:14px}
+.footer-top p{font-size:14px}
+.footer-bottom{font-size:12px}
+.site-footer{overflow:hidden}
+
+/* ---------- Botones en cápsula ---------- */
+.button{border-radius:999px;font-size:13px;font-weight:600;letter-spacing:-.005em;gap:22px}
+.primary{
+  background:linear-gradient(180deg,#2b4d40,#203c32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 14px 28px -16px rgba(32,60,50,.8)
+}
+.primary:hover{background:linear-gradient(180deg,#335a4b,#24443a)}
+.cream{
+  background:rgba(250,248,243,.9);
+  box-shadow:inset 0 1px 0 #fff,0 14px 28px -16px rgba(0,0,0,.6)
+}
+.header-cta{border-radius:999px}
+
+/* ---------- Material de vidrio ---------- */
+.glass-panel,.blend-info,.origin-copy,.ritual-steps article,.faq-list details,.closing-panel{
+  background:var(--glass);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border:1px solid var(--glass-edge);
+  box-shadow:var(--glass-highlight),var(--shadow-soft);
+}
+
+/* Header flotante que acompaña el scroll */
+.site-header{
+  position:sticky;
+  top:0;
+  background:rgba(244,241,233,.62);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border-bottom:1px solid rgba(255,255,255,.55);
+  box-shadow:0 1px 0 rgba(32,60,50,.06)
+}
+
+/* Selector de cafés: la ficha del café como tarjeta de vidrio */
+.blend-info{padding:clamp(22px,2.4vw,36px);border-radius:var(--radius-xl)}
+.blend-info .product-options select{
+  border-radius:12px;
+  background:rgba(255,255,255,.55);
+  border-color:rgba(32,60,50,.14);
+  padding-inline:12px
+}
+.blend-info .order-link{border-radius:999px}
+.blend-choice{border-radius:var(--radius-md)}
+.blend-choice:hover,.blend-choice.is-active{
+  background:var(--glass-strong);
+  border-color:var(--glass-edge);
+  box-shadow:var(--glass-highlight),0 10px 24px -16px rgba(32,60,50,.4)
+}
+
+/* Origen: mapa y relato como dos piezas sobre el mismo fondo */
+.origin-section{
+  gap:clamp(16px,2vw,28px);
+  padding:clamp(24px,4vw,64px) var(--gutter);
+  max-width:1800px;
+  margin:0 auto;
+  align-items:stretch
+}
+.origin-photo{border-radius:var(--radius-xl);overflow:hidden;min-height:520px}
+.origin-copy{border-radius:var(--radius-xl);padding:clamp(28px,4vw,64px);align-self:center}
+.origin-facts{border-top-color:rgba(32,60,50,.14)}
+
+/* Ritual: cada paso como tarjeta */
+.ritual-steps{display:grid;gap:12px}
+.ritual-steps article{border-top:0;border-radius:var(--radius-lg);padding:22px 24px}
+.ritual-steps>.text-link{margin:10px 0 0 4px;justify-self:start}
+
+/* Preguntas frecuentes como píldoras de vidrio */
+.faq-list{display:grid;gap:10px}
+.faq-list details,.faq-list details:last-child{border:1px solid var(--glass-edge);border-radius:var(--radius-lg);padding:0 24px}
+.faq-list details[open]{background:var(--glass-strong)}
+
+/* Cierre: frase grande sobre un panel de vidrio */
+.closing{padding:clamp(48px,7vw,110px) var(--gutter)}
+.closing-panel{
+  position:relative;
+  z-index:1;
+  max-width:1100px;
+  margin:0 auto;
+  padding:clamp(40px,6vw,88px) clamp(20px,4vw,64px);
+  border-radius:calc(var(--radius-xl) + 6px)
+}
+.closing h2{font-size:clamp(52px,7vw,104px);line-height:.98;letter-spacing:-.02em}
+.closing .serif-word{color:var(--orange)}
+
+/* Pie: la marca en Garamond a todo lo ancho */
+.footer-wordmark{
+  display:block;
+  /* Ocupa el ancho del contenido y queda cortada por el borde inferior, como un sello */
+  margin:40px 0 -.06em;
+  font-family:var(--font-display);
+  font-size:25.2vw;
+  font-weight:500;
+  line-height:.78;
+  letter-spacing:-.04em;
+  color:rgba(244,241,233,.1);
+  white-space:nowrap;
+  user-select:none
+}
+
+/* ---------- Para equipos: isla oscura con vidrio ---------- */
+.team-section{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);
+  grid-template-areas:"copy stage" "offers offers";
+  gap:0 clamp(24px,4vw,64px);
+  margin:clamp(24px,4vw,56px) var(--gutter);
+  padding:clamp(40px,5vw,80px) clamp(24px,4.5vw,80px) clamp(28px,4vw,56px);
+  border-radius:calc(var(--radius-xl) + 8px);
+  background:
+    radial-gradient(60% 70% at 85% 25%,rgba(209,108,64,.22),transparent 70%),
+    radial-gradient(55% 60% at 10% 100%,rgba(92,140,110,.3),transparent 70%),
+    #18302a;
+  color:var(--cream);
+  overflow:hidden;
+  min-height:0
+}
+.team-section::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.06)
+}
+.team-section>.world-stage{grid-area:stage;height:auto;min-height:440px}
+.team-copy{grid-area:copy;padding:0;max-width:600px;align-self:center}
+.team-copy .eyebrow{color:#c9d4bd}
+.team-copy h2{margin:18px 0 20px;color:var(--cream)}
+.team-copy h2 .serif-word{color:#f0b48f}
+.team-section .team-copy .team-lede{font-size:17px;line-height:1.65;color:#d6ddcd;max-width:480px}
+.team-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:30px}
+.team-actions .text-link{color:#e8ece2;border-color:rgba(232,236,226,.4)}
+.team-steps{
+  list-style:none;
+  margin:36px 0 0;
+  padding:0;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px
+}
+.team-steps li{
+  display:grid;
+  gap:6px;
+  padding:14px 16px;
+  border-radius:var(--radius-md);
+  background:var(--glass-dark);
+  border:1px solid var(--glass-dark-edge);
+  box-shadow:var(--glass-dark-highlight);
+  font-size:13px;
+  line-height:1.45;
+  color:#d6ddcd
+}
+.team-steps b{font-family:var(--font-mono);font-size:11px;font-weight:500;color:#f0b48f}
+
+/* Tarjeta de código flotando sobre los empaques */
+.team-code{
+  grid-area:stage;
+  align-self:end;
+  justify-self:start;
+  position:relative;
+  z-index:6;
+  margin:0 0 clamp(4px,1.5vw,20px);
+  padding:16px 18px;
+  border-radius:var(--radius-lg);
+  background:var(--glass-dark-strong);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border:1px solid var(--glass-dark-edge);
+  box-shadow:var(--glass-dark-highlight),0 24px 50px -20px rgba(0,0,0,.6);
+  font:400 12.5px/1.7 var(--font-mono);
+  color:#dfe5d8;
+  white-space:pre;
+  pointer-events:none
+}
+.team-code .c{color:#8b9a8c}
+.team-code .k{color:#f0b48f}
+.team-code .s{color:#b6d7a8}
+.team-code .n{color:#e8c37e}
+.team-code .f{color:#9cc4e6}
+
+/* Ofertas en tarjetas de vidrio oscuro */
+.team-offers{
+  grid-area:offers;
+  position:relative;
+  z-index:6;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:clamp(28px,3vw,44px)
+}
+.team-offer{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:24px;
+  border-radius:var(--radius-lg);
+  background:var(--glass-dark);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border:1px solid var(--glass-dark-edge);
+  box-shadow:var(--glass-dark-highlight);
+  transition:background .25s,transform .25s cubic-bezier(.2,.8,.2,1)
+}
+.team-offer:hover{background:rgba(250,248,243,.1);transform:translateY(-3px)}
+.team-offer .tag{font:500 11px/1 var(--font-mono);color:#c9d4bd;letter-spacing:.02em}
+.team-offer h3{margin:4px 0 0;font-size:clamp(26px,2.2vw,32px);font-weight:500;color:var(--cream);letter-spacing:-.01em}
+.team-offer p{font-size:14px;line-height:1.6;color:#cfd7c6}
+.team-offer a{
+  margin-top:auto;
+  padding-top:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--cream);
+  width:max-content;
+  border-bottom:1px solid rgba(244,241,233,.35)
+}
+.team-offer a:hover{border-color:var(--cream)}
+
+/* ---------- Ajustes tras revisión visual ---------- */
+/* Franja de calidad: vidrio en vez de verde plano */
+.quality-strip{
+  background:rgba(250,248,243,.38);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border-top:1px solid rgba(255,255,255,.6);
+  border-bottom:1px solid rgba(32,60,50,.08);
+  font-size:13px;
+  letter-spacing:.01em
+}
+/* clip-path también recorta el iframe del mapa (border-radius solo no siempre lo hace) */
+.origin-photo{clip-path:inset(0 round var(--radius-xl))}
+/* Video del ritual enmarcado en vidrio */
+.ritual-section .ritual-grid .ritual-player{
+  border-radius:var(--radius-xl);
+  clip-path:inset(0 round var(--radius-xl));
+  box-shadow:var(--shadow-soft);
+  outline:1px solid var(--glass-edge);
+  outline-offset:-1px
+}
+.ritual-section .ritual-grid .ritual-player .image-label{
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(250,248,243,.6);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border:1px solid var(--glass-edge)
+}
+.closing h2{margin:22px 0 40px}
+
+/* ---------- Respaldos ---------- */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--glass:rgba(250,248,243,.88);--glass-dark:rgba(250,248,243,.1)}
+  .site-header{background:rgba(244,241,233,.96)}
+}
+@media (prefers-reduced-transparency:reduce){
+  :root{--glass:var(--paper);--glass-strong:var(--paper);--glass-dark:#223b32;--glass-dark-strong:#1c332b}
+  .site-header{background:var(--cream)}
+}
+
+/* ---------- Pantallas medianas y chicas ---------- */
+@media (max-width:1100px){
+  .team-section{grid-template-columns:1fr;grid-template-areas:"copy" "stage" "offers"}
+  .team-section>.world-stage{min-height:420px}
+  .team-copy{max-width:none}
+}
+@media (max-width:760px){
+  .origin-section{padding-inline:16px}
+  .origin-photo{min-height:380px}
+  .team-section{margin-inline:12px;padding:36px 20px 24px;border-radius:var(--radius-xl)}
+  .team-section>.world-stage{min-height:360px}
+  .team-steps,.team-offers{grid-template-columns:1fr}
+  .team-section{grid-template-areas:"copy" "stage" "code" "offers"}
+  .team-code{grid-area:code;justify-self:stretch;margin:-28px 0 0;max-width:100%;overflow:auto;font-size:11.5px}
+  .closing{padding-inline:12px}
+  .ritual-steps article{padding:18px}
+  .faq-list details,.faq-list details:last-child{padding:0 18px}
+}

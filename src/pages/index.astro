@@ -5,9 +5,9 @@ import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Products from '../components/Products.astro';
 import LogoMark from '../components/LogoMark.astro';
-import WorldStage from '../components/WorldStage.astro';
 import Experience from '../components/Experience.astro';
 import RitualVideo from '../components/RitualVideo.astro';
+import TeamSection from '../components/TeamSection.astro';
 import OriginMap from '../components/OriginMap.astro';
 import { getWhatsAppUrl } from '../data/config';
 
@@ -104,18 +104,7 @@ const questions = [
 </div>
 </div>
 </section>
-    <section id="empresas" class="team-section">
-<WorldStage kind="team" label="Empaques Codebrew Hotfix: frente y reverso en 3D" />
-<div class="team-copy">
-<p class="eyebrow">PARA EQUIPOS QUE CONSTRUYEN</p>
-<h2>El mejor perk.<br />
-<span class="serif-word">Un buen café.</span>
-</h2>
-<p>Para la oficina, el próximo sprint o ese welcome pack. Hagamos del café un ritual que tu equipo quiera compartir.</p>
-<a class="button cream" href={getWhatsAppUrl('¡Hola CodeBrew! Me interesa café para mi equipo. Quisiera coordinar una propuesta para oficina o regalos.')} target="_blank" rel="noopener noreferrer">Hablemos de tu equipo <span aria-hidden="true">↗</span>
-</a>
-</div>
-</section>
+    <TeamSection />
     <section class="section faq-section">
 <div>
 <p class="eyebrow">ANTES DEL PRIMER SORBO</p>
@@ -131,12 +120,14 @@ const questions = [
 </details>)}</div>
 </section>
     <section class="closing">
-<p class="eyebrow">MENOS RUIDO. MÁS RITUAL.</p>
+<div class="closing-panel">
+<p class="eyebrow">Menos ruido. Más ritual.</p>
 <h2>¿Listo para tu<br />
 <span class="serif-word">próximo café?</span>
 </h2>
 <a class="button primary" href="#productos">Encuentra tu blend <span aria-hidden="true">↗</span>
 </a>
+</div>
 <span class="closing-star" aria-hidden="true"><BotanicalMark kind="bean" /></span>
 </section>
   </main>
@@ -153,5 +144,6 @@ const questions = [
 <span>Buen café. Mejor código.</span>
 <a href="#">Volver arriba ↑</a>
 </div>
+<span class="footer-wordmark" aria-hidden="true">codebrew</span>
 </footer>
 </Layout>
