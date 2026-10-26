@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { api, customer, db } from './helpers';
+import { ADMIN, api, customer, db, login } from './helpers';
+import { version } from '../../package.json';
 
 const espresso = { sku: 'espresso-250', grind: 'Grano entero', quantity: 1 };
 const pack = { sku: 'pack-developer', grind: 'Ambos en grano', quantity: 1 };
@@ -8,13 +9,34 @@ describe('sitio', () => {
   it('responde la salud de app y base de datos', async () => {
     const { status, json } = await api('/api/health');
     expect(status).toBe(200);
-    expect(json).toEqual({ status: 'ok', database: 'ok' });
+    expect(json).toEqual({ status: 'ok', database: 'ok', version });
   });
 
   it('la landing muestra precios desde la base de datos', async () => {
     const { status, text } = await api('/');
     expect(status).toBe(200);
     expect(text).toContain('S/ 34.00');
+  });
+
+  it('sirve los recursos y el video de la landing con soporte de rangos', async () => {
+    const page = await api('/');
+    const assets = [...new Set([...page.text.matchAll(/(?:src|href)="(\/(?:_astro|assets)\/[^"?#]+)(?:[?#][^"]*)?"/g)].map(match => match[1]))];
+    expect(assets.length).toBeGreaterThan(0);
+    for (const asset of assets) {
+      const response = await api(asset, { method: 'HEAD' });
+      expect(response.status, asset).toBe(200);
+      expect(response.headers.get('content-type'), asset).not.toContain('text/html');
+    }
+    const video = await api('/assets/brand/ritual-orbit.mp4', { headers: { Range: 'bytes=0-1023' } });
+    expect(video.status).toBe(206);
+    expect(video.headers.get('content-range')).toMatch(/^bytes 0-1023\/\d+$/);
+  });
+
+  it('renderiza las pantallas del panel con una sesión válida', async () => {
+    const cookie = await login(ADMIN);
+    for (const path of ['/admin', '/admin/pedidos', '/admin/productos', '/admin/envios', '/admin/clientes', '/admin/usuarios']) {
+      expect((await api(path, { cookie })).status, path).toBe(200);
+    }
   });
 });
 
@@ -97,6 +119,10 @@ describe('pagos', () => {
 describe('webhook de Culqi', () => {
   const secret = process.env.CULQI_WEBHOOK_SECRET;
   const event = { type: 'order.status.changed', data: JSON.stringify({ id: 'ord_test_desconocida', state: 'paid' }) };
+
+  it.skipIf(secret)('sin secreto el webhook queda desactivado', async () => {
+    expect((await api('/api/webhooks/culqi', { body: event })).status).toBe(503);
+  });
 
   it.runIf(secret)('exige la clave secreta', async () => {
     expect((await api('/api/webhooks/culqi', { body: event })).status).toBe(401);

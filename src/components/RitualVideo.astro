@@ -1,0 +1,77 @@
+<div class="ritual-player" data-ritual-player>
+  <img src="/assets/brand/cappuccino-cup.webp" alt="Taza verde Codebrew con capuchino y plato a juego" width="1100" height="1100" loading="lazy" />
+  <video muted playsinline preload="metadata" poster="/assets/brand/ritual-orbit-poster.jpg" aria-label="Preparación del capuchino Codebrew" disablepictureinpicture disableremoteplayback>
+    <source src="/assets/brand/ritual-orbit.mp4" type="video/mp4" />
+  </video>
+  <span class="image-label">// take a coffee break</span>
+</div>
+<style>
+  .ritual-player {position:relative;height:480px;aspect-ratio:9/16;max-width:100%;margin-inline:auto;background:radial-gradient(ellipse at center,#eee9d7 0%,#e7e2ce 100%);overflow:hidden;isolation:isolate;}
+  img {position:absolute;inset:5% 2%;width:96%;height:90%;object-fit:contain;filter:drop-shadow(0 16px 14px #203c321c);transition:opacity .8s ease;}
+  video {position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;height:auto;aspect-ratio:9/16;object-fit:contain;opacity:0;transition:opacity .8s ease;mask-image:linear-gradient(to bottom,transparent,#000 7%,#000 93%,transparent);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 7%,#000 93%,transparent);}
+  .is-playing video {opacity:1;}
+  .is-playing img {opacity:0;}
+  .image-label {z-index:2;background:#f4f1e9c9;}
+  @media(max-width:700px){.ritual-player{height:480px;max-height:75svh;}}
+  @media(prefers-reduced-motion:reduce){video,img{transition:none;}}
+</style>
+<script>
+  const host = document.querySelector<HTMLElement>('[data-ritual-player]');
+  const video = host?.querySelector('video');
+  if (host && video) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    let visible = false;
+    let showingImage = false;
+    let remaining = 3200;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let started = 0;
+    const active = () => visible && !document.hidden && !reduced.matches && !document.documentElement.classList.contains('motion-paused');
+    const stopTimer = () => {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+        timer = undefined;
+        remaining = Math.max(0, remaining - (performance.now() - started));
+      }
+    };
+    const sync = () => {
+      if (!active()) {
+        video.pause();
+        stopTimer();
+        if (reduced.matches) host.classList.remove('is-playing');
+        return;
+      }
+      if (showingImage) {
+        if (timer !== undefined) return;
+        started = performance.now();
+        timer = setTimeout(() => {
+          timer = undefined;
+          showingImage = false;
+          video.currentTime = 0;
+          sync();
+        }, remaining);
+      } else {
+        video.play().catch(() => host.classList.remove('is-playing'));
+      }
+    };
+    video.addEventListener('playing', () => {
+      if (active()) host.classList.add('is-playing');
+      else video.pause();
+    });
+    video.addEventListener('ended', () => {
+      host.classList.remove('is-playing');
+      showingImage = true;
+      remaining = 3200;
+      sync();
+    });
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= .45;
+      sync();
+    }, {threshold:[0,.45]});
+    observer.observe(host);
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('codebrew:motion', sync);
+    reduced.addEventListener('change', sync);
+    window.addEventListener('pagehide', () => {video.pause();stopTimer();});
+    window.addEventListener('pageshow', sync);
+  }
+</script>

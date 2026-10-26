@@ -31,5 +31,26 @@ export default defineConfig({
   server: {
     port: 80,
     host: true
+  },
+  vite: {
+    // Solo desarrollo: prepara desde el arranque las dependencias de las islas. Si Vite las descubre a mitad
+    // de la sesión rearma su caché y el navegador mezcla versiones (504 "Outdated Optimize Dep", "jsxDEV is not a function").
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom/client',
+        'react/jsx-dev-runtime',
+        'nanostores',
+        '@nanostores/react',
+        '@nanostores/persistent',
+        'react-hook-form',
+        '@hookform/resolvers/zod',
+        'zod',
+        // Escenas 3D y animaciones de la landing
+        'three',
+        'gsap',
+        'gsap/ScrollTrigger'
+      ]
+    }
   }
 });

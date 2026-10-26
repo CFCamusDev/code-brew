@@ -8,7 +8,7 @@
   --text:var(--ink);
   --accent:var(--orange);
   --accent-2:var(--ink);
-  font-family:'DM Sans',sans-serif;
+  font-family:var(--font-body);
   color:var(--ink);
   background:var(--cream);
   font-synthesis:none
@@ -44,7 +44,7 @@ h1,h2,h3,p{
   margin:0
 }
 h1,h2,h3,.wordmark{
-  font-family:'Manrope',sans-serif
+  font-family:var(--font-display)
 }
 h2{
   font-size:clamp(34px,4.1vw,58px);
@@ -149,7 +149,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   margin:auto
 }
 .eyebrow{
-  font:500 10px/1.6 'DM Sans',sans-serif;
+  font:500 10px/1.6 var(--font-body);
   letter-spacing:1.8px
 }
 .tiny-star{
@@ -167,7 +167,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   width:fit-content
 }
 .serif-word{
-  font-family:Georgia,'Times New Roman',serif;
+  font-family:var(--font-display);
   font-style:italic;
   font-weight:400;
   letter-spacing:-.045em
@@ -329,7 +329,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   letter-spacing:1px
 }
 .origin-stamp strong{
-  font-family:Georgia,serif;
+  font-family:var(--font-display);
   font-size:35px;
   font-weight:400;
   line-height:1.4
@@ -395,7 +395,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   padding-top:14px
 }
 .pouch-brand>span{
-  font-family:Manrope,sans-serif;
+  font-family:var(--font-display);
   font-weight:800;
   font-size:24px;
   letter-spacing:-1.2px
@@ -420,7 +420,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .pouch-label>strong{
   display:block;
-  font-family:Georgia,serif;
+  font-family:var(--font-display);
   font-size:36px;
   line-height:.9;
   font-weight:400;
@@ -548,7 +548,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .manifesto-code{
   display:block;
-  font-family:monospace;
+  font-family:var(--font-mono);
   font-size:11px;
   color:var(--muted);
   margin-top:25px
@@ -781,7 +781,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   position:absolute;
   bottom:23px;
   left:23px;
-  font-family:monospace;
+  font-family:var(--font-mono);
   font-size:11px;
   background:var(--cream);
   padding:8px 13px
@@ -1568,7 +1568,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .world-coordinate,.world-note {
   position:absolute;
-  font:9px/1.7 monospace;
+  font:9px/1.7 var(--font-mono);
   letter-spacing:1px;
   color:var(--muted);
   z-index:5;
@@ -1585,7 +1585,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   position:absolute;
   right:1%;
   top:10%;
-  font:7px/1.8 monospace;
+  font:7px/1.8 var(--font-mono);
   letter-spacing:1px;
   border:1px solid #9b9f8a;
   border-radius:50%;
@@ -1599,7 +1599,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   z-index:5;
 }
 .world-stamp strong {
-  font:32px/1 Georgia;
+  font:32px/1 var(--font-display);
 }
 .world-stamp br {
   display:none;
@@ -1696,7 +1696,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   background:#f4f1e9ed;
   backdrop-filter:blur(12px);
   border-radius:30px;
-  font:10px monospace;
+  font:10px var(--font-mono);
   color:var(--ink);
   box-shadow:0 3px 15px #203c320a;
 }
@@ -1772,7 +1772,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   display:flex;
   gap:20px;
   border-block:1px solid var(--line);
-  font:8px monospace;
+  font:8px var(--font-mono);
   letter-spacing:1px;
   padding:17px 0;
   margin:24px 0;
@@ -1831,7 +1831,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .blend-ghost {
   position:absolute;
-  font:italic 105px Georgia;
+  font:italic 105px var(--font-display);
   color:#fff2;
   z-index:1;
   left:4%;
@@ -1844,7 +1844,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   left:0;
   right:0;
   text-align:center;
-  font:7px monospace;
+  font:7px var(--font-mono);
   letter-spacing:1.8px;
   color:var(--muted);
 }
@@ -1910,7 +1910,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
 }
 .blend-choice small {
   display:block;
-  font:8px monospace;
+  font:8px var(--font-mono);
   color:var(--muted);
   margin-bottom:4px;
 }
@@ -1958,7 +1958,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
   top:20px;
   right:20px;
   text-align:right;
-  font:8px monospace;
+  font:8px var(--font-mono);
   letter-spacing:1.4px;
   color:var(--ink);
   background:#f6f4ecdd;

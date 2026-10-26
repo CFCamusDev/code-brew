@@ -26,6 +26,7 @@ RUN pnpm install --frozen-lockfile --prod
 # Proxy Nginx público (se construye con `target: web` desde docker-compose)
 FROM nginx:alpine AS web
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/api/health || exit 1
 
 # Stage 3: servidor Node de producción (etapa por defecto)
 FROM node:22.23.4-alpine AS runner
@@ -44,6 +45,7 @@ COPY src/data/catalog.json src/data/shipping.json ./src/data/
 
 USER node
 EXPOSE 4321
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 CMD node -e "fetch('http://127.0.0.1:4321/api/health',{signal:AbortSignal.timeout(4000)}).then(response=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))"
 
 # Aplica migraciones pendientes, carga el catálogo que falte (no pisa ediciones del admin) y arranca el servidor
-CMD ["sh", "-c", "node scripts/db/migrate.mjs && node scripts/db/seed.mjs && node dist/server/entry.mjs"]
+CMD ["sh", "-c", "node scripts/validate-env.mjs && node scripts/db/migrate.mjs && node scripts/db/seed.mjs && exec node dist/server/entry.mjs"]

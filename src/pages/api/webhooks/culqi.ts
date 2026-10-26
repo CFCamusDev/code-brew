@@ -6,7 +6,7 @@ import { syncCulqiOrder } from '../../../lib/server/payments';
 export const prerender = false;
 
 function validKey(received: string | null) {
-  if (!CULQI_WEBHOOK_SECRET) return true;
+  if (!CULQI_WEBHOOK_SECRET) return false;
   if (!received) return false;
   const a = Buffer.from(received);
   const b = Buffer.from(CULQI_WEBHOOK_SECRET);
@@ -19,6 +19,7 @@ function validKey(received: string | null) {
  * El cuerpo solo se usa para saber qué orden cambió; el estado real se consulta a la API de Culqi.
  */
 export const POST: APIRoute = async ({ request, url }) => {
+  if (!CULQI_WEBHOOK_SECRET) return Response.json({ error: 'Webhook desactivado (falta CULQI_WEBHOOK_SECRET).' }, { status: 503 });
   if (!validKey(url.searchParams.get('key'))) return new Response('No autorizado', { status: 401 });
 
   const event = (await request.json().catch(() => null)) as { type?: string; data?: unknown } | null;

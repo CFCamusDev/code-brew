@@ -93,17 +93,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - name: Build de la app
-        uses: docker/build-push-action@v6
+      - uses: actions/setup-node@v4
         with:
-          context: .
-          target: runner
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Build del proxy Nginx
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: web
-          push: false
+          node-version: '22.23.4'
+      - name: Stack Docker, salud y pruebas de integración
+        run: node scripts/test-docker.mjs
