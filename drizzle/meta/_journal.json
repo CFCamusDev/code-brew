@@ -43,6 +43,13 @@
       "when": 1792700939172,
       "tag": "0005_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793102400000,
+      "tag": "0006_hotfix_daily_driver",
+      "breakpoints": true
     }
   ]
 }
