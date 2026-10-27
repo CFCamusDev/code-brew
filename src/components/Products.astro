@@ -4,6 +4,7 @@ import monteverde from '../assets/demo/monteverde.png';
 import espresso from '../assets/demo/espresso.png';
 import microlote from '../assets/demo/microlote.png';
 import hotfix from '../assets/brand/hotfix-daily-driver.webp';
+import hotfixRight from '../assets/brand/hotfix-daily-driver-right.webp';
 const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote, hotfix};
 import { PRODUCTS, getWhatsAppUrl } from '../data/config';
 import catalog from '../data/catalog.json';
@@ -29,7 +30,7 @@ const profiles = [
         const first=variants.find(v=>v.available)??variants[0];
         return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
           <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {first.price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div>{profile.id==='monteverde'&&<dl class="blend-origin-facts"><div><dt>Proceso</dt><dd>Lavado</dd></div><div><dt>Altitud</dt><dd>1 500–1 600 m s. n. m.</dd></div><div class="blend-fact-wide"><dt>Variedades</dt><dd>Caturra, Catuaí y Geisha</dd></div><div class="blend-fact-wide"><dt>Preparación</dt><dd>Espresso · Cafetera tradicional · AeroPress</dd></div></dl>}<div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id} data-available={String(v.available)} selected={v===first}>{v.available?v.format:`${v.format} · agotado`}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><button type="button" class="button primary order-link add-to-cart" disabled={!first.available}>{first.available?'Este es mi café ':'Agotado por ahora '}<span aria-hidden="true">{first.available?'+':''}</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${first.format}), ${profile.grinds[0]}, por S/ ${first.price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
-          <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={profile.id==='monteverde'?'Hotfix 250 g: frente crema con etiqueta verde y lateral verde de métodos de preparación':`Empaque conceptual de ${profile.name}`} width={profile.id==='monteverde'?1000:768} height={profile.id==='monteverde'?1333:1152} format="webp" loading="lazy" />{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
+          <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={profile.id==='monteverde'?'Hotfix 250 g: frente crema con etiqueta verde y lateral verde de métodos de preparación':`Empaque conceptual de ${profile.name}`} width={profile.id==='monteverde'?1000:768} height={profile.id==='monteverde'?1333:1152} format="webp" loading="lazy" />{profile.id==='monteverde'&&<><Image class="blend-cutout blend-side" src={hotfixRight} alt="Hotfix 250 g: frente crema con etiqueta verde y lateral crema con el mensaje Good coffee. Better ideas." width={1000} height={1333} format="webp" loading="lazy" hidden /><button type="button" class="blend-turn" aria-pressed="false" aria-label="Ver el otro lado del empaque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button></>}{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
         </article>;
       })}
     </div>
@@ -48,6 +49,28 @@ const profiles = [
   const choices = document.querySelectorAll<HTMLButtonElement>('.blend-choice');
   const panels = document.querySelectorAll<HTMLElement>('.blend-panel');
   let swap: gsap.core.Timeline | null = null;
+  // Hotfix: la flecha gira la bolsa sobre su eje para mostrar el otro lateral; al pulsarla de nuevo vuelve al frente.
+  const turnButton = document.querySelector<HTMLButtonElement>('.blend-turn');
+  let turn: gsap.core.Timeline | null = null;
+  const sides = () => [...turnButton!.closest('.blend-visual')!.querySelectorAll<HTMLImageElement>('.blend-cutout')];
+  const setSide = (other: boolean) => {
+    const [front, back] = sides();
+    front.hidden = other; back.hidden = !other;
+    turnButton!.setAttribute('aria-pressed', String(other));
+    turnButton!.setAttribute('aria-label', other ? 'Ver el frente del empaque' : 'Ver el otro lado del empaque');
+  };
+  turnButton?.addEventListener('click', () => {
+    const other = turnButton.getAttribute('aria-pressed') !== 'true';
+    turn?.progress(1).kill();
+    if(reduced.matches || document.documentElement.classList.contains('motion-paused')) { setSide(other); return; }
+    const [front, back] = sides();
+    const [shown, next] = other ? [front, back] : [back, front];
+    const dir = other ? 1 : -1;
+    turn = gsap.timeline()
+      .to(shown, { rotationY: -90 * dir, duration: .28, ease: 'power2.in' })
+      .add(() => { setSide(other); gsap.set(shown, { clearProps: 'transform' }); })
+      .fromTo(next, { rotationY: 90 * dir }, { rotationY: 0, duration: .5, ease: 'power3.out', clearProps: 'transform' });
+  });
   // 3D swap: the current bag turns away on its Y axis, the next one turns in from the opposite side.
   choices.forEach((choice, index) => choice.addEventListener('click', () => {
     const panel = document.getElementById(`blend-${choice.dataset.select}`);
@@ -57,7 +80,7 @@ const profiles = [
     const dir = index > from ? 1 : -1;
     choices.forEach(button => { const active = button === choice; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); });
     swap?.progress(1).kill();
-    const show = () => panels.forEach(p => { p.hidden = p !== panel; });
+    const show = () => { panels.forEach(p => { p.hidden = p !== panel; }); if(turnButton?.closest<HTMLElement>('.blend-panel')?.hidden) { turn?.progress(1).kill(); setSide(false); } };
     if(reduced.matches || document.documentElement.classList.contains('motion-paused') || !current) { show(); return; }
     const parts = (p: HTMLElement) => ({ cut: p.querySelectorAll('.blend-cutout'), info: p.querySelector('.blend-info'), disc: p.querySelector('.blend-disc') });
     const out = parts(current), inn = parts(panel);

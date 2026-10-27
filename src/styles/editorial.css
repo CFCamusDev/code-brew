@@ -370,3 +370,33 @@ p{text-wrap:pretty}
   .ritual-steps article{padding:18px}
   .faq-list details,.faq-list details:last-child{padding:0 18px}
 }
+
+/* ---------- Hotfix: girar la bolsa para ver el otro lateral ---------- */
+.blend-cutout[hidden]{display:none}
+.blend-turn{
+  position:absolute;
+  top:50%;
+  right:clamp(6px,2.5%,18px);
+  z-index:3;
+  display:grid;
+  place-items:center;
+  width:48px;
+  height:48px;
+  padding:0;
+  border-radius:50%;
+  color:var(--ink);
+  background:rgba(250,248,243,.62);
+  -webkit-backdrop-filter:var(--blur);
+  backdrop-filter:var(--blur);
+  border:1px solid var(--glass-edge);
+  box-shadow:var(--shadow-soft);
+  cursor:pointer;
+  transform:translateY(-50%);
+  transition:transform .25s,background .25s
+}
+.blend-turn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s}
+.blend-turn[aria-pressed="true"] svg{transform:scaleX(-1)}
+.blend-turn:hover{background:rgba(250,248,243,.85);transform:translateY(-50%) scale(1.06)}
+.blend-turn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.blend-turn{background:#faf8f3}}
+@media(max-width:760px){.blend-turn{width:40px;height:40px;right:-12px}}
