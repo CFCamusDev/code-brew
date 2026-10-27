@@ -66,10 +66,14 @@ const profiles = [
     const [front, back] = sides();
     const [shown, next] = other ? [front, back] : [back, front];
     const dir = other ? 1 : -1;
+    // La gota se encoge en un lado y reaparece en el otro con un pequeño rebote.
     turn = gsap.timeline()
+      .set(turnButton, { transition: 'none' })
       .to(shown, { rotationY: -90 * dir, duration: .28, ease: 'power2.in' })
+      .to(turnButton, { scale: .3, opacity: 0, duration: .24, ease: 'power2.in' }, 0)
       .add(() => { setSide(other); gsap.set(shown, { clearProps: 'transform' }); })
-      .fromTo(next, { rotationY: 90 * dir }, { rotationY: 0, duration: .5, ease: 'power3.out', clearProps: 'transform' });
+      .fromTo(next, { rotationY: 90 * dir }, { rotationY: 0, duration: .5, ease: 'power3.out', clearProps: 'transform' })
+      .fromTo(turnButton, { scale: .3, opacity: 0 }, { scale: 1, opacity: 1, duration: .7, ease: 'elastic.out(1,.5)', clearProps: 'transform,opacity,transition' }, '<.08');
   });
   // 3D swap: the current bag turns away on its Y axis, the next one turns in from the opposite side.
   choices.forEach((choice, index) => choice.addEventListener('click', () => {
