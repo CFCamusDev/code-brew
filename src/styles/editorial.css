@@ -123,6 +123,10 @@ p{text-wrap:pretty}
   padding-inline:12px
 }
 .blend-info .order-link{border-radius:999px}
+.blend-origin-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:0 0 20px;padding:0 0 16px;border-bottom:1px solid var(--line)}
+.blend-origin-facts dt{font:10px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px}
+.blend-origin-facts dd{margin:0;font-size:12px;line-height:1.5;color:var(--ink)}
+.blend-fact-wide{grid-column:1/-1}
 .blend-choice{border-radius:var(--radius-md)}
 .blend-choice:hover,.blend-choice.is-active{
   background:var(--glass-strong);

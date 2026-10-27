@@ -60,10 +60,10 @@ function priceOf(sku: string): number {
 export const PRODUCTS: ProductItem[] = [
   {
     id: 'monteverde-250',
-    name: 'Origen Monteverde',
+    name: 'Hotfix',
     format: '250 g',
     grind: 'Grano entero o molido',
-    roast: 'Tueste medio',
+    roast: 'Tueste medio-oscuro',
     price: priceOf('monteverde-250'),
     imgSlotId: 'img-producto-monteverde-250',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]',
@@ -71,10 +71,10 @@ export const PRODUCTS: ProductItem[] = [
   },
   {
     id: 'monteverde-500',
-    name: 'Origen Monteverde',
+    name: 'Hotfix',
     format: '500 g',
     grind: 'Grano entero o molido',
-    roast: 'Tueste medio',
+    roast: 'Tueste medio-oscuro',
     price: priceOf('monteverde-500'),
     imgSlotId: 'img-producto-monteverde-500',
     imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]',

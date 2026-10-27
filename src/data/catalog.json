@@ -2,13 +2,13 @@
   "products": [
     {
       "slug": "monteverde",
-      "name": "Origen Monteverde",
-      "roast": "Tueste medio",
+      "name": "Hotfix",
+      "roast": "Tueste medio-oscuro",
       "grinds": [
         "Grano entero",
-        "Molido para filtro",
-        "Molido para prensa francesa",
-        "Molido para moka"
+        "Molido para espresso",
+        "Molido para cafetera tradicional",
+        "Molido para AeroPress"
       ],
       "variants": [
         {

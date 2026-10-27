@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Hotfix sustituye a Monteverde en el primer perfil del selector de café.
+- Nuevo empaque con lateral verde, miniatura y ficha de origen basados en los recursos aportados.
+- Catálogo, carrito y preguntas frecuentes actualizados con el nombre Hotfix, tueste medio-oscuro y moliendas compatibles.
+- Migración 0006 para actualizar el producto existente conservando SKU, precios, stock y pedidos anteriores.
+
 ## 1.1.0
 
 - Nueva presentación editorial de la tienda, sección para equipos y video del ritual.
