@@ -6,7 +6,7 @@ import microlote from '../assets/demo/microlote.png';
 import hotfix from '../assets/brand/hotfix-daily-driver.webp';
 import hotfixRight from '../assets/brand/hotfix-daily-driver-right.webp';
 const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote, hotfix};
-import { PRODUCTS, getWhatsAppUrl } from '../data/config';
+import { PRODUCTS, SITE_CONFIG, getWhatsAppUrl } from '../data/config';
 import catalog from '../data/catalog.json';
 import { getLiveCatalog } from '../lib/server/shop';
 // Precios, moliendas y stock en vivo desde la base de datos (catalog.json si no responde).
@@ -29,7 +29,7 @@ const profiles = [
         const variants=profile.ids.map(id=>{const p=PRODUCTS.find(p=>p.id===id)!;return {...p,price:priceOf(p.id,p.price),available:availableOf(p.id)};});
         const first=variants.find(v=>v.available)??variants[0];
         return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
-          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {first.price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div>{profile.id==='monteverde'&&<dl class="blend-origin-facts"><div><dt>Proceso</dt><dd>Lavado</dd></div><div><dt>Altitud</dt><dd>1 500–1 600 m s. n. m.</dd></div><div class="blend-fact-wide"><dt>Variedades</dt><dd>Caturra, Catuaí y Geisha</dd></div><div class="blend-fact-wide"><dt>Preparación</dt><dd>Espresso · Cafetera tradicional · AeroPress</dd></div></dl>}<div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id} data-available={String(v.available)} selected={v===first}>{v.available?v.format:`${v.format} · agotado`}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><button type="button" class="button primary order-link add-to-cart" disabled={!first.available}>{first.available?'Este es mi café ':'Agotado por ahora '}<span aria-hidden="true">{first.available?'+':''}</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${first.format}), ${profile.grinds[0]}, por S/ ${first.price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
+          <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {first.price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div>{profile.id==='monteverde'&&<dl class="blend-origin-facts"><div><dt>Proceso</dt><dd>Lavado</dd></div><div><dt>Altitud</dt><dd>1 500–1 600 m s. n. m.</dd></div><div class="blend-fact-wide"><dt>Variedades</dt><dd>Caturra, Catuaí y Geisha</dd></div><div class="blend-fact-wide"><dt>Preparación</dt><dd>Espresso · Cafetera tradicional · AeroPress</dd></div></dl>}<div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id} data-available={String(v.available)} selected={v===first}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><p class="reserve-note" hidden={first.available}><span class="reserve-dot" aria-hidden="true"></span>Nuevo lote en camino · Resérvalo y te avisamos apenas esté listo.</p><button type="button" class:list={['button primary order-link add-to-cart',{'is-reserve':!first.available}]}>{first.available?'Este es mi café ':'Reservar mi café '}<span aria-hidden="true">{first.available?'+':'→'}</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${first.format}), ${profile.grinds[0]}, por S/ ${first.price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
           <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={profile.id==='monteverde'?'Hotfix 250 g: frente crema con etiqueta verde y lateral verde de métodos de preparación':`Empaque conceptual de ${profile.name}`} width={profile.id==='monteverde'?1000:768} height={profile.id==='monteverde'?1333:1152} format="webp" loading="lazy" />{profile.id==='monteverde'&&<><Image class="blend-cutout blend-side" src={hotfixRight} alt="Hotfix 250 g: frente crema con etiqueta verde y lateral crema con el mensaje Good coffee. Better ideas." width={1000} height={1333} format="webp" loading="lazy" hidden /><button type="button" class="blend-turn" aria-pressed="false" aria-label="Ver el otro lado del empaque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button></>}{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
         </article>;
       })}
@@ -40,6 +40,26 @@ const profiles = [
   </div>
   <p class="catalog-note">Empaques conceptuales de muestra. Arma tu pedido en línea o, si prefieres, coordínalo por WhatsApp.</p>
   <noscript><p>También puedes <a href={getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
+  <!-- Reserva por WhatsApp para las presentaciones sin stock: arma el mensaje con los datos del cliente. -->
+  <dialog class="reserve-dialog" aria-labelledby="reserve-title" data-whatsapp={`https://wa.me/${SITE_CONFIG.phone}`}>
+    <form class="reserve-form" novalidate>
+      <button type="button" class="reserve-close" aria-label="Cerrar">×</button>
+      <p class="eyebrow">NUEVO LOTE EN CAMINO</p>
+      <h3 id="reserve-title">Reserva tu café</h3>
+      <p class="reserve-intro">Estamos empacando el próximo lote. Déjanos tus datos y te escribimos por WhatsApp apenas esté listo. No pagas nada ahora.</p>
+      <p class="reserve-item"></p>
+      <div class="reserve-fields">
+        <label>Cantidad<input name="qty" type="number" min="1" max="10" value="1" inputmode="numeric" required /></label>
+        <label>Celular<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="9XX XXX XXX" required /></label>
+        <label class="reserve-wide">Nombre<input name="name" autocomplete="name" maxlength="60" required /></label>
+        <label class="reserve-wide">Distrito o ciudad<input name="place" autocomplete="address-level2" maxlength="60" placeholder="Ej. Miraflores, Lima" required /></label>
+        <label class="reserve-wide"><span>Comentario <small>(opcional)</small></span><textarea name="note" rows="2" maxlength="200"></textarea></label>
+      </div>
+      <p class="reserve-error" role="alert" hidden></p>
+      <button type="submit" class="button primary">Enviar reserva por WhatsApp <span aria-hidden="true">↗</span></button>
+      <p class="reserve-fine">Se abrirá WhatsApp con tu mensaje listo; solo tienes que enviarlo.</p>
+    </form>
+  </dialog>
 </section>
 <script>
   import { gsap } from 'gsap';
@@ -104,7 +124,8 @@ const profiles = [
     const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;
     const link=card.querySelector<HTMLAnchorElement>('.whatsapp-order')!;
     const add=card.querySelector<HTMLButtonElement>('.add-to-cart')!;
-    const update=()=>{const available=variant.selectedOptions[0].dataset.available!=='false';add.disabled=!available;add.firstChild!.textContent=available?'Este es mi café ':'Agotado por ahora ';add.querySelector('span')!.textContent=available?'+':'';const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
+    const note=card.querySelector<HTMLElement>('.reserve-note')!;
+    const update=()=>{const available=variant.selectedOptions[0].dataset.available!=='false';add.classList.toggle('is-reserve',!available);note.hidden=available;add.firstChild!.textContent=available?'Este es mi café ':'Reservar mi café ';add.querySelector('span')!.textContent=available?'+':'→';const price=Number(variant.selectedOptions[0].dataset.price);card.querySelector('.product-price')!.textContent=`S/ ${price.toFixed(2)}`;const url=new URL(link.href);url.searchParams.set('text',`¡Hola CodeBrew! Quiero pedir ${card.dataset.product} (${variant.value}), ${grind.value}, por S/ ${price}. ¿Me confirman disponibilidad y envío?`);link.href=url.toString();};
     const view = () => {
       const option = variant.selectedOptions[0];
       track('view_item', {value:Number(option.dataset.price),items:[{item_id:option.dataset.sku!,item_name:card.dataset.product!,price:Number(option.dataset.price),quantity:1}]});
@@ -116,6 +137,51 @@ const profiles = [
     observer.observe(card);
     variant.addEventListener('change',()=>{if(!card.hidden){seen=variant.value;view();}});
     variant.addEventListener('change',update);grind.addEventListener('change',update);
-    add.addEventListener('click',()=>{addToCart(variant.selectedOptions[0].dataset.sku!,grind.value,1,Number(variant.selectedOptions[0].dataset.price));cartOpen.set(true);});
+    add.addEventListener('click',()=>{
+      const option=variant.selectedOptions[0];
+      if(option.dataset.available==='false') return openReserve({product:card.dataset.product!,format:variant.value,grind:grind.value,price:Number(option.dataset.price)});
+      addToCart(option.dataset.sku!,grind.value,1,Number(option.dataset.price));cartOpen.set(true);
+    });
+  });
+
+  // Reserva por WhatsApp: mientras llega el nuevo lote, el cliente deja sus datos y se abre el chat con el mensaje listo.
+  const reserveDialog=document.querySelector<HTMLDialogElement>('.reserve-dialog')!;
+  const reserveForm=reserveDialog.querySelector<HTMLFormElement>('form')!;
+  const reserveError=reserveDialog.querySelector<HTMLElement>('.reserve-error')!;
+  let reserving={product:'',format:'',grind:'',price:0};
+  function openReserve(item: typeof reserving){
+    reserving=item;
+    reserveDialog.querySelector('.reserve-item')!.textContent=`${item.product} · ${item.format} · ${item.grind} · S/ ${item.price.toFixed(2)} c/u`;
+    reserveError.hidden=true;
+    reserveDialog.showModal();
+  }
+  reserveDialog.querySelector('.reserve-close')!.addEventListener('click',()=>reserveDialog.close());
+  // Un clic fuera de la tarjeta (sobre el fondo) también la cierra.
+  reserveDialog.addEventListener('click',event=>{if(event.target===reserveDialog)reserveDialog.close();});
+  reserveForm.addEventListener('submit',event=>{
+    event.preventDefault();
+    const data=new FormData(reserveForm);
+    const value=(key:string)=>String(data.get(key)??'').trim();
+    const qty=Number(value('qty'));
+    // Celular peruano: 9 dígitos que empiezan con 9 (se aceptan espacios y el prefijo 51).
+    const phone=value('phone').replace(/\D/g,'').replace(/^51(?=9\d{8}$)/,'');
+    const problem=!Number.isInteger(qty)||qty<1||qty>10?'La cantidad debe ser de 1 a 10 bolsas.'
+      :!/^9\d{8}$/.test(phone)?'Escribe un celular de 9 dígitos que empiece con 9.'
+      :value('name').length<2?'Escribe tu nombre.'
+      :value('place').length<2?'Escribe tu distrito o ciudad.':'';
+    reserveError.textContent=problem;reserveError.hidden=!problem;
+    if(problem) return;
+    const lines=[
+      '¡Hola CodeBrew! Quiero reservar mi café del nuevo lote:',
+      `• ${qty} × ${reserving.product} ${reserving.format}, ${reserving.grind} (S/ ${reserving.price.toFixed(2)} c/u)`,
+      `• Nombre: ${value('name')}`,
+      `• Celular: ${phone}`,
+      `• Entrega en: ${value('place')}`,
+      ...(value('note')?[`• Comentario: ${value('note')}`]:[]),
+      'Avísenme apenas esté listo. ¡Gracias!'
+    ];
+    window.open(`${reserveDialog.dataset.whatsapp}?text=${encodeURIComponent(lines.join('\n'))}`,'_blank','noopener');
+    reserveForm.querySelector<HTMLTextAreaElement>('textarea')!.value='';
+    reserveDialog.close();
   });
 </script>
