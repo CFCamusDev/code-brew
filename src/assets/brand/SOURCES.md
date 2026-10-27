@@ -1,5 +1,11 @@
 # Recursos de marca
 
+## Hotfix en el selector de café (2026-10-27)
+
+`hotfix-daily-driver.webp` procede de `image-gen-5.png`, aportado por el usuario: perspectiva frontal con el lateral izquierdo verde visible. Optimizado a WebP de 1000 px de ancho manteniendo la transparencia y el diseño original. Las otras tres perspectivas se usaron como referencia para transcribir origen, proceso, tueste, variedades y preparación.
+
+Hotfix sustituye a Monteverde en el primer perfil del selector. Se conservan los SKU históricos `monteverde-250` y `monteverde-500`; la migración 0006 actualiza únicamente el nombre, tueste y moliendas del producto, sin modificar precios, stock ni pedidos anteriores. El Dúo conserva sus imágenes actuales.
+
 Recursos aportados por el usuario desde Google Drive el 23 de octubre de 2026.
 
 - codebrew-cup.webp: https://drive.google.com/file/d/1-1YKNlQRVJz4JPeFxZzzkR78vN_J0Ppc/view. Original negro con transparencia, reducido a 192 px.
