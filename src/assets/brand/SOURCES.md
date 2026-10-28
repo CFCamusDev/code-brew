@@ -22,3 +22,6 @@ Actualización: las cuatro caras Hotfix ahora usan los PNG originales 1-Hotfix-S
 ## Cappuccino cup
 Created with the built-in image_gen tool from the user-provided cup reference (2026-10-23). Original: cappuccino-cup.png; website: public/assets/brand/cappuccino-cup.webp, transparent WebP 1100px.
 Prompt: Photorealistic cutout of the reference matte olive forest-green ceramic cup and matching saucer, cream steaming cup logo with </> on the front. No cat. Filled with cappuccino, ivory milk foam, rosetta latte art and caramel crema. Three-quarter view from above, handle right, complete cup and saucer centered with margin. Soft studio lighting, genuine transparent background, no additional objects, text or watermark.
+
+## Video del ritual (método V60)
+Video aportado por el usuario (metodov60_limpio.mp4, 2026-10-28). Se recomprimió en H.264 sin audio (CRF 24, faststart) a public/assets/brand/ritual-v60.mp4; la imagen de espera ritual-v60-poster.jpg es el fotograma del segundo 19,5. Reemplaza al video de la taza (ritual-orbit.mp4).
