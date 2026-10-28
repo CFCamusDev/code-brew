@@ -27,7 +27,7 @@ describe('sitio', () => {
       expect(response.status, asset).toBe(200);
       expect(response.headers.get('content-type'), asset).not.toContain('text/html');
     }
-    const video = await api('/assets/brand/ritual-orbit.mp4', { headers: { Range: 'bytes=0-1023' } });
+    const video = await api('/assets/brand/ritual-v60.mp4', { headers: { Range: 'bytes=0-1023' } });
     expect(video.status).toBe(206);
     expect(video.headers.get('content-range')).toMatch(/^bytes 0-1023\/\d+$/);
   });
