@@ -2307,3 +2307,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible{
     transition:none
   }
 }
+
+.footer-network-links {
+  display:flex;
+  flex-wrap:wrap;
+  gap:24px;
+  padding-bottom:24px;
+  font-size:12px;
+  color:#e9e2cd;
+}
+.footer-network-links a {display:inline-flex;align-items:center;gap:8px;padding:8px 0;min-height:44px;text-underline-offset:5px;}
+.footer-network-links a:hover,.footer-network-links a:focus-visible {text-decoration:underline;}
