@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Video de preparación con método V60 en la sección del ritual: se repite de forma continua, ocupa toda la tarjeta y la etiqueta pasa a `// specialty coffee`. Reemplaza al video de la taza.
+- Enlaces e iconos de Instagram (@codebrewc) y TikTok (@codebrew1) en el pie de página.
+
 ## 1.3.0
 
 - Flecha en forma de gota de vidrio para girar la bolsa Hotfix y ver su otro lateral; vuelve al frente al pulsarla de nuevo o al cambiar de café.
