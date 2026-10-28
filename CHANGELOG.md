@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Flecha en forma de gota de vidrio para girar la bolsa Hotfix y ver su otro lateral; vuelve al frente al pulsarla de nuevo o al cambiar de café.
+- Reserva por WhatsApp para las presentaciones sin stock: nota «Nuevo lote en camino» y formulario que arma el mensaje con los datos del cliente.
+
 ## 1.2.0
 
 - Hotfix sustituye a Monteverde en el primer perfil del selector de café.
