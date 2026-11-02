@@ -301,3 +301,15 @@ export const purchases = pgTable(
   },
   t => [index('purchases_date_idx').on(t.purchasedOn), check('purchases_amount_check', sql`${t.amountCents} > 0`)]
 );
+
+/**
+ * Configuración del sitio editable desde el panel: redes sociales, WhatsApp y el texto de
+ * las políticas (términos, privacidad, envíos y devoluciones). Clave → valor en JSON para no
+ * crear una tabla por cada cosa; ver `src/lib/server/settings.ts`.
+ */
+export const siteSettings = pgTable('site_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: integer('updated_by').references(() => adminUsers.id, { onDelete: 'set null' })
+});

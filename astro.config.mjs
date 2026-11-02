@@ -25,7 +25,11 @@ export default defineConfig({
       ADMIN_EMAIL: envField.string({ context: 'server', access: 'secret', optional: true }),
       SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Token para tareas programadas (Authorization: Bearer …), p. ej. cancelar pedidos abandonados.
-      CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true })
+      CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Cloudinary: sin estas tres, la subida de imágenes de producto queda deshabilitada.
+      CLOUDINARY_CLOUD_NAME: envField.string({ context: 'server', access: 'secret', optional: true }),
+      CLOUDINARY_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      CLOUDINARY_API_SECRET: envField.string({ context: 'server', access: 'secret', optional: true })
     }
   },
   server: {
