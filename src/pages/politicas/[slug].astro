@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ShopHeader from '../../components/shop/ShopHeader.astro';
+import { getSetting, POLICY_KEYS, type PolicySlug, type PolicyContent } from '../../lib/server/settings';
+import '../../styles/shop.css';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug || !(slug in POLICY_KEYS)) return new Response('Página no encontrada', { status: 404 });
+
+const key = POLICY_KEYS[slug as PolicySlug];
+const policy = await getSetting<PolicyContent>(key, { title: '', body: '' });
+const hasContent = policy.body.trim().length > 0;
+---
+<Layout title={`${policy.title || 'Política'} — CodeBrew`} description={`${policy.title} de CodeBrew.`}>
+  <ShopHeader />
+  <main id="main-content" class="shop-main order-page policy-page">
+    <p class="eyebrow">CODEBREW</p>
+    <h1>{policy.title || 'Política no encontrada'}</h1>
+    {hasContent ? (
+      <div class="policy-body">
+        {policy.body.split('\n\n').map(paragraph => (
+          <p>{paragraph.split('\n').map((line, i) => (i === 0 ? line : <><br />{line}</>))}</p>
+        ))}
+      </div>
+    ) : (
+      <p class="muted">Aún no publicamos el texto de esta política. Escríbenos por WhatsApp si tienes dudas mientras tanto.</p>
+    )}
+  </main>
+</Layout>
+<style>
+  .policy-page{max-width:720px}
+  .policy-body p{margin:0 0 20px;line-height:1.7;font-size:15px}
+  .policy-body p:first-child{font-weight:600}
+</style>

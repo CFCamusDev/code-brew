@@ -42,7 +42,8 @@ export type Customer = z.output<typeof customerSchema>;
 
 export const createOrderSchema = z.object({
   items: cartSchema,
-  customer: customerSchema
+  customer: customerSchema,
+  acceptedPolicies: z.literal(true, { message: 'Debes aceptar los Términos y la Política de privacidad para continuar.' })
 });
 
 export const quoteSchema = z.object({

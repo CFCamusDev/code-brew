@@ -16,11 +16,21 @@ interface Product {
   name: string;
   roast: string;
   grinds: string[];
+  imageUrl: string | null;
   active: boolean;
   variants: Variant[];
 }
 
 const post = (url: string, body: unknown) => adminPost<{ stock?: number }>(url, body);
+
+async function uploadImage(file: File): Promise<{ url?: string; error?: string }> {
+  const body = new FormData();
+  body.append('file', file);
+  const response = await fetch('/api/admin/products/upload-image', { method: 'POST', body }).catch(() => null);
+  if (!response) return { error: 'Sin conexión. Inténtalo de nuevo.' };
+  const data = await response.json().catch(() => ({}));
+  return response.ok ? data : { error: data.error ?? 'No se pudo subir la imagen.' };
+}
 
 function Feedback({ state }: { state: { error?: string; ok?: string } }) {
   if (state.error) return <span className="form-error">{state.error}</span>;
@@ -28,8 +38,62 @@ function Feedback({ state }: { state: { error?: string; ok?: string } }) {
   return null;
 }
 
+function ImagePicker({
+  imageUrl,
+  onChange,
+  disabled
+}: {
+  imageUrl: string | null;
+  onChange: (url: string | null) => void;
+  disabled?: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    setError(undefined);
+    const result = await uploadImage(file);
+    setBusy(false);
+    if (result.error) return setError(result.error);
+    onChange(result.url ?? null);
+  };
+
+  return (
+    <div className="admin-image-picker">
+      {imageUrl ? (
+        <img src={imageUrl} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8 }} />
+      ) : (
+        <div style={{ width: 72, height: 72, borderRadius: 8, background: 'var(--surface-2)' }} />
+      )}
+      <div className="actions" style={{ alignItems: 'center' }}>
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={disabled || busy}
+          onChange={e => pick(e.target.files?.[0])}
+        />
+        {imageUrl && !disabled && (
+          <button type="button" className="btn ghost small" onClick={() => onChange(null)} disabled={busy}>
+            Quitar
+          </button>
+        )}
+        {busy && <span className="muted">Subiendo…</span>}
+        {error && <span className="form-error">{error}</span>}
+      </div>
+    </div>
+  );
+}
+
 function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolean }) {
-  const [form, setForm] = useState({ name: product.name, roast: product.roast, grinds: product.grinds.join('\n'), active: product.active });
+  const [form, setForm] = useState({
+    name: product.name,
+    roast: product.roast,
+    grinds: product.grinds.join('\n'),
+    imageUrl: product.imageUrl,
+    active: product.active
+  });
   const [state, setState] = useState<{ error?: string; ok?: string }>({});
   const [busy, setBusy] = useState(false);
 
@@ -69,6 +133,10 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
         Moliendas disponibles (una por línea)
         <textarea rows={3} value={form.grinds} onChange={e => setForm({ ...form, grinds: e.target.value })} />
       </label>
+      <label>
+        Imagen del producto
+        <ImagePicker imageUrl={form.imageUrl} onChange={url => setForm({ ...form, imageUrl: url })} />
+      </label>
       <div className="actions" style={{ alignItems: 'center' }}>
         <label className="check">
           <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} /> Disponible para la venta
@@ -79,6 +147,132 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
         <Feedback state={state} />
       </div>
     </div>
+  );
+}
+
+function NewVariantForm({ productId, onCreated }: { productId: number; onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ format: '', price: '', stock: '0', bags: '1' });
+  const [state, setState] = useState<{ error?: string; ok?: string }>({});
+  const [busy, setBusy] = useState(false);
+
+  const create = async () => {
+    const priceCents = Math.round(Number(form.price.replace(',', '.')) * 100);
+    if (!Number.isFinite(priceCents)) return setState({ error: 'Precio inválido.' });
+    const stock = Number.parseInt(form.stock, 10);
+    const bags = Number.parseInt(form.bags, 10);
+    if (!Number.isInteger(stock) || !Number.isInteger(bags)) return setState({ error: 'Stock y bolsas deben ser números.' });
+    setBusy(true);
+    const result = await post('/api/admin/products/variants', { productId, format: form.format, priceCents, stock, bags });
+    setBusy(false);
+    if (result.error) return setState({ error: result.error });
+    setState({ ok: 'Presentación creada.' });
+    setForm({ format: '', price: '', stock: '0', bags: '1' });
+    setOpen(false);
+    onCreated();
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="btn ghost small" onClick={() => setOpen(true)}>
+        + Nueva presentación
+      </button>
+    );
+  }
+  return (
+    <div className="admin-form" style={{ marginTop: 8 }}>
+      <div className="row">
+        <label>
+          Formato
+          <input placeholder="250 g" value={form.format} maxLength={40} onChange={e => setForm({ ...form, format: e.target.value })} />
+        </label>
+        <label>
+          Precio (S/)
+          <input inputMode="decimal" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+        </label>
+        <label>
+          Stock inicial
+          <input type="number" min={0} value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
+        </label>
+        <label>
+          Bolsas
+          <input type="number" min={1} max={20} value={form.bags} onChange={e => setForm({ ...form, bags: e.target.value })} />
+        </label>
+      </div>
+      <div className="actions" style={{ alignItems: 'center' }}>
+        <button type="button" className="btn small" onClick={create} disabled={busy}>
+          Crear presentación
+        </button>
+        <button type="button" className="btn ghost small" onClick={() => setOpen(false)} disabled={busy}>
+          Cancelar
+        </button>
+        <Feedback state={state} />
+      </div>
+    </div>
+  );
+}
+
+function NewProductForm({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', roast: '', grinds: '', imageUrl: null as string | null });
+  const [state, setState] = useState<{ error?: string; ok?: string }>({});
+  const [busy, setBusy] = useState(false);
+
+  const create = async () => {
+    const grinds = form.grinds.split('\n').map(g => g.trim()).filter(Boolean);
+    if (!form.name.trim() || !form.roast.trim() || grinds.length === 0) {
+      return setState({ error: 'Completa nombre, tueste y al menos una molienda.' });
+    }
+    setBusy(true);
+    const result = await post('/api/admin/products', { name: form.name, roast: form.roast, grinds, imageUrl: form.imageUrl });
+    setBusy(false);
+    if (result.error) return setState({ error: result.error });
+    setState({ ok: 'Producto creado.' });
+    setForm({ name: '', roast: '', grinds: '', imageUrl: null });
+    setOpen(false);
+    onCreated();
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="btn small" onClick={() => setOpen(true)}>
+        + Nuevo producto
+      </button>
+    );
+  }
+  return (
+    <section className="admin-card">
+      <h2>Nuevo producto</h2>
+      <div className="admin-form">
+        <div className="row">
+          <label>
+            Nombre
+            <input value={form.name} maxLength={80} onChange={e => setForm({ ...form, name: e.target.value })} />
+          </label>
+          <label>
+            Tueste
+            <input value={form.roast} maxLength={80} onChange={e => setForm({ ...form, roast: e.target.value })} />
+          </label>
+        </div>
+        <label>
+          Moliendas disponibles (una por línea)
+          <textarea rows={3} value={form.grinds} onChange={e => setForm({ ...form, grinds: e.target.value })} />
+        </label>
+        <label>
+          Imagen del producto
+          <ImagePicker imageUrl={form.imageUrl} onChange={url => setForm({ ...form, imageUrl: url })} />
+        </label>
+        <div className="actions" style={{ alignItems: 'center' }}>
+          <button type="button" className="btn small" onClick={create} disabled={busy}>
+            Crear producto
+          </button>
+          <button type="button" className="btn ghost small" onClick={() => setOpen(false)} disabled={busy}>
+            Cancelar
+          </button>
+          <Feedback state={state} />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -229,8 +423,10 @@ function VariantRow({ variant, canEdit }: { variant: Variant; canEdit: boolean }
 }
 
 export default function ProductsManager({ products, canEdit }: { products: Product[]; canEdit: boolean }) {
+  const reload = () => window.location.reload();
   return (
     <div className="admin-stack">
+      {canEdit && <NewProductForm onCreated={reload} />}
       {products.map(product => (
         <section key={product.id} className="admin-card">
           <ProductHeader product={product} canEdit={canEdit} />
@@ -255,6 +451,7 @@ export default function ProductsManager({ products, canEdit }: { products: Produ
               </tbody>
             </table>
           </div>
+          {canEdit && <NewVariantForm productId={product.id} onCreated={reload} />}
         </section>
       ))}
     </div>

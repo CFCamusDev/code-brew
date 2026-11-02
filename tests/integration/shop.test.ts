@@ -80,15 +80,15 @@ describe('pedidos', () => {
 
   it('rechaza productos, moliendas o zonas que no existen', async () => {
     const cases = [
-      { items: [{ ...espresso, sku: 'oro-puro' }], customer },
-      { items: [{ ...espresso, grind: 'Molido para moka' }], customer },
-      { items: [espresso], customer: { ...customer, zone: 'marte' } }
+      { items: [{ ...espresso, sku: 'oro-puro' }], customer, acceptedPolicies: true },
+      { items: [{ ...espresso, grind: 'Molido para moka' }], customer, acceptedPolicies: true },
+      { items: [espresso], customer: { ...customer, zone: 'marte' }, acceptedPolicies: true }
     ];
     for (const body of cases) expect((await api('/api/orders', { body })).status).toBe(409);
   });
 
   it('crea el pedido con precios del servidor, ignorando precios enviados por el navegador', async () => {
-    const created = await api('/api/orders', { body: { items: [{ ...espresso, quantity: 2, price: 1 }], customer } });
+    const created = await api('/api/orders', { body: { items: [{ ...espresso, quantity: 2, price: 1 }], customer, acceptedPolicies: true } });
     expect(created.status).toBe(201);
     const page = await api(`/pedido/${created.json.id}`);
     expect(page.status).toBe(200);
@@ -105,7 +105,7 @@ describe('pedidos', () => {
 
 describe('pagos', () => {
   it.skipIf(process.env.CULQI_SECRET_KEY)('sin llaves de Culqi el pago en línea queda desactivado', async () => {
-    const created = await api('/api/orders', { body: { items: [espresso], customer } });
+    const created = await api('/api/orders', { body: { items: [espresso], customer, acceptedPolicies: true } });
     const session = await api('/api/payments/session', { body: { orderId: created.json.id } });
     expect(session.status).toBe(503);
     expect(session.json.status).toBe('disabled');

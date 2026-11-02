@@ -1,0 +1,68 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { listComplaints } from '../../../lib/server/admin/complaints';
+import { formatComplaintNumber, formatDateTime } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const STATUS_LABEL = { pending: 'Pendiente', answered: 'Respondido' } as const;
+type Status = keyof typeof STATUS_LABEL;
+
+const params = Astro.url.searchParams;
+const statusParam = params.get('estado');
+const status = statusParam && statusParam in STATUS_LABEL ? (statusParam as Status) : undefined;
+const page = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1);
+const { rows, total, pages, byStatus } = await listComplaints({ status, page });
+const allCount = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+
+const link = (changes: Record<string, string | undefined>) => {
+  const next = new URLSearchParams(params);
+  for (const [key, value] of Object.entries(changes)) value ? next.set(key, value) : next.delete(key);
+  if (!('pagina' in changes)) next.delete('pagina');
+  const query = next.toString();
+  return `/admin/reclamos${query ? `?${query}` : ''}`;
+};
+---
+<AdminLayout title="Reclamos">
+  <div class="admin-head">
+    <div>
+      <h1>Libro de Reclamaciones</h1>
+      <p>{total} {total === 1 ? 'registro' : 'registros'}{status ? ` · ${STATUS_LABEL[status]}` : ''}</p>
+    </div>
+  </div>
+
+  <nav class="status-tabs" aria-label="Filtrar por estado">
+    <a href={link({ estado: undefined })} aria-current={!status ? 'true' : undefined}>Todos<span>{allCount}</span></a>
+    {(Object.keys(STATUS_LABEL) as Status[]).map(key => (
+      <a href={link({ estado: key })} aria-current={status === key ? 'true' : undefined}>{STATUS_LABEL[key]}<span>{byStatus[key] ?? 0}</span></a>
+    ))}
+  </nav>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>N.º</th><th>Fecha</th><th>Tipo</th><th>Consumidor</th><th>Bien contratado</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {rows.length === 0 && <tr><td class="empty-row" colspan="6">No hay reclamos con estos filtros.</td></tr>}
+        {rows.map(complaint => (
+          <tr>
+            <td><a class="row-link" href={`/admin/reclamos/${complaint.id}`}>{formatComplaintNumber(complaint)}</a></td>
+            <td>{formatDateTime(complaint.createdAt)}</td>
+            <td>{complaint.type === 'queja' ? 'Queja' : 'Reclamo'}</td>
+            <td>{complaint.consumerName}</td>
+            <td>{complaint.productOrService}</td>
+            <td><span class="badge" data-status={complaint.status}>{STATUS_LABEL[complaint.status]}</span></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {pages > 1 && (
+    <nav class="pagination" aria-label="Páginas">
+      {page > 1 && <a class="btn ghost small" href={link({ pagina: String(page - 1) })}>← Anterior</a>}
+      <span>Página {page} de {pages}</span>
+      {page < pages && <a class="btn ghost small" href={link({ pagina: String(page + 1) })}>Siguiente →</a>}
+    </nav>
+  )}
+</AdminLayout>

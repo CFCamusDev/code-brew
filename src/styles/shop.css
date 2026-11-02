@@ -333,6 +333,10 @@
   font-size:12px;
   text-decoration:underline
 }
+.policy-accept{margin:4px 0 0}
+.policy-accept-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5;color:var(--ink)}
+.policy-accept-row input{margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:var(--ink)}
+.policy-accept-row a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .checkout-submit{width:100%}
 .checkout-submit:disabled{
   opacity:.45;

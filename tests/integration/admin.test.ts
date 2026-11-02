@@ -22,7 +22,9 @@ async function variantId(sku: string) {
 
 /** Crea un pedido y lo marca pagado directo en la BD (el cobro real lo cubre Culqi). */
 async function paidOrder() {
-  const created = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+  const created = await api('/api/orders', {
+    body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer, acceptedPolicies: true }
+  });
   const sql = db();
   try {
     await sql`update orders set status = 'paid', paid_at = now() where id = ${created.json.id}`;
@@ -216,7 +218,9 @@ describe('inicio del panel', () => {
 
   it('cuenta pedidos sin pagar de más de 24 h y no cuenta los reembolsados como venta', async () => {
     const before = await kpis(adminCookie);
-    const created = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const created = await api('/api/orders', {
+      body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer, acceptedPolicies: true }
+    });
     const refunded = await paidOrder();
     const sql = db();
     try {
@@ -290,9 +294,15 @@ describe('filtro por fechas y exportación', () => {
 
   it('exporta pedidos del rango en CSV para Excel y neutraliza fórmulas', async () => {
     const today = await api('/api/orders', {
-      body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 2 }], customer: { ...customer, name: '=HYPERLINK("http://x") Cliente' } }
+      body: {
+        items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 2 }],
+        customer: { ...customer, name: '=HYPERLINK("http://x") Cliente' },
+        acceptedPolicies: true
+      }
     });
-    const old = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const old = await api('/api/orders', {
+      body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer, acceptedPolicies: true }
+    });
     const sql = db();
     const todayRow = { number: today.json.number as number };
     const oldRow = { number: old.json.number as number };
@@ -341,7 +351,13 @@ describe('clientes', () => {
   it('agrupa por correo sin importar mayúsculas y suma solo pedidos pagados', async () => {
     const email = `cliente-${randomUUID().slice(0, 8)}@codebrew.test`;
     const order = (mail: string, quantity: number) =>
-      api('/api/orders', { body: { items: [{ sku: 'pack-developer', grind: 'Ambos en grano', quantity }], customer: { ...customer, name: 'Rosa Fiel', email: mail } } });
+      api('/api/orders', {
+        body: {
+          items: [{ sku: 'pack-developer', grind: 'Ambos en grano', quantity }],
+          customer: { ...customer, name: 'Rosa Fiel', email: mail },
+          acceptedPolicies: true
+        }
+      });
     const a = await order(email, 1);
     const b = await order(email.toUpperCase(), 2);
     await order(email, 1); // queda pendiente: no cuenta como compra
@@ -373,7 +389,9 @@ describe('pedidos abandonados', () => {
     api('/api/cron/pedidos-abandonados', { method: 'POST', body: {}, headers: token ? { Authorization: `Bearer ${token}` } : {} });
 
   async function oldPendingOrder(withLiveCulqiOrder = false) {
-    const created = await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } });
+    const created = await api('/api/orders', {
+      body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer, acceptedPolicies: true }
+    });
     const sql = db();
     try {
       await sql`update orders set created_at = now() - interval '49 hours' where id = ${created.json.id}`;
@@ -406,7 +424,11 @@ describe('pedidos abandonados', () => {
   it.runIf(secret)('cancela pendientes de más de 48 h y respeta códigos de pago vigentes, una sola vez', async () => {
     const abandoned = await oldPendingOrder();
     const withCode = await oldPendingOrder(true);
-    const recent = (await api('/api/orders', { body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer } })).json.id;
+    const recent = (
+      await api('/api/orders', {
+        body: { items: [{ sku: 'espresso-250', grind: 'Grano entero', quantity: 1 }], customer, acceptedPolicies: true }
+      })
+    ).json.id;
 
     const first = await cron(secret);
     expect(first.status).toBe(200);

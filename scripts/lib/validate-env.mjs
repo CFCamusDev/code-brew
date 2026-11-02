@@ -47,5 +47,12 @@ export function validateEnvironment(environment) {
     }
   }
   if (environment.RESEND_API_KEY && !environment.EMAIL_FROM?.trim()) errors.push('Configura EMAIL_FROM para habilitar Resend.');
+
+  const cloudinaryVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+  const cloudinarySet = cloudinaryVars.filter(name => environment[name]?.trim());
+  if (cloudinarySet.length > 0 && cloudinarySet.length < cloudinaryVars.length) {
+    errors.push('Configura CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET juntas.');
+  }
+
   return errors;
 }

@@ -1,8 +1,11 @@
 import { ADMIN_EMAIL, EMAIL_FROM, RESEND_API_KEY, SITE_URL } from 'astro:env/server';
-import { formatOrderNumber, formatPEN } from '../shop/format';
+import { formatComplaintNumber, formatOrderNumber, formatPEN } from '../shop/format';
 import type { getOrder } from './shop';
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
+
+/** Correo legal fijo del Libro de Reclamaciones (Indecopi exige avisar al negocio); no es el ADMIN_EMAIL editable del panel. */
+const COMPLAINTS_NOTICE_EMAIL = 'codebrewc@gmail.com';
 
 const escape = (value: string) =>
   value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
@@ -90,6 +93,46 @@ export async function sendOrderShippedEmail(order: Order) {
       `<p style="font-size:14px;line-height:1.6">Ya despachamos tu café hacia ${escape(order.shippingDistrict)}, ${escape(order.shippingCity)}.${tracking ? `<br>Seguimiento: <strong>${tracking}</strong>` : ''}</p>
       ${orderSummary(order)}
       ${link ? `<p style="margin-top:20px"><a href="${link}" style="color:#d16c40">Ver mi pedido</a></p>` : ''}`
+    )
+  );
+}
+
+interface ComplaintForEmail {
+  year: number;
+  sequence: number;
+  type: 'reclamo' | 'queja';
+  consumerName: string;
+  consumerEmail: string;
+  productOrService: string;
+  detail: string;
+  consumerRequest: string;
+}
+
+/** Copia al consumidor y aviso al negocio (obligatorio por Indecopi) al registrar un reclamo o queja. */
+export async function sendComplaintEmails(complaint: ComplaintForEmail) {
+  const number = formatComplaintNumber(complaint);
+  const kind = complaint.type === 'reclamo' ? 'reclamo' : 'queja';
+  const body = `<p style="font-size:14px;line-height:1.6">Bien contratado: ${escape(complaint.productOrService)}</p>
+    <p style="font-size:14px;line-height:1.6"><strong>Detalle:</strong><br>${escape(complaint.detail)}</p>
+    <p style="font-size:14px;line-height:1.6"><strong>Pedido del consumidor:</strong><br>${escape(complaint.consumerRequest)}</p>`;
+
+  await sendEmail(
+    complaint.consumerEmail,
+    `Registramos tu ${kind} ${number} · Libro de Reclamaciones CodeBrew`,
+    layout(
+      `Recibimos tu ${kind} ${number}`,
+      `<p style="font-size:14px;line-height:1.6">Hola ${escape(complaint.consumerName.split(' ')[0])}, confirmamos el registro de tu ${kind} en nuestro Libro de Reclamaciones. Tienes hasta 30 días calendario para recibir nuestra respuesta.</p>
+      ${body}`
+    )
+  );
+
+  await sendEmail(
+    COMPLAINTS_NOTICE_EMAIL,
+    `Nuevo ${kind} ${number} · Libro de Reclamaciones`,
+    layout(
+      `Nuevo ${kind} ${number}`,
+      `<p style="font-size:14px;line-height:1.6">${escape(complaint.consumerName)} · ${escape(complaint.consumerEmail)}</p>
+      ${body}`
     )
   );
 }

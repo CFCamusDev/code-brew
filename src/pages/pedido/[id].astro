@@ -30,7 +30,7 @@ const purchase = ['paid','preparing','shipped','delivered'].includes(order.statu
   transaction_id:number, value:order.totalCents/100, shipping:order.shippingCents/100,
   items:order.items.map(item=>({item_id:item.sku,item_name:item.productName,price:item.unitPriceCents/100,quantity:item.quantity}))
 } : null;
-const whatsapp = getWhatsAppUrl(`¡Hola CodeBrew! Acabo de registrar el pedido ${number} por ${formatPEN(order.totalCents)}. ¿Cómo completo el pago?`);
+const whatsapp = await getWhatsAppUrl(`¡Hola CodeBrew! Acabo de registrar el pedido ${number} por ${formatPEN(order.totalCents)}. ¿Cómo completo el pago?`);
 
 // Seguimiento: pasos en orden, con la fecha si ya la tenemos. "En preparación" no tiene
 // columna propia en la tabla de pedidos (es un estado intermedio), así que no muestra fecha.
