@@ -352,6 +352,7 @@
 .badge[data-status="shipped"]{background:var(--st-shipped-bg);color:var(--st-shipped)}
 .badge[data-status="delivered"]{background:var(--st-delivered-bg);color:var(--st-delivered)}
 .badge[data-status="cancelled"],.badge[data-status="refunded"]{background:var(--st-off-bg);color:var(--st-off)}
+.badge[data-status="answered"]{background:var(--st-delivered-bg);color:var(--st-delivered)}
 .badge.warn{background:var(--danger);color:#fff}
 
 /* ---------- Filtros y pestañas ---------- */

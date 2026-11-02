@@ -18,6 +18,11 @@ export function parseOrderNumber(input: string): number | null {
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
+/** { year: 2026, sequence: 1 } → "2026-0001" */
+export function formatComplaintNumber({ year, sequence }: { year: number; sequence: number }): string {
+  return `${year}-${String(sequence).padStart(4, '0')}`;
+}
+
 const dateTime = new Intl.DateTimeFormat('es-PE', {
   timeZone: 'America/Lima',
   dateStyle: 'short',
