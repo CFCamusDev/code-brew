@@ -6,7 +6,7 @@ import microlote from '../assets/demo/microlote.png';
 import hotfix from '../assets/brand/hotfix-daily-driver.webp';
 import hotfixRight from '../assets/brand/hotfix-daily-driver-right.webp';
 const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote, hotfix};
-import { PRODUCTS, SITE_CONFIG, getWhatsAppUrl } from '../data/config';
+import { PRODUCTS, getWhatsAppBaseUrl, getWhatsAppUrl } from '../data/config';
 import catalog from '../data/catalog.json';
 import { getLiveCatalog } from '../lib/server/shop';
 // Precios, moliendas y stock en vivo desde la base de datos (catalog.json si no responde).
@@ -41,7 +41,7 @@ const profiles = [
   <p class="catalog-note">Empaques conceptuales de muestra. Arma tu pedido en línea o, si prefieres, coordínalo por WhatsApp.</p>
   <noscript><p>También puedes <a href={await getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
   <!-- Reserva por WhatsApp para las presentaciones sin stock: arma el mensaje con los datos del cliente. -->
-  <dialog class="reserve-dialog" aria-labelledby="reserve-title" data-whatsapp={`https://wa.me/${SITE_CONFIG.phone}`}>
+  <dialog class="reserve-dialog" aria-labelledby="reserve-title" data-whatsapp={await getWhatsAppBaseUrl()}>
     <form class="reserve-form" novalidate>
       <button type="button" class="reserve-close" aria-label="Cerrar">×</button>
       <p class="eyebrow">NUEVO LOTE EN CAMINO</p>
