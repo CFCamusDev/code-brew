@@ -1,25 +1,21 @@
 import { and, desc, eq, gt, gte, inArray, sql } from 'drizzle-orm';
+import type { Quote } from '../shop/checkout';
 import { formatOrderNumber } from '../shop/format';
 import * as culqi from './culqi';
 import { getDb } from './db';
 import { orderItems, orders, payments, productVariants, stockMovements } from './db/schema';
 import { sendOrderPaidEmails } from './email';
-import { getOrder } from './shop';
+import { getOrder, quoteOrder } from './shop';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
-/** ¿Hay stock para todas las líneas? Se revisa antes de cobrar; el descuento real ocurre al confirmar el pago. */
-async function stockIssue(order: Order) {
-  const needed = new Map<number, number>();
-  for (const item of order.items) needed.set(item.variantId, (needed.get(item.variantId) ?? 0) + item.quantity);
-  const rows = await getDb()
-    .select({ id: productVariants.id, stock: productVariants.stock, active: productVariants.active })
-    .from(productVariants)
-    .where(inArray(productVariants.id, [...needed.keys()]));
-  const unavailable = rows.some(row => !row.active || row.stock < needed.get(row.id)!) || rows.length !== needed.size;
-  return unavailable ? 'Uno de los cafés de tu pedido se agotó. Escríbenos por WhatsApp y lo resolvemos.' : null;
+/** ¿Hay stock para todas las líneas, a precios/zona vigentes? Se revisa antes de cobrar; el descuento real ocurre al confirmar el pago. */
+async function stockIssue(order: Order): Promise<{ message: string; issues: Quote['issues'] } | null> {
+  const quote = await quoteOrder(getDb(), order);
+  if (!quote.issues.length) return null;
+  return { message: 'Uno de los cafés de tu pedido se agotó. Ajusta tu pedido abajo o escríbenos por WhatsApp.', issues: quote.issues };
 }
 
 /**
@@ -89,7 +85,8 @@ async function markPaid(orderId: string, payment: { reference: string; method: s
 export type StartPaymentResult =
   | { status: 'ready'; publicKey: string; amountCents: number; culqiOrderId: string | null; email: string; orderNumber: string }
   | { status: 'paid' | 'not_found' | 'disabled' }
-  | { status: 'invalid' | 'unavailable'; message: string };
+  | { status: 'invalid'; message: string }
+  | { status: 'unavailable'; message: string; issues: Quote['issues'] };
 
 /** Prepara el checkout de Culqi: valida el pedido y crea (o reutiliza) la orden de Culqi para pagos en efectivo y billeteras. */
 export async function startPayment(orderId: string): Promise<StartPaymentResult> {
@@ -99,7 +96,7 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
   if (order.status !== 'pending') return { status: 'invalid', message: 'Este pedido ya no admite pagos.' };
   if (!culqi.culqiEnabled()) return { status: 'disabled' };
   const issue = await stockIssue(order);
-  if (issue) return { status: 'unavailable', message: issue };
+  if (issue) return { status: 'unavailable', message: issue.message, issues: issue.issues };
 
   const db = getDb();
   const [existing] = await db
@@ -158,7 +155,8 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
 
 export type ChargeResult =
   | { status: 'paid' | '3ds_required' | 'not_found' | 'disabled' }
-  | { status: 'declined' | 'invalid' | 'unavailable' | 'error'; message: string };
+  | { status: 'declined' | 'invalid' | 'error'; message: string }
+  | { status: 'unavailable'; message: string; issues: Quote['issues'] };
 
 /** Cobra un token de tarjeta o Yape por el total guardado del pedido (nunca un monto enviado por el navegador). */
 export async function payWithToken(
@@ -171,7 +169,7 @@ export async function payWithToken(
   if (order.status !== 'pending') return { status: 'invalid', message: 'Este pedido ya no admite pagos.' };
   if (!culqi.culqiEnabled()) return { status: 'disabled' };
   const issue = await stockIssue(order);
-  if (issue) return { status: 'unavailable', message: issue };
+  if (issue) return { status: 'unavailable', message: issue.message, issues: issue.issues };
 
   const { firstName, lastName } = culqi.splitName(order.customerName);
   const response = await culqi.createCharge({
