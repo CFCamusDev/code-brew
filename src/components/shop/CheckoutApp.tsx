@@ -258,6 +258,11 @@ export default function CheckoutApp() {
             </span>
           </span>
         </label>
+        <p className="policy-accept-row" style={{ marginTop: -4 }}>
+          <a href="/reclamos" target="_blank" rel="noopener noreferrer">
+            ¿Algún problema con tu compra? Libro de Reclamaciones
+          </a>
+        </p>
         {submitError && (
           <p className="field-error" role="alert">
             {submitError}

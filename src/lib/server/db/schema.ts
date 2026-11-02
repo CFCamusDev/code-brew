@@ -315,3 +315,44 @@ export const siteSettings = pgTable('site_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer('updated_by').references(() => adminUsers.id, { onDelete: 'set null' })
 });
+
+export const complaintType = pgEnum('complaint_type', ['reclamo', 'queja']);
+export const complaintStatus = pgEnum('complaint_status', ['pending', 'answered']);
+
+/** Libro de Reclamaciones virtual (CB-202): obligatorio por Indecopi para tiendas en línea. */
+export const complaints = pgTable(
+  'complaints',
+  {
+    id: serial('id').primaryKey(),
+    /** Junto con `sequence` arma el número correlativo por año que ve el cliente (2026-0001). */
+    year: integer('year').notNull(),
+    sequence: integer('sequence').notNull(),
+    type: complaintType('type').notNull(),
+    consumerName: text('consumer_name').notNull(),
+    consumerDocument: text('consumer_document'),
+    consumerEmail: text('consumer_email').notNull(),
+    consumerPhone: text('consumer_phone'),
+    consumerAddress: text('consumer_address').notNull(),
+    isMinor: boolean('is_minor').notNull().default(false),
+    guardianName: text('guardian_name'),
+    guardianDocument: text('guardian_document'),
+    /** "Bien contratado" de la hoja oficial. */
+    productOrService: text('product_or_service').notNull(),
+    amountCents: integer('amount_cents'),
+    detail: text('detail').notNull(),
+    /** "Pedido del consumidor": lo que solicita, no un número de pedido. */
+    consumerRequest: text('consumer_request').notNull(),
+    status: complaintStatus('status').notNull().default('pending'),
+    response: text('response'),
+    respondedAt: timestamp('responded_at', { withTimezone: true }),
+    respondedBy: integer('responded_by').references(() => adminUsers.id, { onDelete: 'set null' }),
+    ...timestamps
+  },
+  t => [uniqueIndex('complaints_year_sequence_idx').on(t.year, t.sequence), index('complaints_status_idx').on(t.status)]
+);
+
+/** Contador correlativo por año de los reclamos, incrementado atómicamente al crear uno. */
+export const complaintCounters = pgTable('complaint_counters', {
+  year: integer('year').primaryKey(),
+  lastNumber: integer('last_number').notNull().default(0)
+});

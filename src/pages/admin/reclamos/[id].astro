@@ -1,0 +1,67 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ComplaintResponse from '../../../components/admin/ComplaintResponse';
+import { getComplaint } from '../../../lib/server/admin/complaints';
+import { formatComplaintNumber, formatDateTime, formatPEN } from '../../../lib/shop/format';
+
+export const prerender = false;
+
+const id = Number(Astro.params.id);
+const complaint = Number.isInteger(id) ? await getComplaint(id) : undefined;
+if (!complaint) return new Response('Reclamo no encontrado', { status: 404 });
+
+const number = formatComplaintNumber(complaint);
+const STATUS_LABEL = { pending: 'Pendiente', answered: 'Respondido' } as const;
+const dueAt = new Date(complaint.createdAt);
+dueAt.setDate(dueAt.getDate() + 30);
+const overdue = complaint.status === 'pending' && dueAt.getTime() < Date.now();
+---
+<AdminLayout title={`Reclamo ${number}`}>
+  <div class="admin-head">
+    <div>
+      <p><a href="/admin/reclamos">← Reclamos</a></p>
+      <h1>{complaint.type === 'queja' ? 'Queja' : 'Reclamo'} {number}</h1>
+      <p>Registrado {formatDateTime(complaint.createdAt)}</p>
+    </div>
+    <span class="badge" data-status={complaint.status}>{STATUS_LABEL[complaint.status]}</span>
+  </div>
+
+  {overdue && <p class="alert">El plazo de respuesta (30 días calendario) venció el {formatDateTime(dueAt)}.</p>}
+
+  <div class="admin-grid">
+    <div class="admin-stack">
+      <section class="admin-card">
+        <h2>Consumidor</h2>
+        <p>{complaint.consumerName}{complaint.consumerDocument && ` · ${complaint.consumerDocument}`}</p>
+        <p class="muted">{complaint.consumerEmail}{complaint.consumerPhone && ` · ${complaint.consumerPhone}`}</p>
+        <p class="muted">{complaint.consumerAddress}</p>
+        {complaint.isMinor && (
+          <p class="muted">Apoderado: {complaint.guardianName} · {complaint.guardianDocument}</p>
+        )}
+      </section>
+
+      <section class="admin-card">
+        <h2>Reclamo</h2>
+        <p><strong>Bien contratado:</strong> {complaint.productOrService}</p>
+        {complaint.amountCents !== null && <p><strong>Monto:</strong> {formatPEN(complaint.amountCents)}</p>}
+        <p><strong>Detalle:</strong></p>
+        <p class="muted">{complaint.detail}</p>
+        <p><strong>Pedido del consumidor:</strong></p>
+        <p class="muted">{complaint.consumerRequest}</p>
+      </section>
+
+      <section class="admin-card">
+        <h2>Respuesta</h2>
+        <p class="muted">Plazo de respuesta: {formatDateTime(dueAt)}</p>
+        {complaint.status === 'answered' ? (
+          <>
+            <p class="muted">Respondido {formatDateTime(complaint.respondedAt!)}{complaint.respondedByName && ` por ${complaint.respondedByName}`}</p>
+            <p>{complaint.response}</p>
+          </>
+        ) : (
+          <ComplaintResponse id={complaint.id} client:load />
+        )}
+      </section>
+    </div>
+  </div>
+</AdminLayout>
