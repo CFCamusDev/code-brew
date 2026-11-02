@@ -49,7 +49,7 @@ describe('createOrderSchema', () => {
   });
 
   it('ignora campos extra como un precio enviado por el navegador', () => {
-    const parsed = createOrderSchema.parse({ items: [{ ...item, price: 1 }], customer });
+    const parsed = createOrderSchema.parse({ items: [{ ...item, price: 1 }], customer, acceptedPolicies: true });
     expect(parsed.items[0]).toEqual(item);
   });
 });
