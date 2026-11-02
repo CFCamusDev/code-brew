@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+- Libro de Reclamaciones virtual (`/reclamos`), obligatorio por Indecopi: formulario público con los campos de la hoja oficial, numeración correlativa por año (2026-0001...), copia por correo al consumidor y aviso al negocio. Panel admin con lista por estado, plazo de respuesta de 30 días y registro de la respuesta.
+- Políticas legales editables desde el panel (`/politicas/terminos`, `/politicas/privacidad`, `/politicas/envios-devoluciones`), con casilla obligatoria de aceptación en el checkout.
+- Redes sociales (Instagram, TikTok, Facebook) y número de WhatsApp Business editables desde `/admin/configuracion`, en vez de estar fijos en el código.
+- Alta de productos y presentaciones desde `/admin/productos`, con subida de imágenes a Cloudinary.
+
 ## 1.4.0
 
 - Video de preparación con método V60 en la sección del ritual: se repite de forma continua, ocupa toda la tarjeta y la etiqueta pasa a `// specialty coffee`. Reemplaza al video de la taza.
