@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+- El botón "Reservar mi café" (presentaciones sin stock) ahora usa el número de WhatsApp configurado en `/admin/configuracion` en vez del número fijo en el código.
+- Cuando el stock se agota entre crear el pedido y pagarlo, `/pedido/[id]` muestra qué producto quedó corto y deja ajustar la cantidad o quitarlo ahí mismo, sin recargar la página, para reintentar el pago.
+
 ## 1.5.0
 
 - Libro de Reclamaciones virtual (`/reclamos`), obligatorio por Indecopi: formulario público con los campos de la hoja oficial, numeración correlativa por año (2026-0001...), copia por correo al consumidor y aviso al negocio. Panel admin con lista por estado, plazo de respuesta de 30 días y registro de la respuesta.
