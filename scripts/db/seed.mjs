@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import postgres from 'postgres';
 import catalog from '../../src/data/catalog.json' with { type: 'json' };
 import shipping from '../../src/data/shipping.json' with { type: 'json' };
+import settings from '../../src/data/settings.json' with { type: 'json' };
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 if (!process.env.DATABASE_URL) throw new Error('Falta DATABASE_URL');
@@ -12,6 +13,7 @@ const sql = postgres(process.env.DATABASE_URL, { max: 1 });
 let insertedProducts = 0;
 let insertedVariants = 0;
 let insertedZones = 0;
+let insertedSettings = 0;
 
 try {
   await sql.begin(async tx => {
@@ -50,8 +52,25 @@ try {
           on conflict (zone_id, region) do nothing`;
       }
     }
+
+    const settingRows = [
+      ['social_links', settings.socialLinks],
+      ['policy_terms', settings.policies.terminos],
+      ['policy_privacy', settings.policies.privacidad],
+      ['policy_shipping_returns', settings.policies['envios-devoluciones']]
+    ];
+    for (const [key, value] of settingRows) {
+      const inserted = await tx`
+        insert into site_settings (key, value)
+        values (${key}, ${tx.json(value)})
+        on conflict (key) do nothing
+        returning key`;
+      insertedSettings += inserted.length;
+    }
   });
-  console.log(`[db] seed: ${insertedProducts} perfiles, ${insertedVariants} presentaciones y ${insertedZones} zonas de envío nuevas`);
+  console.log(
+    `[db] seed: ${insertedProducts} perfiles, ${insertedVariants} presentaciones, ${insertedZones} zonas de envío y ${insertedSettings} ajustes nuevos`
+  );
 } finally {
   await sql.end();
 }

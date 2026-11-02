@@ -10,9 +10,16 @@ import RitualVideo from '../components/RitualVideo.astro';
 import TeamSection from '../components/TeamSection.astro';
 import OriginMap from '../components/OriginMap.astro';
 import { getWhatsAppUrl } from '../data/config';
+import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/settings';
 
 // Se renderiza por solicitud para mostrar precios y stock vigentes del panel.
 export const prerender = false;
+const socialLinks = await getSetting<SocialLinks>(SOCIAL_LINKS_KEY, {
+  instagram: 'https://www.instagram.com/codebrewc/',
+  tiktok: 'https://www.tiktok.com/@codebrew1',
+  facebook: '',
+  whatsapp: ''
+});
 const questions = [
   ['¿Cuál elijo si es mi primer café CodeBrew?', 'Hotfix es un espresso de tueste medio-oscuro, con cuerpo alto, dulzor a chancaca y un final limpio de cacao. Si buscas un tueste más claro, consulta el Microlote de Temporada. Elige el perfil que mejor acompañe tu ritual.'],
   ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, dinos qué cafetera usas y coordinamos la molienda. Para el Pack Developer puedes personalizar las dos bolsas por WhatsApp.'],
@@ -99,7 +106,7 @@ const questions = [
 <p>Aléjate un momento de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.</p>
 </div>
 </article>
-<a href={getWhatsAppUrl('¡Hola CodeBrew! Quisiera ayuda para elegir un café y la molienda para mi cafetera.')} target="_blank" rel="noopener noreferrer" class="text-link">Ayúdame a elegir <span aria-hidden="true">↗</span>
+<a href={await getWhatsAppUrl('¡Hola CodeBrew! Quisiera ayuda para elegir un café y la molienda para mi cafetera.')} target="_blank" rel="noopener noreferrer" class="text-link">Ayúdame a elegir <span aria-hidden="true">↗</span>
 </a>
 </div>
 </div>
@@ -111,7 +118,7 @@ const questions = [
 <h2>Sin dudas.<br />
 <span class="serif-word">Con café.</span>
 </h2>
-<p>Y si queda alguna, <a class="inline-link" href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos</a>.</p>
+<p>Y si queda alguna, <a class="inline-link" href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos</a>.</p>
 </div>
 <div class="faq-list">{questions.map(([q, a]) => <details>
 <summary>{q}<span aria-hidden="true">+</span>
@@ -137,11 +144,17 @@ const questions = [
 <LogoMark size={32} light />codebrew
 </a>
 <p>Café de origen.<br />Espíritu developer.</p>
-<a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Hablemos por WhatsApp ↗</a>
+<a href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Hablemos por WhatsApp ↗</a>
 </div>
 <nav class="footer-network-links" aria-label="Redes sociales de Codebrew">
-  <a href="https://www.instagram.com/codebrewc/" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram ↗</span></a>
-  <a href="https://www.tiktok.com/@codebrew1" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2h-3.2v13.3a3 3 0 1 1-2.6-3V9a6.3 6.3 0 1 0 5.8 6.3V8.6a8.1 8.1 0 0 0 4.7 1.5V6.9A4.8 4.8 0 0 1 16.6 2Z"/></svg><span>TikTok ↗</span></a>
+  {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram ↗</span></a>}
+  {socialLinks.tiktok && <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2h-3.2v13.3a3 3 0 1 1-2.6-3V9a6.3 6.3 0 1 0 5.8 6.3V8.6a8.1 8.1 0 0 0 4.7 1.5V6.9A4.8 4.8 0 0 1 16.6 2Z"/></svg><span>TikTok ↗</span></a>}
+  {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg><span>Facebook ↗</span></a>}
+</nav>
+<nav class="footer-policy-links" aria-label="Políticas de Codebrew">
+  <a href="/politicas/terminos">Términos y condiciones</a>
+  <a href="/politicas/privacidad">Privacidad</a>
+  <a href="/politicas/envios-devoluciones">Envíos y devoluciones</a>
 </nav>
 <div class="footer-bottom">
 <span>© {new Date().getFullYear()} CodeBrew. Hecho en Perú.</span>

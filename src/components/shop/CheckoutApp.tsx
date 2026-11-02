@@ -20,6 +20,7 @@ export default function CheckoutApp() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
   const {
     register,
@@ -77,7 +78,7 @@ export default function CheckoutApp() {
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: lines, customer })
+        body: JSON.stringify({ items: lines, customer, acceptedPolicies })
       });
       const body = await response.json().catch(() => ({}));
       if (response.status === 201) {
@@ -105,7 +106,7 @@ export default function CheckoutApp() {
     );
   }
 
-  const canSubmit = quote !== null && quote.issues.length === 0 && quote.lines.length > 0 && !isSubmitting;
+  const canSubmit = quote !== null && quote.issues.length === 0 && quote.lines.length > 0 && !isSubmitting && acceptedPolicies;
 
   return (
     <form className="checkout" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -241,6 +242,22 @@ export default function CheckoutApp() {
             </dl>
           </>
         )}
+        <label className="field policy-accept">
+          <span className="policy-accept-row">
+            <input type="checkbox" checked={acceptedPolicies} onChange={event => setAcceptedPolicies(event.target.checked)} />
+            <span>
+              Acepto los{' '}
+              <a href="/politicas/terminos" target="_blank" rel="noopener noreferrer">
+                Términos y condiciones
+              </a>{' '}
+              y la{' '}
+              <a href="/politicas/privacidad" target="_blank" rel="noopener noreferrer">
+                Política de privacidad
+              </a>
+              .
+            </span>
+          </span>
+        </label>
         {submitError && (
           <p className="field-error" role="alert">
             {submitError}

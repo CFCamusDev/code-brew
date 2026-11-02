@@ -1,0 +1,26 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import SettingsManager from '../../components/admin/SettingsManager';
+import { getSettingsForAdmin } from '../../lib/server/admin/settings';
+
+export const prerender = false;
+
+const admin = Astro.locals.admin!;
+if (admin.role !== 'admin') return Astro.redirect('/admin');
+const { socialLinks, policies } = await getSettingsForAdmin();
+const policiesForClient = Object.fromEntries(
+  Object.entries(policies).map(([slug, policy]) => [
+    slug,
+    { title: policy.title, body: policy.body, updatedAt: policy.updatedAt ? policy.updatedAt.toISOString() : null }
+  ])
+);
+---
+<AdminLayout title="Configuración">
+  <div class="admin-head">
+    <div>
+      <h1>Configuración</h1>
+      <p>Redes sociales, WhatsApp y el texto de las políticas que ve el cliente en la web. Los cambios se reflejan al instante, sin tocar código.</p>
+    </div>
+  </div>
+  <SettingsManager client:load socialLinks={socialLinks} policies={policiesForClient} />
+</AdminLayout>

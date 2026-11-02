@@ -1,4 +1,5 @@
 import type { ImageMetadata } from 'astro';
+import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/settings';
 import bagLight from '../assets/products/bag-light.png';
 import bagDark from '../assets/products/bag-dark.png';
 import lifestyleCup from '../assets/lifestyle/cup.png';
@@ -16,9 +17,20 @@ export const SITE_CONFIG = {
   googleAdsId: '' // Espacio reservado para ID de Google Ads (ej. AW-XXXXXXXXX)
 };
 
-export function getWhatsAppUrl(message?: string): string {
+/** El número sale de /admin/configuración (redes y contacto); si no hay nada guardado aún, usa SITE_CONFIG.phone. */
+export async function getWhatsAppUrl(message?: string): Promise<string> {
+  const links = await getSetting<SocialLinks>(SOCIAL_LINKS_KEY, {
+    instagram: '',
+    tiktok: '',
+    facebook: '',
+    whatsapp: SITE_CONFIG.phone
+  });
+  // En configuración se guarda el celular de 9 dígitos (como lo pide el formulario del panel);
+  // wa.me necesita el prefijo de país.
+  const digits = links.whatsapp || SITE_CONFIG.phone;
+  const phone = digits.length === 9 ? `51${digits}` : digits;
   const text = encodeURIComponent(message || SITE_CONFIG.defaultMessage);
-  return `https://wa.me/${SITE_CONFIG.phone}?text=${text}`;
+  return `https://wa.me/${phone}?text=${text}`;
 }
 
 export interface ProductImage {
