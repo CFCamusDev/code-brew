@@ -186,6 +186,71 @@ export async function createOrder(items: CartLine[], customer: Customer) {
   });
 }
 
+type OrderLike = { items: { sku: string; grind: string; quantity: number }[]; shippingZoneId: number | null; shippingRegion: string };
+
+/** Recotiza un pedido ya creado con el stock y precios vigentes (orders no guarda el slug de zona, solo el id). */
+export async function quoteOrder(db: Executor, order: OrderLike): Promise<Quote> {
+  let zoneSlug: string | undefined;
+  if (order.shippingZoneId) {
+    const [zone] = await db.select({ slug: shippingZones.slug }).from(shippingZones).where(eq(shippingZones.id, order.shippingZoneId));
+    zoneSlug = zone?.slug;
+  }
+  const items: CartLine[] = order.items.map(item => ({ sku: item.sku, grind: item.grind, quantity: item.quantity }));
+  return quoteCart(db, items, zoneSlug, order.shippingRegion);
+}
+
+/**
+ * Reemplaza las líneas de un pedido pendiente (el cliente ajusta cantidades o quita un
+ * producto cuando el stock se agotó antes de pagar). Nunca sobre un pedido que ya no admite cambios.
+ */
+export async function updateOrderItems(orderId: string, items: CartLine[]) {
+  return getDb().transaction(async tx => {
+    const [order] = await tx.select().from(orders).where(eq(orders.id, orderId)).for('update');
+    if (!order) throw new CartIssuesError([{ sku: '', message: 'Pedido no encontrado.' }]);
+    if (order.status !== 'pending') throw new CartIssuesError([{ sku: '', message: 'Este pedido ya no se puede modificar.' }]);
+
+    let zoneSlug: string | undefined;
+    if (order.shippingZoneId) {
+      const [zone] = await tx.select({ slug: shippingZones.slug }).from(shippingZones).where(eq(shippingZones.id, order.shippingZoneId));
+      zoneSlug = zone?.slug;
+    }
+    const quote = await quoteCart(tx, items, zoneSlug, order.shippingRegion);
+    if (quote.issues.length) throw new CartIssuesError(quote.issues);
+    if (quote.shippingCents === null || quote.totalCents === null) {
+      throw new CartIssuesError([{ sku: '', message: 'La zona de envío de este pedido ya no está disponible.' }]);
+    }
+
+    const variantIds = new Map(
+      (
+        await tx
+          .select({ id: productVariants.id, sku: productVariants.sku })
+          .from(productVariants)
+          .where(inArray(productVariants.sku, quote.lines.map(line => line.sku)))
+      ).map(row => [row.sku, row.id])
+    );
+
+    await tx.delete(orderItems).where(eq(orderItems.orderId, orderId));
+    await tx.insert(orderItems).values(
+      quote.lines.map(line => ({
+        orderId,
+        variantId: variantIds.get(line.sku)!,
+        productName: line.productName,
+        format: line.format,
+        grind: line.grind,
+        unitPriceCents: line.unitPriceCents,
+        quantity: line.quantity,
+        lineTotalCents: line.lineTotalCents
+      }))
+    );
+    await tx
+      .update(orders)
+      .set({ subtotalCents: quote.subtotalCents, shippingCents: quote.shippingCents, totalCents: quote.totalCents })
+      .where(eq(orders.id, orderId));
+
+    return { items: quote.lines, subtotalCents: quote.subtotalCents, shippingCents: quote.shippingCents, totalCents: quote.totalCents };
+  });
+}
+
 /** Los ids de pedido son UUID aleatorios: funcionan como enlace privado para compras como invitado. */
 export function isOrderId(id: string | undefined): id is string {
   return !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
