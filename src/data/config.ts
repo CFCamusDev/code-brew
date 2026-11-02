@@ -18,7 +18,7 @@ export const SITE_CONFIG = {
 };
 
 /** El número sale de /admin/configuración (redes y contacto); si no hay nada guardado aún, usa SITE_CONFIG.phone. */
-export async function getWhatsAppUrl(message?: string): Promise<string> {
+export async function getWhatsAppBaseUrl(): Promise<string> {
   const links = await getSetting<SocialLinks>(SOCIAL_LINKS_KEY, {
     instagram: '',
     tiktok: '',
@@ -29,8 +29,13 @@ export async function getWhatsAppUrl(message?: string): Promise<string> {
   // wa.me necesita el prefijo de país.
   const digits = links.whatsapp || SITE_CONFIG.phone;
   const phone = digits.length === 9 ? `51${digits}` : digits;
+  return `https://wa.me/${phone}`;
+}
+
+export async function getWhatsAppUrl(message?: string): Promise<string> {
+  const base = await getWhatsAppBaseUrl();
   const text = encodeURIComponent(message || SITE_CONFIG.defaultMessage);
-  return `https://wa.me/${phone}?text=${text}`;
+  return `${base}?text=${text}`;
 }
 
 export interface ProductImage {
