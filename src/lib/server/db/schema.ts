@@ -33,6 +33,8 @@ export const products = pgTable('products', {
   roast: text('roast').notNull(),
   /** Opciones de molienda que el cliente puede elegir. */
   grinds: jsonb('grinds').$type<string[]>().notNull().default([]),
+  /** URL de Cloudinary; null usa un marcador de posición en el panel. */
+  imageUrl: text('image_url'),
   active: boolean('active').notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),
   ...timestamps
