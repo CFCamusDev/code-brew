@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0
+
+- Acceso flotante a WhatsApp Business en las páginas públicas, con icono compacto en móvil y etiqueta de ayuda en escritorio.
+- Mensajes adaptados a consultas generales, asistencia en checkout y seguimiento de pedidos, sin incluir datos personales.
+- El destino se resuelve con la configuración vigente al hacer clic, también en páginas prerenderizadas.
+- Número de contacto predeterminado e inicial actualizado a +51 946 848 984. En instalaciones existentes, actualizar el número guardado desde Administración > Configuración.
+- El botón se oculta al abrir diálogos y durante la entrada de formularios en móvil; el control de animaciones se sitúa a la izquierda.
+- Se conserva el footer sin espacio adicional debajo y se añaden pruebas del acceso y la configuración de WhatsApp.
+
 ## 1.5.2
 
 - Los próximos perfiles de Pipeline se presentan como «Muy pronto», con siluetas genéricas difuminadas, sin revelar nombres, imágenes reales, descripciones, precios ni opciones de compra.
