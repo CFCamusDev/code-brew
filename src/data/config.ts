@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
   name: 'CodeBrew',
   tagline: 'Café que despierta ideas.',
   codeComment: '// tu código necesita café',
-  phone: '51917712438',
+  phone: '51946848984',
   defaultMessage: '¡Hola CodeBrew! Quiero hacer una consulta sobre su café de especialidad.',
   ga4Id: '', // Espacio reservado para ID de Google Analytics 4 (ej. G-XXXXXXXXXX)
   googleAdsId: '' // Espacio reservado para ID de Google Ads (ej. AW-XXXXXXXXX)
