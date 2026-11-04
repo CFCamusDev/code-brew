@@ -1,11 +1,8 @@
 ---
 import { Image } from 'astro:assets';
-import monteverde from '../assets/demo/monteverde.png';
-import espresso from '../assets/demo/espresso.png';
-import microlote from '../assets/demo/microlote.png';
 import hotfix from '../assets/brand/hotfix-daily-driver.webp';
 import hotfixRight from '../assets/brand/hotfix-daily-driver-right.webp';
-const demoImages: Record<string, typeof monteverde> = {monteverde, espresso, microlote, hotfix};
+const demoImages: Record<string, typeof hotfix> = {hotfix};
 import { PRODUCTS, getWhatsAppBaseUrl, getWhatsAppUrl } from '../data/config';
 import catalog from '../data/catalog.json';
 import { getLiveCatalog } from '../lib/server/shop';
@@ -16,10 +13,8 @@ const priceOf=(sku:string,fallback:number)=>live?.variants.get(sku)?.price ?? fa
 const availableOf=(sku:string)=>live ? live.variants.get(sku)?.available ?? false : true;
 const profiles = [
  {id:'monteverde',name:'Hotfix',tag:'01 / PIPELINE · STABLE',description:'Espresso de Rodríguez de Mendoza, Amazonas. Cuerpo alto, dulzor a chancaca y un final limpio de cacao. Hay bugs que no esperan al próximo sprint: para esos, existe un hotfix.',roast:'Tueste medio-oscuro',color:'#254b38',image:'hotfix',ids:['monteverde-250','monteverde-500'],grinds:grindsOf('monteverde')},
- {id:'espresso',name:'Espresso Amazonas',tag:'02 / MODO INTENSO',description:'Un perfil de tueste medio-oscuro para quienes disfrutan un café con más carácter. Tu siguiente ritual empieza aquí.',roast:'Tueste medio-oscuro',color:'#a65c3d',image:'espresso',ids:['espresso-250','espresso-500'],grinds:grindsOf('espresso')},
- {id:'developer',name:'Pack Developer',tag:'03 / MEJOR EN PAREJA',description:'Monteverde + Espresso Amazonas. Dos bolsas, dos perfiles y una buena excusa para descubrir tu favorito o compartir con tu pair.',roast:'Dos perfiles de tueste',color:'#b89350',image:'monteverde',ids:['pack-developer'],grinds:grindsOf('developer')},
- {id:'microlote',name:'Microlote de Temporada',tag:'04 / EXPLORA ALGO NUEVO',description:'Un tueste claro para salir de la rutina y acercarte al origen desde otra perspectiva. Consulta el lote disponible.',roast:'Tueste claro',color:'#727d9b',image:'microlote',ids:['microlote-temporada'],grinds:grindsOf('microlote')}
 ];
+const upcoming = ['02', '03', '04'].map(number => ({ id: `pipeline-${number}`, number }));
 ---
 <section id="productos" class="blend-section section">
   <div class="section-heading" data-reveal><div><p class="eyebrow">01 / CHOOSE YOUR DAILY DRIVER</p><h2>Encuentra tu<br /><span class="serif-word">match perfecto.</span></h2></div><p>Un origen. Distintas formas de disfrutarlo.<br />El siguiente movimiento lo eliges tú.</p></div>
@@ -30,15 +25,33 @@ const profiles = [
         const first=variants.find(v=>v.available)??variants[0];
         return <article id={`blend-${profile.id}`} class:list={['blend-panel',{'is-selected':index===0}]} data-profile={profile.id} data-product={profile.name} style={`--blend-color:${profile.color}`} hidden={index!==0}>
           <div class="blend-info"><p class="eyebrow">{profile.tag}</p><h3>{profile.name}</h3><div class="blend-price-row"><span class="product-price">S/ {first.price.toFixed(2)}</span><span class="blend-roast">{profile.roast}</span></div><p class="blend-description">{profile.description}</p><div class="blend-specs"><span>AMAZONAS, PERÚ</span><span>100% ARÁBICA</span></div>{profile.id==='monteverde'&&<dl class="blend-origin-facts"><div><dt>Proceso</dt><dd>Lavado</dd></div><div><dt>Altitud</dt><dd>1 500–1 600 m s. n. m.</dd></div><div class="blend-fact-wide"><dt>Variedades</dt><dd>Caturra, Catuaí y Geisha</dd></div><div class="blend-fact-wide"><dt>Preparación</dt><dd>Espresso · Cafetera tradicional · AeroPress</dd></div></dl>}<div class="product-options"><label>Presentación<select class="variant-select" aria-label={`Presentación de ${profile.name}`}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.id} data-available={String(v.available)} selected={v===first}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={`Molienda de ${profile.name}`}>{profile.grinds.map(g=><option>{g}</option>)}</select></label></div><p class="reserve-note" hidden={first.available}><span class="reserve-dot" aria-hidden="true"></span>Nuevo lote en camino · Resérvalo y te avisamos apenas esté listo.</p><button type="button" class:list={['button primary order-link add-to-cart',{'is-reserve':!first.available}]}>{first.available?'Este es mi café ':'Reservar mi café '}<span aria-hidden="true">{first.available?'+':'→'}</span></button><a class="order-alt whatsapp-order" target="_blank" rel="noopener noreferrer" href={await getWhatsAppUrl(`¡Hola CodeBrew! Quiero pedir ${profile.name} (${first.format}), ${profile.grinds[0]}, por S/ ${first.price}. ¿Me confirman disponibilidad y envío?`)}>o pídelo por WhatsApp ↗</a></div>
-          <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={profile.id==='monteverde'?'Hotfix 250 g: frente crema con etiqueta verde y lateral verde de métodos de preparación':`Empaque conceptual de ${profile.name}`} width={profile.id==='monteverde'?1000:768} height={profile.id==='monteverde'?1333:1152} format="webp" loading="lazy" />{profile.id==='monteverde'&&<><Image class="blend-cutout blend-side" src={hotfixRight} alt="Hotfix 250 g: frente crema con etiqueta verde y lateral crema con el mensaje Good coffee. Better ideas." width={1000} height={1333} format="webp" loading="lazy" hidden /><button type="button" class="blend-turn" aria-pressed="false" aria-label="Ver el otro lado del empaque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button></>}{profile.id==='developer'&&<Image class="blend-cutout second-cutout" src={espresso} alt="Segundo empaque conceptual del Pack Developer" width="1024" height="1536" loading="lazy" />}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
+          <div class:list={['blend-visual',{'is-pair':profile.id==='developer'}]}><div class="blend-disc"></div><Image class="blend-cutout" src={demoImages[profile.image]} alt={profile.id==='monteverde'?'Hotfix 250 g: frente crema con etiqueta verde y lateral verde de métodos de preparación':`Empaque conceptual de ${profile.name}`} width={profile.id==='monteverde'?1000:768} height={profile.id==='monteverde'?1333:1152} format="webp" loading="lazy" />{profile.id==='monteverde'&&<><Image class="blend-cutout blend-side" src={hotfixRight} alt="Hotfix 250 g: frente crema con etiqueta verde y lateral crema con el mensaje Good coffee. Better ideas." width={1000} height={1333} format="webp" loading="lazy" hidden /><button type="button" class="blend-turn" aria-pressed="false" aria-label="Ver el otro lado del empaque"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button></>}<span class="blend-caption">DISEÑADO PARA TU RITUAL DIARIO</span></div>
         </article>;
       }))}
+      {upcoming.map(profile => <article id={`blend-${profile.id}`} class="blend-panel pipeline-preview" data-profile={profile.id} style="--blend-color:#647260" hidden>
+        <div class="blend-info pipeline-info">
+          <p class="eyebrow">{profile.number} / PIPELINE · EN DESARROLLO</p>
+          <span class="pipeline-status"><span aria-hidden="true"></span>PRÓXIMO LANZAMIENTO</span>
+          <h3>Lo bueno<br />se está <span class="serif-word">preparando.</span></h3>
+          <p class="blend-description">Un nuevo perfil de la línea Pipeline está tomando forma. Por ahora, guardamos la sorpresa.</p>
+          <div class="pipeline-redacted" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="pipeline-soon">Muy pronto<span aria-hidden="true"> ↗</span></p>
+          <p class="pipeline-footnote">El nombre, el perfil y los detalles se revelarán en su lanzamiento.</p>
+        </div>
+        <div class="blend-visual pipeline-visual" aria-label="Próximo café de la línea Pipeline, aún sin revelar">
+          <div class="blend-disc"></div>
+          <div class="pipeline-silhouette" aria-hidden="true"><span></span></div>
+          <div class="pipeline-seal" aria-hidden="true"><span>PIPELINE / {profile.number}</span><strong>Muy pronto.</strong><small>UN NUEVO RITUAL EN CAMINO</small></div>
+          <span class="blend-caption">EL SIGUIENTE COMMIT TODAVÍA SE ESTÁ PREPARANDO</span>
+        </div>
+      </article>)}
     </div>
     <div class="blend-selector" role="group" aria-label="Elige tu perfil de café">
-      {profiles.map((profile,index)=><button class:list={['blend-choice',{'is-active':index===0}]} data-select={profile.id} aria-pressed={index===0?'true':'false'} aria-controls={`blend-${profile.id}`} style={`--blend-color:${profile.color}`}><span class="choice-image"><Image src={demoImages[profile.image]} alt="" width={120} height={profile.id==='monteverde'?160:180} format="webp" loading="lazy" /></span><span><small>0{index+1}</small>{profile.id==='developer'?'Developer Dúo':profile.id==='microlote'?'Microlote':profile.id==='espresso'?'Espresso':'Hotfix'}</span><b aria-hidden="true">↗</b></button>)}
+      {profiles.map((profile,index)=><button class:list={['blend-choice',{'is-active':index===0}]} data-select={profile.id} aria-pressed={index===0?'true':'false'} aria-controls={`blend-${profile.id}`} style={`--blend-color:${profile.color}`}><span class="choice-image"><Image src={demoImages[profile.image]} alt="" width={120} height={profile.id==='monteverde'?160:180} format="webp" loading="lazy" /></span><span><small>0{index+1}</small>Hotfix</span><b aria-hidden="true">↗</b></button>)}
+      {upcoming.map(profile => <button class="blend-choice pipeline-choice" data-select={profile.id} aria-pressed="false" aria-controls={`blend-${profile.id}`} aria-label={`Pipeline ${profile.number}: muy pronto`} style="--blend-color:#647260"><span class="choice-image pipeline-choice-image" aria-hidden="true"><span></span></span><span><small>PIPELINE / {profile.number}</small>Muy pronto</span><b aria-hidden="true">◌</b></button>)}
     </div>
   </div>
-  <p class="catalog-note">Empaques conceptuales de muestra. Arma tu pedido en línea o, si prefieres, coordínalo por WhatsApp.</p>
+  <p class="catalog-note">Hotfix ya es parte de tu ritual. Los próximos perfiles de Pipeline se revelarán muy pronto.</p>
   <noscript><p>También puedes <a href={await getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
   <!-- Reserva por WhatsApp para las presentaciones sin stock: arma el mensaje con los datos del cliente. -->
   <dialog class="reserve-dialog" aria-labelledby="reserve-title" data-whatsapp={await getWhatsAppBaseUrl()}>
@@ -106,7 +119,7 @@ const profiles = [
     swap?.progress(1).kill();
     const show = () => { panels.forEach(p => { p.hidden = p !== panel; }); if(turnButton?.closest<HTMLElement>('.blend-panel')?.hidden) { turn?.progress(1).kill(); setSide(false); } };
     if(reduced.matches || document.documentElement.classList.contains('motion-paused') || !current) { show(); return; }
-    const parts = (p: HTMLElement) => ({ cut: p.querySelectorAll('.blend-cutout'), info: p.querySelector('.blend-info'), disc: p.querySelector('.blend-disc') });
+    const parts = (p: HTMLElement) => ({ cut: p.querySelectorAll('.blend-cutout,.pipeline-silhouette'), info: p.querySelector('.blend-info'), disc: p.querySelector('.blend-disc') });
     const out = parts(current), inn = parts(panel);
     // Developer Dúo bags rest tilted via CSS (±10deg); tween into that tilt so clearing props doesn't jump.
     const tilt = (_: number, el: Element) => !el.closest('.is-pair') ? 0 : el.classList.contains('second-cutout') ? 10 : -10;
@@ -119,7 +132,7 @@ const profiles = [
       .fromTo(inn.cut, { rotation: 0, rotationY: 75 * dir, x: 60 * dir, z: -220, opacity: 0 }, { rotation: tilt, rotationY: 0, x: 0, z: 0, opacity: 1, duration: .8, ease: 'power3.out', stagger: .08, clearProps: 'transform' }, '<')
       .fromTo(inn.info, { opacity: 0, x: 24 * dir }, { opacity: 1, x: 0, duration: .5, ease: 'power2.out', clearProps: 'transform' }, '<.1');
   }));
-  document.querySelectorAll<HTMLElement>('.blend-panel').forEach(card=>{
+  document.querySelectorAll<HTMLElement>('.blend-panel[data-product]').forEach(card=>{
     const variant=card.querySelector<HTMLSelectElement>('.variant-select')!;
     const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;
     const link=card.querySelector<HTMLAnchorElement>('.whatsapp-order')!;

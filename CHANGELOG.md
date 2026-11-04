@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.2
+
+- Los próximos perfiles de Pipeline se presentan como «Muy pronto», con siluetas genéricas difuminadas, sin revelar nombres, imágenes reales, descripciones, precios ni opciones de compra.
+- Hotfix conserva su ficha, giro de empaque y flujos de compra y reserva.
+- Preguntas frecuentes y sección para equipos ajustadas a la presentación actual de Hotfix.
+- Perfil de TikTok actualizado a `@coffecodebrew` en los enlaces, valores de respaldo y configuración inicial.
+- Migración 0010 para sustituir el enlace anterior de TikTok en la configuración existente sin alterar otras redes ni enlaces personalizados distintos.
+
 ## 1.5.1
 
 - El botón "Reservar mi café" (presentaciones sin stock) ahora usa el número de WhatsApp configurado en `/admin/configuracion` en vez del número fijo en el código.

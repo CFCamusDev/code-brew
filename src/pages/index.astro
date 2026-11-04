@@ -16,13 +16,13 @@ import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/se
 export const prerender = false;
 const socialLinks = await getSetting<SocialLinks>(SOCIAL_LINKS_KEY, {
   instagram: 'https://www.instagram.com/codebrewc/',
-  tiktok: 'https://www.tiktok.com/@codebrew1',
+  tiktok: 'https://www.tiktok.com/@coffecodebrew',
   facebook: '',
   whatsapp: ''
 });
 const questions = [
-  ['¿Cuál elijo si es mi primer café CodeBrew?', 'Hotfix es un espresso de tueste medio-oscuro, con cuerpo alto, dulzor a chancaca y un final limpio de cacao. Si buscas un tueste más claro, consulta el Microlote de Temporada. Elige el perfil que mejor acompañe tu ritual.'],
-  ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, dinos qué cafetera usas y coordinamos la molienda. Para el Pack Developer puedes personalizar las dos bolsas por WhatsApp.'],
+  ['¿Cuál elijo si es mi primer café CodeBrew?', 'Empieza por Hotfix, nuestro perfil de la línea Pipeline: espresso de tueste medio-oscuro, con cuerpo alto, dulzor a chancaca y un final limpio de cacao. Los próximos perfiles se revelarán muy pronto.'],
+  ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, selecciona la molienda para tu cafetera al pedir Hotfix. También puedes consultarnos por WhatsApp.'],
   ['¿Cómo coordino el envío y el pago?', 'Agrega tu café al carrito, elige tu zona de envío y confirma tu pedido: verás el costo de envío y el plazo antes de confirmar. Pagas en línea con tarjeta, Yape, billeteras o agentes a través de Culqi. El envío es gratis en Lima y Callao desde 3 bolsas. Si prefieres, también puedes pedir por WhatsApp.'],
   ['¿Puedo pedir café para mi equipo?', 'Sí. Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos la propuesta, las presentaciones y la entrega directamente contigo.']
 ];

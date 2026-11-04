@@ -1,10 +1,10 @@
-# CodeBrew — 1.5.1
+# CodeBrew — 1.5.2
 
 Tienda en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing con precios en vivo, los pedidos, las API y la administración se ejecutan en un servidor Node con PostgreSQL. Las rutas marcadas para prerenderizado se generan como HTML estático. Los componentes interactivos se escriben como islas React.
 
 ## Desarrollo
 
-El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.5.1.md` para este release y `docs/releases/1.1.0.md` para la configuración de producción.
+El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.5.2.md` para este release y `docs/releases/1.1.0.md` para la configuración de producción.
 
 - `pnpm install --frozen-lockfile`
 - `cp .env.example .env`
