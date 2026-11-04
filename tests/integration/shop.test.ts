@@ -6,6 +6,20 @@ const espresso = { sku: 'espresso-250', grind: 'Grano entero', quantity: 1 };
 const pack = { sku: 'pack-developer', grind: 'Ambos en grano', quantity: 1 };
 
 describe('sitio', () => {
+  it('muestra Hotfix y tres próximos lanzamientos sin revelar los otros productos', async () => {
+    const { status, text } = await api('/');
+    expect(status).toBe(200);
+    const section = text.match(/<section id="productos"[\s\S]*?<\/section>/)?.[0];
+    expect(section).toBeTruthy();
+    expect(section).toContain('Hotfix');
+    expect(section).toContain('Muy pronto');
+    expect(section?.match(/class="blend-panel pipeline-preview"/g)).toHaveLength(3);
+    for (const name of ['Espresso Amazonas', 'Pack Developer', 'Microlote de Temporada', 'demo/espresso', 'demo/microlote']) {
+      expect(section).not.toContain(name);
+    }
+    expect(text).toContain('https://www.tiktok.com/@coffecodebrew');
+    expect(text).not.toContain('https://www.tiktok.com/@codebrew1');
+  });
   it('responde la salud de app y base de datos', async () => {
     const { status, json } = await api('/api/health');
     expect(status).toBe(200);
