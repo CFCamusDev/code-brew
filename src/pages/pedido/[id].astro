@@ -52,13 +52,13 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
     const payload = document.getElementById('purchase-analytics')?.dataset.purchase;
     if(payload) void trackPurchase(JSON.parse(payload));
   </script>
-  <main id="main-content" class="shop-main order-page">
+  <main id="main-content" class="shop-main order-page cb-order-detail">
     <p class="eyebrow">PEDIDO {number}</p>
     <h1>{order.status === 'pending' ? '¡Pedido registrado!' : order.status === 'paid' ? '¡Gracias por tu compra!' : `Pedido ${number}`}</h1>
     <span class="order-status" data-status={order.status}>{STATUS_LABEL[order.status]}</span>
 
     {isException ? (
-      <section class="order-card cancelled">
+      <section class="order-card cancelled cb-order-tracking">
         <h2>{order.status === 'cancelled' ? 'Pedido cancelado' : 'Pedido reembolsado'}</h2>
         <p>
           {order.status === 'cancelled'
@@ -69,7 +69,7 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
         <p>Si tienes dudas, escríbenos por WhatsApp con tu número de pedido.</p>
       </section>
     ) : (
-      <section class="order-card">
+      <section class="order-card cb-order-tracking">
         <h2>Seguimiento de tu pedido</h2>
         <ol class="order-timeline">
           {TIMELINE_STEPS.map((step, index) => (
@@ -136,7 +136,7 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
       </>
     )}
 
-    <section class="order-card">
+    <section class="order-card cb-order-delivery">
       <h2>Entrega</h2>
       <p>{order.customerName} · {order.customerPhone}</p>
       <p>{order.shippingAddress}, {order.shippingDistrict}, {order.shippingCity}, {order.shippingRegion}</p>

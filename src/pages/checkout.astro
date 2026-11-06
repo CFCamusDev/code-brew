@@ -6,7 +6,7 @@ import '../styles/shop.css';
 ---
 <Layout title="Tu pedido — CodeBrew" description="Confirma tu pedido de café de especialidad CodeBrew." noindex>
   <ShopHeader />
-  <main id="main-content" class="shop-main">
+  <main id="main-content" class="shop-main cb-checkout-page"><ol class="cb-checkout-steps" aria-label="Pasos de compra"><li aria-current="step"><b>01</b> Tus datos y entrega</li><li><b>02</b> Pago</li><li><b>03</b> Seguimiento</li></ol>
     <CheckoutApp client:only="react">
       <p slot="fallback" class="cart-hint">Cargando tu pedido…</p>
     </CheckoutApp>

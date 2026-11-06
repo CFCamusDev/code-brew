@@ -1,3 +1,4 @@
+import hotfixThumbnail from '../../assets/pipeline/hotfix-front.webp';
 import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
 import { cartCount, cartLines, cartOpen, describeSku, removeFromCart, setQuantity } from '../../lib/shop/cart';
@@ -59,6 +60,7 @@ export default function CartWidget() {
           <path d="M5 8h14l-1.2 11.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9L5 8Z" />
           <path d="M9 8V6a3 3 0 0 1 6 0v2" />
         </svg>
+        <span className="cb-cart-label">Carrito</span>
         {count > 0 && <span className="cart-badge">{count}</span>}
       </button>
 
@@ -71,7 +73,7 @@ export default function CartWidget() {
       >
         <div className="cart-panel">
           <header className="cart-head">
-            <h2 id="cart-title">Tu carrito</h2>
+            <div><p className="cb-label">Tu pausa empieza aquí</p><h2 id="cart-title">Tu carrito</h2></div>
             <button type="button" className="cart-close" onClick={() => cartOpen.set(false)} aria-label="Cerrar carrito">
               ×
             </button>
@@ -92,6 +94,7 @@ export default function CartWidget() {
                   const info = describeSku(line.sku);
                   return (
                     <li key={`${line.sku}|${line.grind}`} className="cart-line">
+                      {line.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                       <div>
                         <p className="cart-line-name">{info?.productName ?? line.sku}</p>
                         <p className="cart-line-meta">
