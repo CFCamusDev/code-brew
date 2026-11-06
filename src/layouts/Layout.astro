@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import '../styles/editorial.css';
+import '../styles/brand.css';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.astro';
 interface Props { title?: string; description?: string; noindex?: boolean; }
 const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', description = 'Café de especialidad de Amazonas, Perú, para quienes crean. Descubre tu próximo ritual y elige tu café en grano o molido.' } = Astro.props;
@@ -73,7 +73,7 @@ const { noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', desc
       })();
     </script>
   </head>
-  <body>
+  <body class="cb-site">
     <a class="skip-link" href="#main-content">Saltar al contenido</a>
     <slot />
     <FloatingWhatsApp />
