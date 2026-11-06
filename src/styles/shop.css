@@ -464,7 +464,7 @@
 .cb-site .cb-policy-body{padding:48px;border-radius:32px;background:var(--cb-cream-2);border:1px solid var(--cb-line);min-width:0}.cb-site .cb-policy-body h1{font-size:clamp(38px,4vw,56px);overflow-wrap:anywhere;margin-top:18px}.cb-site .cb-policy-body .policy-body p{font-size:16px;line-height:1.8;margin:0 0 24px}.cb-site .cb-policy-body .policy-body p:first-child{font-weight:500}
 .cb-site .policy-body,.cb-site .order-card{overflow-wrap:anywhere}
 .cb-site .cart-empty,.cb-site .checkout-empty{min-height:280px}
-.cb-site .cb-shop-header .cb-nav{background:#0f1f19;color:var(--cb-cream)}
+.cb-site .cb-shop-header .cb-nav{color:var(--cb-cream)}
 .cb-site .cb-order-detail astro-island{display:contents}
 .cb-site .cb-order-detail astro-island .order-card{margin:0}
 .cb-site .cb-order-detail .order-card:has(.totals){background:radial-gradient(ellipse at 80% 0%,#58a07666,transparent 70%),var(--cb-forest-900);color:var(--cb-cream);border-color:var(--cb-forest-900);grid-column:2;grid-row:4}
