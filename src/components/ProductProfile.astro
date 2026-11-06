@@ -9,7 +9,7 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
 ---
 <div class="cb-product" style={'--profile-color:'+p.color+';--profile-tint:'+p.tint+';--profile-glow:'+p.glow}>
  <section id="top" class="cb-product-hero cb-dark"><div class="cb-wrap">
-  <nav class="cb-product-profiles" aria-label="Perfiles del Pipeline">{PIPELINE.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.status==='available'?'Disponible':'Próximamente'}</small></a>)}</nav>
+  <div class="cb-profile-home"><nav class="cb-product-profiles" aria-label="Perfiles del Pipeline">{PIPELINE.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.status==='available'?'Disponible':'Próximamente'}</small></a>)}</nav></div>
   <div class="cb-product-grid"><div class="cb-gallery"><div class="cb-gallery-stage">{views.map((view,i)=><div data-pouch-view={view} hidden={i!==0} class="cb-gallery-view cb-float"><Pouch transitionName={i===0 ? `pipeline-${p.slug}` : undefined} product={p.slug} view={view} scale={1.9} eager={i===0} /></div>)}<span class="cb-orbit" aria-hidden="true"></span><span class="cb-glass cb-gallery-method">{p.method}</span><span class="cb-glass cb-gallery-roast">{p.roast}</span></div><div class="cb-gallery-thumbs" role="group" aria-label="Vistas de la bolsa">{views.map((view,i)=><button type="button" data-view={view} aria-label={'Ver '+({front:'frente',front2:'frente en perspectiva',flat:'vista plana',back:'reverso',back3d:'reverso en perspectiva'}[view])} aria-pressed={i===0?'true':'false'}><Pouch product={p.slug} view={view} scale={.24} /></button>)}</div></div>
   <div class="cb-product-copy cb-stack"><p class="cb-label">Pipeline {p.num} · {available?'STABLE · DISPONIBLE':'QUEUED · PRÓXIMAMENTE'}</p><h1>{p.name}</h1><p class="cb-product-tagline">{p.tagline}</p><div class="cb-product-chips"><span>{p.method}</span><span>{p.roast}</span><span>Hecho en Perú</span></div>
   {available ? <ProductPurchase catalogSlug={p.catalogSlug} productName={p.name} /> : <div class="cb-product-queued cb-glass"><div class="cb-queued-price"><span class="cb-label">Precio</span><span class="cb-redacted" aria-hidden="true">Por revelar</span></div><p>Este perfil ya tiene nombre y receta. Su origen, proceso y notas de cata se revelan en el lanzamiento.</p><form aria-label={'Aviso de lanzamiento de '+p.name}><label for="mail2">Tu correo</label><input id="mail2" name="email" type="email" placeholder="tu@correo.com" disabled /><button type="button" class="cb-btn cb-accent" disabled>Avísame</button><p>Los avisos todavía no están habilitados.</p></form></div>}
@@ -24,6 +24,47 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
  <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Receta sugerida</p><h2>Prepáralo<br />como un <em>commit.</em></h2><p>Una guía para preparar {p.recipeFor} y encontrar tu próxima pausa.</p><div class="cb-trace"><span class="cb-label">git log --origen</span><p>{available?'Rodríguez de Mendoza, Amazonas · Lavado':'Origen y trazabilidad: se revelan en el lanzamiento.'}</p></div></div><div class="cb-recipe-window"><div class="cb-window-head"><i></i><i></i><i></i><span>{p.slug}.js</span></div><pre><span>// receta sugerida · {p.recipeFor}</span><br /><b>const</b> {p.slug} = brew({'{'}<br />{p.recipe.map(([key,value])=><Fragment>{'  '+key+': '}<em>"{value}"</em>,<br /></Fragment>)}{'}'});</pre></div></div></section>
 </div>
 <script>
+ const header = document.querySelector<HTMLElement>('.cb-nav');
+ const home = document.querySelector<HTMLElement>('.cb-profile-home');
+ const selector = home?.querySelector<HTMLElement>('.cb-product-profiles');
+ const dock = header?.querySelector<HTMLElement>('.cb-profile-dock');
+ if (header && home && selector && dock) {
+  let docked = false;
+  let frame = 0;
+  const update = () => {
+   frame = 0;
+   // Use the original header height so expanding it cannot move the threshold.
+   const threshold = header.getBoundingClientRect().top + (innerWidth <= 560 ? 56 : 64);
+   const shouldDock = home.getBoundingClientRect().top <= threshold - (docked ? 0 : 2);
+   if (shouldDock === docked) return;
+   const focused = selector.contains(document.activeElement) ? document.activeElement as HTMLElement : null;
+   if (shouldDock) {
+    home.style.height = home.getBoundingClientRect().height + 'px';
+    dock.hidden = false;
+    dock.append(selector);
+    header.classList.add('cb-nav-profile-mode');
+    header.querySelector('#main-nav')?.classList.remove('is-open');
+    const toggle = header.querySelector<HTMLButtonElement>('.menu-toggle');
+    toggle?.setAttribute('aria-expanded','false');
+    toggle?.setAttribute('aria-label','Abrir menú');
+    const active = selector.querySelector<HTMLElement>('[aria-current="page"]');
+    if (active) selector.scrollLeft = Math.max(0, active.offsetLeft - selector.offsetLeft - (selector.clientWidth - active.clientWidth) / 2);
+   } else {
+    home.append(selector);
+    home.style.height = '';
+    header.classList.remove('cb-nav-profile-mode');
+    dock.hidden = true;
+   }
+   docked = shouldDock;
+   focused?.focus({preventScroll:true});
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  addEventListener('scroll',schedule,{passive:true});
+  addEventListener('resize',schedule);
+  addEventListener('pageshow',schedule);
+  update();
+ }
+
  document.querySelectorAll<HTMLElement>('.cb-gallery').forEach(gallery=>{
   gallery.querySelectorAll<HTMLButtonElement>('[data-view]').forEach(button=>button.addEventListener('click',()=>{
    gallery.querySelectorAll<HTMLElement>('[data-pouch-view]').forEach(view=>view.hidden=view.dataset.pouchView!==button.dataset.view);

@@ -1,11 +1,12 @@
 ---
 
 import CartWidget from './shop/CartWidget';
+import LogoMark from './LogoMark.astro';
 ---
 
 <div class="cb-header-host"><header class="site-header cb-nav cb-glass-dark">
   <a class="wordmark" href="/" aria-label="CodeBrew, inicio">
-codebrew<sup>®</sup>
+<span class="cb-header-wordmark">codebrew<sup>®</sup></span><span class="cb-header-symbol"><LogoMark light size={32} /></span>
 </a>
   <nav id="main-nav" aria-label="Navegación principal">
     <a href="/#pipeline">Pipeline</a>
@@ -13,6 +14,7 @@ codebrew<sup>®</sup>
 
 <a href="/#empresas">Equipos</a>
   </nav>
+  <div class="cb-profile-dock" hidden></div>
   <div class="header-actions">
   
   <CartWidget client:idle />

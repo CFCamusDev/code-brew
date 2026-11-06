@@ -331,3 +331,31 @@
  .cb-site .cb-gallery-method{top:16px;left:0;font-size:12px}
  .cb-site .cb-gallery-roast{bottom:16px;right:0;font-size:12px}
 }
+
+/* The product selector joins the header after its original position scrolls away. */
+.cb-site .cb-header-symbol{display:none}
+.cb-site .cb-profile-home{display:flow-root}
+.cb-site .cb-nav{transition:width .35s var(--ease-out),height .35s var(--ease-out),border-radius .35s var(--ease-out),padding .35s var(--ease-out)}
+.cb-site .cb-nav-profile-mode{width:min(1280px,calc(100% - 32px));display:grid;grid-template-columns:40px minmax(0,1fr) 44px;gap:18px;padding:8px 12px 8px 20px;height:80px}
+.cb-site .cb-nav-profile-mode .cb-header-wordmark,.cb-site .cb-nav-profile-mode #main-nav,.cb-site .cb-nav-profile-mode .menu-toggle{display:none}
+.cb-site .cb-nav-profile-mode .cb-header-symbol{display:block}
+.cb-site .cb-nav-profile-mode .header-actions{margin:0;justify-self:end}
+.cb-site .cb-nav-profile-mode .cart-button{width:44px;min-width:44px;padding:0}
+.cb-site .cb-nav-profile-mode .cart-button::after,.cb-site .cb-nav-profile-mode .cb-cart-label{display:none}
+.cb-site .cb-profile-dock{min-width:0}
+.cb-site .cb-profile-dock .cb-product-profiles{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;margin:0;padding:4px;scrollbar-width:thin;scrollbar-color:#f4f1e940 transparent;animation:cb-dock-in .3s var(--ease-out)}
+.cb-site .cb-profile-dock .cb-profile-pill{flex:none;white-space:nowrap;padding:10px 14px;min-height:44px;font-size:13px}
+.cb-site .cb-profile-dock .cb-profile-pill small{display:none}
+@keyframes cb-dock-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.cb-site .cb-profile-dock .cb-profile-pill .cb-label{display:none}.cb-site .cb-profile-dock .cb-profile-pill{padding:10px 12px;gap:7px}}
+@media(max-width:560px){
+ .cb-site .cb-nav-profile-mode{height:124px;border-radius:28px;grid-template-columns:minmax(0,1fr) 44px;grid-template-rows:44px 48px;gap:8px;padding:10px 10px 10px 18px}
+ .cb-site .cb-nav-profile-mode .wordmark{grid-column:1;grid-row:1}
+ .cb-site .cb-nav-profile-mode .header-actions{grid-column:2;grid-row:1}
+ .cb-site .cb-profile-dock{grid-column:1/-1;grid-row:2;margin-left:-8px}
+ .cb-site .cb-profile-dock .cb-product-profiles{padding:2px 4px 4px;gap:6px;scroll-snap-type:x proximity}
+ .cb-site .cb-profile-dock .cb-profile-pill{font-size:12px;padding:9px 12px;min-height:40px}
+}
+.cb-site .cb-nav.cb-nav-profile-mode{background:linear-gradient(135deg,rgba(15,31,25,.82),rgba(15,31,25,.72))}
+.cb-site .cb-nav.cb-nav-profile-mode .cart-button{width:44px;min-width:44px;padding:0}
+@media(min-width:901px){.cb-site .cb-profile-dock .cb-product-profiles{justify-content:center}}
