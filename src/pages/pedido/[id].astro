@@ -1,4 +1,5 @@
 ---
+import Footer from '../../components/Footer.astro';
 import Layout from '../../layouts/Layout.astro';
 import ShopHeader from '../../components/shop/ShopHeader.astro';
 import { getOrder, isOrderId } from '../../lib/server/shop';
@@ -144,4 +145,5 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
       <p>Guarda esta página: es el enlace para consultar tu pedido. Si la pierdes, puedes volver a encontrarlo en <a href="/pedido">¿Dónde está mi pedido?</a></p>
     </section>
   </main>
+<Footer />
 </Layout>

@@ -1,4 +1,5 @@
 ---
+import Footer from '../../components/Footer.astro';
 import Layout from '../../layouts/Layout.astro';
 import ShopHeader from '../../components/shop/ShopHeader.astro';
 import { getSetting, POLICY_KEYS, type PolicySlug, type PolicyContent } from '../../lib/server/settings';
@@ -15,8 +16,8 @@ const hasContent = policy.body.trim().length > 0;
 ---
 <Layout title={`${policy.title || 'Política'} — CodeBrew`} description={`${policy.title} de CodeBrew.`}>
   <ShopHeader />
-  <main id="main-content" class="shop-main order-page policy-page">
-    <p class="eyebrow">CODEBREW</p>
+  <main id="main-content" class="shop-main order-page policy-page cb-policy-layout">
+    <aside class="cb-policy-nav"><p class="cb-label">Información de CodeBrew</p><h2>Todo con <em>claridad.</em></h2><nav aria-label="Documentos legales">{Object.entries(POLICY_KEYS).map(([key])=><a href={'/politicas/'+key} aria-current={slug===key?'page':undefined}>{({'terminos':'Términos y condiciones','privacidad':'Privacidad','envios-devoluciones':'Envíos y devoluciones'} as Record<string,string>)[key]}<span aria-hidden="true">↗</span></a>)}<a href="/reclamos">Libro de Reclamaciones <span aria-hidden="true">↗</span></a></nav></aside><article class="cb-policy-body"><p class="eyebrow">CODEBREW</p>
     <h1>{policy.title || 'Política no encontrada'}</h1>
     {hasContent ? (
       <div class="policy-body">
@@ -27,10 +28,11 @@ const hasContent = policy.body.trim().length > 0;
     ) : (
       <p class="muted">Aún no publicamos el texto de esta política. Escríbenos por WhatsApp si tienes dudas mientras tanto.</p>
     )}
-  </main>
+  </article></main>
+<Footer />
 </Layout>
 <style>
-  .policy-page{max-width:720px}
+  .policy-page{max-width:1240px}
   .policy-body p{margin:0 0 20px;line-height:1.7;font-size:15px}
   .policy-body p:first-child{font-weight:600}
 </style>

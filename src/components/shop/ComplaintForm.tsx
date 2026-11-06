@@ -52,13 +52,15 @@ export default function ComplaintForm() {
   }
 
   return (
-    <form className="order-page" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <p className="eyebrow">LIBRO DE RECLAMACIONES</p>
-      <h1>Registra tu reclamo o queja</h1>
+    <div className="cb-complaint-grid"><aside className="cb-complaint-intro">
+      <p className="eyebrow">LIBRO DE RECLAMACIONES</p><h1>Registra tu reclamo o <em>queja</em></h1>
       <p className="muted">Conforme al Código de Protección y Defensa del Consumidor, puedes presentar un reclamo o queja sobre nuestro producto o servicio.</p>
+      <div className="cb-complaint-guide"><p><b>01 · Reclamo</b>Disconformidad con el producto o servicio.</p><p><b>02 · Queja</b>Malestar con la atención recibida.</p><p>Tus datos se usan para responder este reclamo.</p></div>
+    </aside><form className="order-page cb-complaint-form" onSubmit={handleSubmit(onSubmit)} noValidate>
 
-      <div className="field-grid" style={{ marginTop: 24 }}>
-        <Field label="Tipo" error={errors.type} wide>
+
+      <div className="field-grid">
+        <fieldset className="field wide cb-complaint-type"><legend>Tipo</legend>
           <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input type="radio" value="reclamo" {...register('type')} /> Reclamo
@@ -67,8 +69,9 @@ export default function ComplaintForm() {
               <input type="radio" value="queja" {...register('type')} /> Queja
             </label>
           </div>
-        </Field>
+        {errors.type && <small className="field-error">{errors.type.message}</small>}</fieldset>
 
+        <h2 className="wide">Tus datos</h2>
         <Field label="Nombre completo" error={errors.consumerName} wide>
           <input {...register('consumerName')} autoComplete="name" />
         </Field>
@@ -85,11 +88,11 @@ export default function ComplaintForm() {
           <input {...register('consumerAddress')} autoComplete="street-address" />
         </Field>
 
-        <Field label="" error={undefined} wide>
+        <div className="field wide">
           <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input type="checkbox" {...register('isMinor')} /> El consumidor es menor de edad (lo presenta un apoderado)
           </label>
-        </Field>
+        </div>
         {isMinor && (
           <>
             <Field label="Nombre del apoderado" error={errors.guardianName}>
@@ -101,8 +104,9 @@ export default function ComplaintForm() {
           </>
         )}
 
+        <h2 className="wide">Sobre tu compra</h2>
         <Field label="Bien contratado (producto o servicio)" error={errors.productOrService} wide>
-          <input {...register('productOrService')} placeholder="Ej. Espresso Amazonas 250 g" />
+          <input {...register('productOrService')} placeholder="Ej. Hotfix 250 g" />
         </Field>
         <Field label="Monto reclamado en soles (opcional)" error={errors.amount}>
           <input {...register('amount')} inputMode="decimal" placeholder="0.00" />
@@ -124,7 +128,7 @@ export default function ComplaintForm() {
       <button type="submit" className="button primary checkout-submit" disabled={isSubmitting} style={{ marginTop: 20 }}>
         {isSubmitting ? 'Enviando…' : 'Registrar reclamo'} <span aria-hidden="true">↗</span>
       </button>
-    </form>
+    </form></div>
   );
 }
 
