@@ -1,0 +1,41 @@
+/* CodeBrew · tokens del rediseño (extraídos del diseño aprobado) */
+:root{
+  /* superficies */
+  --cb-forest-950:#0f1f19; --cb-forest-900:#172c24; --cb-forest-800:#203c32;
+  --cb-cream:#f4f1e9; --cb-cream-2:#faf8f3; --cb-cream-3:#eeebe2; --cb-line:#d9dcd0; --cb-line-2:#e3dfd1;
+  --cb-ink:#10211b; --cb-text:#203c32; --cb-muted:#5a655d;
+  /* acento */
+  --cb-terracotta:#d16c40; --cb-terracotta-deep:#b4552f; --cb-terracotta-bright:#e58a5f; /* CTA sobre oscuro, texto --cb-ink */
+  /* etiquetas del Pipeline (color de cada perfil) */
+  --pl-hotfix:#1f4a35;   --pl-hotfix-tint:#7fd6a0;
+  --pl-coldstart:#2a5369;--pl-coldstart-tint:#7fb6d4;
+  --pl-deploy:#1a424b;   --pl-deploy-tint:#6fbfc8;
+  --pl-merge:#601c28;    --pl-merge-tint:#e59aa8;
+  --pl-rollback:#43494f; --pl-rollback-tint:#b4bdc8;
+  /* tipografía */
+  --font-display:'EB Garamond',Georgia,serif;   /* 500/600, una palabra itálica terracota por titular */
+  --font-body:'Geist',system-ui,sans-serif;     /* 400/500/600 */
+  --font-mono:'Geist Mono',ui-monospace,monospace; /* 400/500, etiquetas en MAYÚSCULAS +12-14% tracking */
+  /* radios y sombras */
+  --r-pill:999px; --r-card:28px; --r-tile:20px;
+  --shadow-cta:0 12px 30px -10px rgba(229,138,95,.7);
+  /* glass: SOLO sobre fondos ricos (nav, hotspots, tarjetas de datos sobre mapa, carrito, paneles "próximamente"); nunca sobre crema plana ni apilado */
+  --glass-bg:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+  --glass-blur:blur(22px) saturate(150%);
+  --glass-border:1px solid rgba(255,255,255,.16);
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 20px 40px -14px rgba(0,0,0,.5);
+  /* motion */
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+}
+.glass{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:var(--glass-border);box-shadow:var(--glass-shadow);color:var(--cb-cream)}
+.glass-dark{background:rgba(15,31,25,.62);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 20px 40px -14px rgba(0,0,0,.5);color:var(--cb-cream)}
+/* 4 movimientos: float 6-9s, pulse 2.4s, reveal 24px/700ms/stagger 80ms, flow/progress */
+@keyframes cb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes cb-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* This stylesheet is activated only by the public Layout, never AdminLayout. */
+.cb-site{--ink:var(--cb-ink);--cream:var(--cb-cream);--paper:var(--cb-cream-2);--muted:var(--cb-muted);--line:var(--cb-line);--orange:var(--cb-terracotta);background:var(--cb-cream);color:var(--cb-text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+.cb-site .cb-glass{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:var(--glass-border);box-shadow:var(--glass-shadow);color:var(--cb-cream)}
+.cb-site .cb-glass-dark{background:rgba(15,31,25,.72);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border:1px solid #ffffff24;box-shadow:inset 0 1px #ffffff24,0 16px 36px -14px #0007;color:var(--cb-cream)}
+.cb-float{animation:cb-float 7s ease-in-out infinite}

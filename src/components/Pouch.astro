@@ -1,0 +1,28 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+interface Props {
+  product?: string;
+  view?: 'front' | 'front2' | 'flat' | 'back' | 'back3d';
+  scale?: number;
+  locked?: boolean;
+  eager?: boolean;
+}
+const { product = 'hotfix', view = 'front', scale = 1, locked = false, eager = false } = Astro.props;
+const images = import.meta.glob<{ default: ImageMetadata }>('../assets/pipeline/*.webp', { eager: true });
+// Hotfix does not have a flat render: use its real front, never a synthetic bag.
+const source = images[`../assets/pipeline/${product}-${view}.webp`]?.default
+  ?? images[`../assets/pipeline/${product}-front.webp`]?.default;
+if (!source) throw new Error(`Render de Pipeline desconocido: ${product}`);
+const names: Record<string, string> = { hotfix: 'Hotfix', coldstart: 'Cold Start', deploy: 'Deploy', merge: 'Merge', rollback: 'Rollback' };
+const views = { front: 'frente', front2: 'frente en perspectiva', flat: 'vista plana', back: 'reverso', back3d: 'reverso en perspectiva' };
+---
+<span class="cb-pouch" style={`--pouch-scale:${scale}`}>
+  <Image src={source} alt={`Bolsa CodeBrew ${names[product] ?? product}, ${views[view]}`} widths={[240, 400, 640, 900]} sizes="(max-width: 600px) 65vw, 380px" width={640} format="webp" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} />
+  {locked && <span class="cb-pouch-lock">● Próximamente</span>}
+</span>
+<style>
+  .cb-pouch{position:relative;display:inline-block;width:calc(240px * var(--pouch-scale));max-width:100%;vertical-align:middle}
+  img{display:block;width:100%;height:auto;filter:drop-shadow(0 24px 20px #0003)}
+  .cb-pouch-lock{position:absolute;top:6%;left:12%;right:12%;padding:7px 10px;border:1px solid #ffffff40;border-radius:999px;background:#172c24e8;color:#f4f1e9;text-align:center;font:500 10px/1.2 'Geist Mono',monospace;letter-spacing:.12em;text-transform:uppercase}
+</style>
