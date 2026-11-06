@@ -91,7 +91,7 @@ export default function CartWidget() {
             <div className="cart-empty">
               <p className="cart-code">// carrito vacío</p>
               <p>Aún no agregas ningún café.</p>
-              <a className="button primary" href="/#productos" onClick={() => cartOpen.set(false)}>
+              <a className="button primary" href="/#pipeline" onClick={() => cartOpen.set(false)}>
                 Elegir mi café <span aria-hidden="true">↗</span>
               </a>
             </div>

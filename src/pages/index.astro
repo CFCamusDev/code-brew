@@ -6,7 +6,6 @@ import Hero from '../components/Hero.astro';
 import TrustBar from '../components/TrustBar.astro';
 import Manifesto from '../components/Manifesto.astro';
 import Pipeline from '../components/Pipeline.astro';
-import Products from '../components/Products.astro';
 import Origin from '../components/Origin.astro';
 import TeamSection from '../components/TeamSection.astro';
 import RitualVideo from '../components/RitualVideo.astro';
@@ -20,11 +19,11 @@ const questions = [
   ['¿Puedo pedir café para mi equipo?', 'Sí. Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos la propuesta, las presentaciones y la entrega directamente contigo.']
 ];
 ---
-<Layout title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para quienes convierten una idea en algo real. De Amazonas a tu escritorio.">
- <Header /><main id="main-content"><Hero /><TrustBar /><Manifesto /><Pipeline /><Products /><Origin />
+<Layout pageTransitions title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para quienes convierten una idea en algo real. De Amazonas a tu escritorio.">
+ <Header /><main id="main-content"><Hero /><TrustBar /><Manifesto /><Pipeline /><Origin />
  <section id="ritual" class="cb-section cb-ritual"><div class="cb-wrap"><div class="cb-section-heading"><div><p class="cb-label">Una pausa bien hecha</p><h2>Tu mejor rutina empieza <em>aquí.</em></h2></div></div><div class="cb-ritual-grid">{[['Elige tu punto de partida.','Hotfix, nuestro espresso de tueste medio-oscuro. Los próximos perfiles se revelarán muy pronto.'],['Hazlo a tu manera.','En grano si tienes molino. Molido para tu método si quieres ir directo. Te ayudamos a elegir.'],['Una pausa. Y seguimos.','Aléjate de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.']].map(([title,text],i)=><article data-reveal><span>0{i+1}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div><details class="cb-ritual-video"><summary>Una pausa para ver el ritual V60 ↗</summary><RitualVideo /></details></div></section>
  <TeamSection />
  <section class="cb-section cb-faq"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Antes del primer sorbo</p><h2>Sin dudas.<br /><em>Con café.</em></h2><p>Y si queda alguna, <a href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos ↗</a>.</p></div><div class="cb-faq-list">{questions.map(([q,a],i)=><details open={i===0}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>
- <section class="cb-closing cb-dark cb-section"><div class="cb-wrap cb-stack"><p class="cb-label">Menos ruido. Más ritual.</p><h2>¿Listo para tu<br /><em>próximo café?</em></h2><div class="cb-actions"><a class="cb-btn cb-accent" href="#productos">Ir a la tienda ↗</a><a class="cb-btn cb-glass" href="#pipeline">Ver el Pipeline</a></div></div></section>
+ <section class="cb-closing cb-dark cb-section"><div class="cb-wrap cb-stack"><p class="cb-label">Menos ruido. Más ritual.</p><h2>¿Listo para tu<br /><em>próximo café?</em></h2><div class="cb-actions"><a class="cb-btn cb-accent" href="/producto/hotfix">Comprar Hotfix ↗</a><a class="cb-btn cb-glass" href="#pipeline">Ver el Pipeline</a></div></div></section>
  </main><Footer /><ScrollAnimations />
 </Layout>

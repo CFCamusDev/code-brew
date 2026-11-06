@@ -100,7 +100,7 @@ export default function CheckoutApp() {
       <div className="checkout-empty">
         <p className="cart-code">// carrito vacío</p>
         <h1>Aún no hay café en tu pedido.</h1>
-        <a className="button primary" href="/#productos">
+        <a className="button primary" href="/#pipeline">
           Elegir mi café <span aria-hidden="true">↗</span>
         </a>
       </div>
