@@ -1,4 +1,4 @@
-import hotfixThumbnail from '../../assets/pipeline/hotfix-front.webp';
+import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { useEffect, useRef, useState } from 'react';
 import { MAX_QUANTITY } from '../../lib/shop/limits';
 import { formatPEN } from '../../lib/shop/format';

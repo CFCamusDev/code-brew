@@ -1,4 +1,4 @@
-import hotfixThumbnail from '../../assets/pipeline/hotfix-front.webp';
+import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { track, quoteAnalytics } from '../../lib/analytics';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useStore } from '@nanostores/react';

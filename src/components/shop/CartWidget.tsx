@@ -1,4 +1,4 @@
-import hotfixThumbnail from '../../assets/pipeline/hotfix-front.webp';
+import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
 import { cartCount, cartLines, cartOpen, describeSku, removeFromCart, setQuantity } from '../../lib/shop/cart';
@@ -78,6 +78,14 @@ export default function CartWidget() {
               ×
             </button>
           </header>
+
+          {quote && quote.zones.some(zone => zone.freeFromBags !== null) && (
+            <aside className="cb-cart-shipping" aria-label="Condiciones de envío gratis">
+              {quote.zones.filter(zone => zone.freeFromBags !== null).map(zone => (
+                <p key={zone.slug}>{zone.name}: envío gratis desde {zone.freeFromBags} bolsas.</p>
+              ))}
+            </aside>
+          )}
 
           {lines.length === 0 ? (
             <div className="cart-empty">

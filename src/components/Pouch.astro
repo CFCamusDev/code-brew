@@ -9,16 +9,20 @@ interface Props {
   eager?: boolean;
 }
 const { product = 'hotfix', view = 'front', scale = 1, locked = false, eager = false } = Astro.props;
-const images = import.meta.glob<{ default: ImageMetadata }>('../assets/pipeline/*.webp', { eager: true });
+const images = import.meta.glob<{ default: ImageMetadata }>('../assets/pipeline/optimized/*.webp', { eager: true });
 // Hotfix does not have a flat render: use its real front, never a synthetic bag.
-const source = images[`../assets/pipeline/${product}-${view}.webp`]?.default
-  ?? images[`../assets/pipeline/${product}-front.webp`]?.default;
+const render = (width: number) => images[`../assets/pipeline/optimized/${product}-${view}-${width}.webp`]?.default
+  ?? images[`../assets/pipeline/optimized/${product}-front-${width}.webp`]?.default;
+const source = render(720);
 if (!source) throw new Error(`Render de Pipeline desconocido: ${product}`);
+const imageSrcset = [240, 480, 720].map(width => render(width)).filter(Boolean).map(asset => `${asset.src} ${asset.width}w`).join(', ');
 const names: Record<string, string> = { hotfix: 'Hotfix', coldstart: 'Cold Start', deploy: 'Deploy', merge: 'Merge', rollback: 'Rollback' };
 const views = { front: 'frente', front2: 'frente en perspectiva', flat: 'vista plana', back: 'reverso', back3d: 'reverso en perspectiva' };
+const displayWidth = Math.round(240 * scale);
+const imageSizes = `(max-width: 600px) ${Math.min(300, Math.round(displayWidth * .67))}px, ${displayWidth}px`;
 ---
 <span class="cb-pouch" style={`--pouch-scale:${scale}`}>
-  <Image src={source} alt={`Bolsa CodeBrew ${names[product] ?? product}, ${views[view]}`} widths={[240, 400, 640, 900]} sizes="(max-width: 600px) 65vw, 380px" width={640} format="webp" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} />
+  <Image src={import.meta.env.DEV ? source : source.src} srcset={imageSrcset} alt={`Bolsa CodeBrew ${names[product] ?? product}, ${views[view]}`} sizes={imageSizes} width={source.width} height={source.height} format="webp" decoding={eager ? 'sync' : 'async'} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} />
   {locked && <span class="cb-pouch-lock">● Próximamente</span>}
 </span>
 <style>
