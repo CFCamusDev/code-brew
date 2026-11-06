@@ -12,11 +12,6 @@ const live = await getLiveCatalog();
 const grindsOf=(slug:string)=>live?.grinds.get(slug) ?? catalog.products.find(p=>p.slug===slug)!.grinds;
 const priceOf=(sku:string,fallback:number)=>live?.variants.get(sku)?.price ?? fallback;
 const availableOf=(sku:string)=>live ? live.variants.get(sku)?.available ?? false : true;
-const pack = catalog.products.find(p=>p.slug==='developer')!;
-const packVariant = pack.variants[0];
-const packPrice = priceOf(packVariant.sku, packVariant.price);
-const packAvailable = availableOf(packVariant.sku);
-const packGrinds = grindsOf('developer');
 const profiles = [
  {id:'monteverde',name:'Hotfix',tag:'01 / PIPELINE · STABLE',description:'Espresso de Rodríguez de Mendoza, Amazonas. Cuerpo alto, dulzor a chancaca y un final limpio de cacao. Hay bugs que no esperan al próximo sprint: para esos, existe un hotfix.',roast:'Tueste medio-oscuro',color:'#254b38',image:'hotfix',ids:['monteverde-250','monteverde-500'],grinds:grindsOf('monteverde')},
 ];
@@ -36,11 +31,8 @@ const profiles = [
 
     </div>
 
-  <article class="blend-panel cb-pack" data-profile="developer" data-product="Pack Developer" id="blend-developer">
-    <div class="blend-info"><p class="eyebrow">const favorito = true;</p><h3>Pack Developer</h3><p class="blend-description">Dos bolsas de 250 g. Elige tu combinación y molienda al coordinar el pedido.</p><div class="cb-pack-images" aria-label="Empaques de Merge, Hotfix, Deploy, Rollback y Coldstart">{['merge','hotfix','deploy','rollback','coldstart'].map(product=><Pouch product={product} scale={.42} />)}</div><div class="blend-price-row"><span class="product-price">S/ {packPrice.toFixed(2)}</span><span>2 × 250 g</span></div><div class="product-options"><label>Presentación<select class="variant-select" aria-label="Presentación de Pack Developer"><option value={packVariant.format} data-price={packPrice} data-sku={packVariant.sku} data-available={String(packAvailable)}>{packVariant.format}</option></select></label><label>Molienda<select class="grind-select" aria-label="Molienda de Pack Developer">{packGrinds.map(g=><option>{g}</option>)}</select></label></div><p class="reserve-note" hidden={packAvailable}>Nuevo lote en camino · Resérvalo y te avisamos apenas esté listo.</p><button type="button" class="button primary order-link add-to-cart">{packAvailable?'Este es mi café ':'Reservar mi café '}<span aria-hidden="true">{packAvailable?'+':'→'}</span></button><a class="order-alt whatsapp-order" href={await getWhatsAppUrl('¡Hola CodeBrew! Quisiera coordinar un Pack Developer.')} target="_blank" rel="noopener noreferrer">o pídelo por WhatsApp ↗</a></div>
-  </article>
-  <article class="cb-shop-team"><p class="cb-label">Para equipos</p><h3>¿Café para todo tu equipo?</h3><p>Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos presentaciones y entrega contigo.</p><a class="cb-btn" href={await getWhatsAppUrl('¡Hola CodeBrew! Quisiera café para mi equipo.')} target="_blank" rel="noopener noreferrer">Cotizar por WhatsApp ↗</a></article>
   <article class="cb-shop-next"><Pouch product="coldstart" view="front2" /><div class="cb-glass"><p class="cb-label">PIPELINE / 02</p><h3>Cold Start</h3><p>Cold brew en molienda gruesa. Origen, proceso y notas de cata se revelan en su lanzamiento.</p><a class="cb-btn" href="/producto/coldstart">Conocer el perfil ↗</a></div></article>
+  <article class="cb-shop-team"><p class="cb-label">Para equipos</p><h3>¿Café para todo tu equipo?</h3><p>Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos presentaciones y entrega contigo.</p><a class="cb-btn" href={await getWhatsAppUrl('¡Hola CodeBrew! Quisiera café para mi equipo.')} target="_blank" rel="noopener noreferrer">Cotizar por WhatsApp ↗</a></article>
   </div>
   <a class="cb-profile-link" href="/producto/hotfix">Conoce el perfil y la receta de Hotfix ↗</a><p class="catalog-note">Hotfix ya es parte de tu ritual. Los próximos perfiles de Pipeline se revelarán muy pronto.</p>
   <noscript><p>También puedes <a href={await getWhatsAppUrl()}>consultar todos los perfiles y formatos por WhatsApp</a>.</p></noscript>
