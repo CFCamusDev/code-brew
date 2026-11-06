@@ -1,0 +1,11 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ProductProfile from '../../components/ProductProfile.astro';
+import { PIPELINE } from '../../data/pipeline';
+export const prerender = false;
+const product = PIPELINE.find(p=>p.slug===Astro.params.slug);
+if (!product) return new Response('Página no encontrada', {status:404});
+---
+<Layout title={product.name+' · Pipeline — CodeBrew'} description={product.tagline}><Header /><main id="main-content"><ProductProfile product={product} /></main><Footer /></Layout>
