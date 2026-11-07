@@ -408,3 +408,17 @@
  .cb-site .cb-nav-scroll-profile .cb-current-profile,.cb-site .cb-nav-scroll-profile .cb-current-profile i{pointer-events:none}
  .cb-site .cb-nav-scroll-profile .cb-profile-dock .cb-product-profiles{position:absolute;top:calc(100% + 8px);left:0;right:0}
 }
+/* Equal profile widths and shared outer alignment with the desktop header. */
+@media(min-width:901px){
+ .cb-site .cb-profile-home{width:min(1160px,calc(100vw - 32px));position:relative;left:50%;translate:-50% 0}
+ .cb-site .cb-profile-home .cb-product-profiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+ .cb-site .cb-profile-home .cb-profile-pill{justify-content:center;min-width:0;padding:10px;gap:7px;font-size:13px;white-space:nowrap}
+ .cb-site .cb-profile-home .cb-profile-pill small{font-size:10px}
+ .cb-site .cb-profile-dock .cb-product-profiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+ .cb-site .cb-profile-dock .cb-profile-pill{justify-content:center;min-width:0;padding:10px 8px;gap:7px;font-size:13px}
+}
+@media(min-width:901px) and (max-width:1150px){
+ .cb-site .cb-profile-home .cb-profile-pill{flex-wrap:wrap;row-gap:3px}
+ .cb-site .cb-profile-home .cb-profile-pill small{flex-basis:100%;text-align:center}
+ .cb-site .cb-profile-dock .cb-profile-pill .cb-label{display:none}
+}
