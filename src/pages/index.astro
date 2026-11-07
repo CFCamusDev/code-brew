@@ -1,25 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import BotanicalMark from '../components/BotanicalMark.astro';
 import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 import Hero from '../components/Hero.astro';
-import Products from '../components/Products.astro';
-import LogoMark from '../components/LogoMark.astro';
-import Experience from '../components/Experience.astro';
-import RitualVideo from '../components/RitualVideo.astro';
+import TrustBar from '../components/TrustBar.astro';
+import Manifesto from '../components/Manifesto.astro';
+import Pipeline from '../components/Pipeline.astro';
+import Origin from '../components/Origin.astro';
 import TeamSection from '../components/TeamSection.astro';
-import OriginMap from '../components/OriginMap.astro';
+import RitualVideo from '../components/RitualVideo.astro';
+import ScrollAnimations from '../components/ScrollAnimations.astro';
 import { getWhatsAppUrl } from '../data/config';
-import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/settings';
-
-// Se renderiza por solicitud para mostrar precios y stock vigentes del panel.
 export const prerender = false;
-const socialLinks = await getSetting<SocialLinks>(SOCIAL_LINKS_KEY, {
-  instagram: 'https://www.instagram.com/codebrewc/',
-  tiktok: 'https://www.tiktok.com/@coffecodebrew',
-  facebook: '',
-  whatsapp: ''
-});
 const questions = [
   ['¿Cuál elijo si es mi primer café CodeBrew?', 'Empieza por Hotfix, nuestro perfil de la línea Pipeline: espresso de tueste medio-oscuro, con cuerpo alto, dulzor a chancaca y un final limpio de cacao. Los próximos perfiles se revelarán muy pronto.'],
   ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, selecciona la molienda para tu cafetera al pedir Hotfix. También puedes consultarnos por WhatsApp.'],
@@ -27,141 +19,11 @@ const questions = [
   ['¿Puedo pedir café para mi equipo?', 'Sí. Cuéntanos cuántas personas son y si buscas café para la oficina o un regalo. Coordinamos la propuesta, las presentaciones y la entrega directamente contigo.']
 ];
 ---
-<Layout title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para programadores. De Amazonas a tu escritorio: elige tu tueste, formato y molienda, y pide directamente por WhatsApp.">
-  <Header />
-  <Experience />
-  <main id="main-content">
-    <Hero />
-    <section class="manifesto section" data-reveal>
-<p class="eyebrow">ESPECIALIDAD EN EL CAFÉ. IDENTIDAD EN EL CÓDIGO.</p>
-<h2>Hay cosas que no se automatizan.<br />
-<span>El placer de un buen café es una de ellas.</span>
-</h2>
-<p>Nos gusta construir cosas. Y también hacer una pausa para disfrutarlas. CodeBrew une el café de origen peruano con la cultura de quienes viven entre ideas, código y nuevos proyectos.</p>
-<span class="manifesto-code">const ritual = café + pausa + código;</span>
-</section>
-    <Products />
-    <section id="origen" class="origin-section">
-<div class="origin-photo">
-<OriginMap />
-</div>
-<div class="origin-copy">
-<p class="eyebrow">02 / DESDE AMAZONAS, PERÚ</p>
-<h2>Antes del código,<br />está la <span class="serif-word">tierra.</span>
-</h2>
-<p>Nuestro café comienza en Rodríguez de Mendoza, Amazonas. Un origen peruano que merece su propio lugar en tu escritorio.</p>
-<p>El tueste artesanal y la elección de la molienda son parte de un mismo propósito: que encuentres una taza que quieras preparar todos los días.</p>
-<dl class="origin-facts">
-<div>
-<dt>PROCEDENCIA</dt>
-<dd>Rodríguez de Mendoza</dd>
-</div>
-<div>
-<dt>REGIÓN</dt>
-<dd>Amazonas, Perú</dd>
-</div>
-<div>
-<dt>CAFÉ</dt>
-<dd>100% arábica</dd>
-</div>
-<div>
-<dt>TUESTE</dt>
-<dd>Artesanal</dd>
-</div>
-</dl>
-<a href="#productos" class="text-link">Del origen a tu taza <span aria-hidden="true">↗</span>
-</a>
-</div>
-</section>
-    <section id="ritual" class="section ritual-section">
-<div class="section-heading">
-<div>
-<p class="eyebrow">03 / UNA PAUSA BIEN HECHA</p>
-<h2>Tu mejor rutina<br />empieza <span class="serif-word">aquí.</span>
-</h2>
-</div>
-<p>No necesitas ser barista.<br />Solo encontrar tu forma de disfrutarlo.</p>
-</div>
-<div class="ritual-grid">
-<RitualVideo />
-<div class="ritual-steps">
-<article>
-<span>01</span>
-<div>
-<h3>Elige tu punto de partida.</h3>
-<p>Tueste medio para tu día a día, medio-oscuro para explorar más intensidad o un dúo para descubrir ambos.</p>
-</div>
-</article>
-<article>
-<span>02</span>
-<div>
-<h3>Hazlo a tu manera.</h3>
-<p>En grano si tienes molino. Molido para tu método si quieres ir directo a la preparación. Te ayudamos a elegir.</p>
-</div>
-</article>
-<article>
-<span>03</span>
-<div>
-<h3>Una pausa. Y seguimos.</h3>
-<p>Aléjate un momento de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.</p>
-</div>
-</article>
-<a href={await getWhatsAppUrl('¡Hola CodeBrew! Quisiera ayuda para elegir un café y la molienda para mi cafetera.')} target="_blank" rel="noopener noreferrer" class="text-link">Ayúdame a elegir <span aria-hidden="true">↗</span>
-</a>
-</div>
-</div>
-</section>
-    <TeamSection />
-    <section class="section faq-section">
-<div>
-<p class="eyebrow">ANTES DEL PRIMER SORBO</p>
-<h2>Sin dudas.<br />
-<span class="serif-word">Con café.</span>
-</h2>
-<p>Y si queda alguna, <a class="inline-link" href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos</a>.</p>
-</div>
-<div class="faq-list">{questions.map(([q, a]) => <details>
-<summary>{q}<span aria-hidden="true">+</span>
-</summary>
-<p>{a}</p>
-</details>)}</div>
-</section>
-    <section class="closing">
-<div class="closing-panel">
-<p class="eyebrow">Menos ruido. Más ritual.</p>
-<h2>¿Listo para tu<br />
-<span class="serif-word">próximo café?</span>
-</h2>
-<a class="button primary" href="#productos">Encuentra tu blend <span aria-hidden="true">↗</span>
-</a>
-</div>
-<span class="closing-star" aria-hidden="true"><BotanicalMark kind="bean" /></span>
-</section>
-  </main>
-  <footer class="site-footer">
-<div class="footer-top">
-<a class="wordmark" href="#">
-<LogoMark size={32} light />codebrew
-</a>
-<p>Café de origen.<br />Espíritu developer.</p>
-<a href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Hablemos por WhatsApp ↗</a>
-</div>
-<nav class="footer-network-links" aria-label="Redes sociales de Codebrew">
-  {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg><span>Instagram ↗</span></a>}
-  {socialLinks.tiktok && <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 2h-3.2v13.3a3 3 0 1 1-2.6-3V9a6.3 6.3 0 1 0 5.8 6.3V8.6a8.1 8.1 0 0 0 4.7 1.5V6.9A4.8 4.8 0 0 1 16.6 2Z"/></svg><span>TikTok ↗</span></a>}
-  {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg><span>Facebook ↗</span></a>}
-</nav>
-<nav class="footer-policy-links" aria-label="Políticas de Codebrew">
-  <a href="/politicas/terminos">Términos y condiciones</a>
-  <a href="/politicas/privacidad">Privacidad</a>
-  <a href="/politicas/envios-devoluciones">Envíos y devoluciones</a>
-  <a href="/reclamos">Libro de Reclamaciones</a>
-</nav>
-<div class="footer-bottom">
-<span>© {new Date().getFullYear()} CodeBrew. Hecho en Perú.</span>
-<span>Buen café. Mejor código.</span>
-<a href="#">Volver arriba ↑</a>
-</div>
-<span class="footer-wordmark" aria-hidden="true">codebrew</span>
-</footer>
+<Layout pageTransitions title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para quienes convierten una idea en algo real. De Amazonas a tu escritorio.">
+ <Header /><main id="main-content"><Hero /><TrustBar /><Manifesto /><Pipeline /><Origin />
+ <section id="ritual" class="cb-section cb-ritual"><div class="cb-wrap"><div class="cb-section-heading"><div><p class="cb-label">Una pausa bien hecha</p><h2>Tu mejor rutina empieza <em>aquí.</em></h2></div></div><div class="cb-ritual-grid">{[['Elige tu punto de partida.','Hotfix, nuestro espresso de tueste medio-oscuro. Los próximos perfiles se revelarán muy pronto.'],['Hazlo a tu manera.','En grano si tienes molino. Molido para tu método si quieres ir directo. Te ayudamos a elegir.'],['Una pausa. Y seguimos.','Aléjate de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.']].map(([title,text],i)=><article data-reveal><span>0{i+1}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div><details class="cb-ritual-video"><summary>Una pausa para ver el ritual V60 ↗</summary><RitualVideo /></details></div></section>
+ <TeamSection />
+ <section class="cb-section cb-faq"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Antes del primer sorbo</p><h2>Sin dudas.<br /><em>Con café.</em></h2><p>Y si queda alguna, <a href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos ↗</a>.</p></div><div class="cb-faq-list">{questions.map(([q,a],i)=><details open={i===0}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>
+ <section class="cb-closing cb-dark cb-section"><div class="cb-wrap cb-stack"><p class="cb-label">Menos ruido. Más ritual.</p><h2>¿Listo para tu<br /><em>próximo café?</em></h2><div class="cb-actions"><a class="cb-btn cb-accent" href="/producto/hotfix">Comprar Hotfix ↗</a><a class="cb-btn cb-glass" href="#pipeline">Ver el Pipeline</a></div></div></section>
+ </main><Footer /><ScrollAnimations />
 </Layout>

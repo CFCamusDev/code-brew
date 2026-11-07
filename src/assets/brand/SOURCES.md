@@ -25,3 +25,6 @@ Prompt: Photorealistic cutout of the reference matte olive forest-green ceramic 
 
 ## Video del ritual (método V60)
 Video aportado por el usuario (metodov60_limpio.mp4, 2026-10-28). Se recomprimió en H.264 sin audio (CRF 24, faststart) a public/assets/brand/ritual-v60.mp4; la imagen de espera ritual-v60-poster.jpg es el fotograma del segundo 19,5. Reemplaza al video de la taza (ritual-orbit.mp4).
+
+## Limpieza del cliente (2026-11-06)
+Las versiones históricas `hotfix-daily-driver.webp`, `hotfix-daily-driver-right.webp` y `workspace-hero.webp` se retiraron al no tener consumidores en el cliente actual ni en el código 3D reservado. Se conserva arriba su procedencia como registro histórico. Los empaques actuales provienen de `src/assets/pipeline/`; las texturas 3D de `public/assets/brand/hotfix-stable-*.webp` se mantienen.

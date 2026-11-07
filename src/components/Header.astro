@@ -1,22 +1,22 @@
 ---
-import LogoMark from './LogoMark.astro';
+
 import CartWidget from './shop/CartWidget';
+import LogoMark from './LogoMark.astro';
 ---
-<div class="announcement">De Amazonas, Perú, a tu próxima gran idea. <span>Un origen. Muchas posibilidades.</span>
-</div>
-<header class="site-header">
-  <a class="wordmark" href="#" aria-label="CodeBrew, inicio">
-<LogoMark size={32} />codebrew
+
+<div class="cb-header-host"><header class="site-header cb-nav cb-glass-dark">
+  <a class="wordmark" href="/" aria-label="CodeBrew, inicio">
+<span class="cb-header-wordmark">codebrew</span><span class="cb-header-symbol"><LogoMark light size={32} /></span>
 </a>
   <nav id="main-nav" aria-label="Navegación principal">
-    <a href="#productos">Nuestro café</a>
-<a href="#origen">El origen</a>
-<a href="#ritual">Tu ritual</a>
-<a href="#empresas">Para equipos</a>
+    <a href="/#pipeline">Pipeline</a>
+<a href="/#origen">Origen</a>
+
+<a href="/#empresas">Equipos</a>
   </nav>
+  <div class="cb-profile-dock" hidden><button type="button" class="cb-profile-trigger" aria-expanded="false" aria-controls="product-profiles" aria-label="Cambiar perfil del Pipeline"><span class="cb-current-profile"></span><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg></button></div>
   <div class="header-actions">
-  <a class="header-cta" href="#productos">Encuentra tu café <span aria-hidden="true">↗</span>
-</a>
+  
   <CartWidget client:idle />
   </div>
   <button class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Abrir menú">
@@ -25,7 +25,7 @@ import CartWidget from './shop/CartWidget';
 <span>
 </span>
 </button>
-</header>
+</header></div>
 <script>
   const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
   const nav = document.querySelector<HTMLElement>('#main-nav');

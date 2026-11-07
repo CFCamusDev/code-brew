@@ -1,0 +1,5 @@
+/* Locally served variable Latin fonts. Original OFL licenses are kept beside them. */
+@font-face{font-family:'EB Garamond';font-style:normal;font-weight:400 800;font-display:swap;src:url('../assets/fonts/eb-garamond-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'EB Garamond';font-style:italic;font-weight:400 800;font-display:swap;src:url('../assets/fonts/eb-garamond-latin-wght-italic.woff2') format('woff2')}
+@font-face{font-family:'Geist';font-style:normal;font-weight:100 900;font-display:swap;src:url('../assets/fonts/geist-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Geist Mono';font-style:normal;font-weight:100 900;font-display:swap;src:url('../assets/fonts/geist-mono-latin-wght-normal.woff2') format('woff2')}

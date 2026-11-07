@@ -1,3 +1,4 @@
+import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { track, quoteAnalytics } from '../../lib/analytics';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useStore } from '@nanostores/react';
@@ -99,7 +100,7 @@ export default function CheckoutApp() {
       <div className="checkout-empty">
         <p className="cart-code">// carrito vacío</p>
         <h1>Aún no hay café en tu pedido.</h1>
-        <a className="button primary" href="/#productos">
+        <a className="button primary" href="/#pipeline">
           Elegir mi café <span aria-hidden="true">↗</span>
         </a>
       </div>
@@ -197,6 +198,7 @@ export default function CheckoutApp() {
             <ul className="cart-lines">
               {quote.lines.map(line => (
                 <li key={`${line.sku}|${line.grind}`} className="cart-line">
+                  {line.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                   <div>
                     <p className="cart-line-name">
                       {line.productName} <span className="cart-line-qty">× {line.quantity}</span>
