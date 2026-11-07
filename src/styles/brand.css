@@ -372,3 +372,29 @@
  .cb-site .cb-profile-dock .cb-product-profiles{align-items:stretch}
  .cb-site .cb-profile-dock .cb-profile-pill{width:100%;border-radius:14px;justify-content:flex-start}
 }
+
+/* Scroll-driven morph: no timed animation or layout-dependent threshold. */
+.cb-site .cb-nav.cb-nav-scroll-profile{--cb-dock-progress:0;display:grid;grid-template-columns:calc(140px - 100px * var(--cb-dock-progress)) minmax(0,1fr) calc(96px - 52px * var(--cb-dock-progress));grid-template-rows:1fr;gap:18px;width:min(calc(1160px + 120px * var(--cb-dock-progress)),calc(100% - 32px));height:calc(64px + 16px * var(--cb-dock-progress));padding:0 12px 0 28px;transition:none;background:linear-gradient(135deg,rgba(15,31,25,calc(.4 + .42 * var(--cb-dock-progress))),rgba(15,31,25,calc(.3 + .42 * var(--cb-dock-progress))))}
+.cb-site .cb-nav-scroll-profile .wordmark{grid-column:1;grid-row:1;position:relative;height:36px;display:flex;align-items:center}
+.cb-site .cb-nav-scroll-profile .cb-header-wordmark{position:absolute;opacity:calc(1 - var(--cb-dock-progress));white-space:nowrap}
+.cb-site .cb-nav-scroll-profile .cb-header-symbol{position:absolute;display:block;opacity:var(--cb-dock-progress)}
+.cb-site .cb-nav-scroll-profile #main-nav{grid-column:2;grid-row:1;justify-self:center;opacity:calc(1 - var(--cb-dock-progress))}
+.cb-site .cb-nav-scroll-profile .cb-profile-dock{grid-column:2;grid-row:1;opacity:var(--cb-dock-progress);transform:translateY(calc(3px * (1 - var(--cb-dock-progress))));min-width:0}
+.cb-site .cb-nav-scroll-profile .header-actions{grid-column:3;grid-row:1;margin:0;justify-self:end}
+.cb-site .cb-nav.cb-nav-scroll-profile .cart-button{width:calc(96px - 52px * var(--cb-dock-progress));min-width:0;padding:0;gap:calc(8px * (1 - var(--cb-dock-progress)))}
+.cb-site .cb-nav-scroll-profile .cart-button::after{display:none}
+.cb-site .cb-nav-scroll-profile .cb-cart-label{opacity:calc(1 - var(--cb-dock-progress));max-width:calc(48px * (1 - var(--cb-dock-progress)));overflow:hidden;white-space:nowrap}
+.cb-site .cb-nav-scroll-profile .cb-product-profiles,.cb-site .cb-nav-scroll-profile .cb-profile-trigger{animation:none}
+@media(max-width:900px) and (min-width:561px){.cb-site .cb-nav.cb-nav-scroll-profile{grid-template-columns:calc(140px - 100px * var(--cb-dock-progress)) minmax(0,1fr) calc(96px - 52px * var(--cb-dock-progress)) calc(44px * (1 - var(--cb-dock-progress)));gap:12px}.cb-site .cb-nav-scroll-profile .menu-toggle{grid-column:4;grid-row:1;opacity:calc(1 - var(--cb-dock-progress));overflow:hidden;width:calc(44px * (1 - var(--cb-dock-progress)))}}
+@media(max-width:560px){
+ .cb-site .cb-nav.cb-nav-scroll-profile{height:calc(56px + 8px * var(--cb-dock-progress));grid-template-columns:calc(110px - 78px * var(--cb-dock-progress)) minmax(0,1fr) 44px calc(44px * (1 - var(--cb-dock-progress)));gap:calc(8px + 4px * var(--cb-dock-progress));padding:0 9px 0 18px}
+ .cb-site .cb-nav-scroll-profile .menu-toggle{grid-column:4;grid-row:1;width:calc(44px * (1 - var(--cb-dock-progress)));opacity:calc(1 - var(--cb-dock-progress));overflow:hidden}
+ .cb-site .cb-nav.cb-nav-scroll-profile .cart-button{width:44px;min-width:44px;gap:0}
+ .cb-site .cb-nav-scroll-profile .cb-profile-dock{position:static;transform:none}
+ .cb-site .cb-nav-scroll-profile .cb-cart-label{display:none}
+ .cb-site .cb-nav-scroll-profile #main-nav.is-open{position:absolute;grid-column:auto;grid-row:auto;justify-self:stretch}
+ .cb-site .cb-nav-scroll-profile .cb-profile-trigger{padding:0;gap:6px}
+}
+/* Fade the old controls out before revealing the new ones to avoid overlapping labels. */
+.cb-site .cb-nav-scroll-profile .cb-header-wordmark,.cb-site .cb-nav-scroll-profile #main-nav,.cb-site .cb-nav-scroll-profile .menu-toggle{opacity:clamp(0,calc(1 - 2 * var(--cb-dock-progress)),1)}
+.cb-site .cb-nav-scroll-profile .cb-header-symbol,.cb-site .cb-nav-scroll-profile .cb-profile-dock{opacity:clamp(0,calc(2 * var(--cb-dock-progress) - 1),1)}

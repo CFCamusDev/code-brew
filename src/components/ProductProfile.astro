@@ -36,40 +36,56 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
   trigger?.addEventListener('click', () => { const open = trigger.getAttribute('aria-expanded') !== 'true'; header.classList.toggle('cb-profiles-open',open); trigger.setAttribute('aria-expanded',String(open)); });
   document.addEventListener('click', event => { if (!dock.contains(event.target as Node)) closeProfiles(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && trigger?.getAttribute('aria-expanded') === 'true') { closeProfiles(); trigger.focus(); } });
-  let docked = false;
+  // Keep the source in flow: its geometry is the stable scroll timeline.
+  const dockSelector = selector.cloneNode(true) as HTMLElement;
+  selector.id = 'product-profiles-source';
+  dockSelector.id = 'product-profiles';
+  dock.append(dockSelector);
+  dock.hidden = false;
+  header.classList.add('cb-nav-scroll-profile');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let frame = 0;
+  let lastInteractive = false;
   const update = () => {
    frame = 0;
-   // Use the original header height so expanding it cannot move the threshold.
-   const threshold = header.getBoundingClientRect().top + (innerWidth <= 560 ? 56 : 64);
-   const shouldDock = home.getBoundingClientRect().top <= threshold - (docked ? 0 : 2);
-   if (shouldDock === docked) return;
-   const focused = selector.contains(document.activeElement) ? document.activeElement as HTMLElement : null;
-   if (shouldDock) {
-    home.style.height = home.getBoundingClientRect().height + 'px';
-    dock.hidden = false;
-    dock.append(selector);
-    header.classList.add('cb-nav-profile-mode');
-    header.querySelector('#main-nav')?.classList.remove('is-open');
-    const toggle = header.querySelector<HTMLButtonElement>('.menu-toggle');
-    toggle?.setAttribute('aria-expanded','false');
-    toggle?.setAttribute('aria-label','Abrir menú');
-    const active = selector.querySelector<HTMLElement>('[aria-current="page"]');
-    if (active) selector.scrollLeft = Math.max(0, active.offsetLeft - selector.offsetLeft - (selector.clientWidth - active.clientWidth) / 2);
-   } else {
+   const mobile = innerWidth <= 560;
+   const baseHeight = mobile ? 56 : 64;
+   const bounds = selector.getBoundingClientRect();
+   // At 50% occlusion begin the morph; at 100% it is fully integrated.
+   // Use the original lower edge of the header to avoid feedback as it grows.
+   const edge = header.getBoundingClientRect().top + baseHeight;
+   const covered = Math.max(0,Math.min(1,(edge - bounds.top) / bounds.height));
+   const rawProgress = Math.max(0,Math.min(1,(covered - .5) * 2));
+   const progress = reduced.matches ? Number(rawProgress >= 1) : rawProgress;
+   header.style.setProperty('--cb-dock-progress',String(progress));
+   header.dataset.dockProgress = progress.toFixed(3);
+   selector.style.opacity = String(1 - progress);
+   const interactive = progress >= .5;
+   dock.inert = !interactive;
+   dock.setAttribute('aria-hidden',String(!interactive));
+   selector.inert = interactive;
+   selector.setAttribute('aria-hidden',String(interactive));
+   const main = header.querySelector<HTMLElement>('#main-nav');
+   const menu = header.querySelector<HTMLButtonElement>('.menu-toggle');
+   main?.toggleAttribute('inert',interactive);
+   menu?.toggleAttribute('inert',interactive);
+   if (interactive !== lastInteractive) {
     closeProfiles();
-    home.append(selector);
-    home.style.height = '';
-    header.classList.remove('cb-nav-profile-mode');
-    dock.hidden = true;
+    if (interactive) {
+     main?.classList.remove('is-open');
+     menu?.setAttribute('aria-expanded','false');
+     menu?.setAttribute('aria-label','Abrir menú');
+     const active = dockSelector.querySelector<HTMLElement>('[aria-current="page"]');
+     if (active && !mobile) dockSelector.scrollLeft = Math.max(0,active.offsetLeft - dockSelector.offsetLeft - (dockSelector.clientWidth - active.clientWidth) / 2);
+    }
+    lastInteractive = interactive;
    }
-   docked = shouldDock;
-   focused?.focus({preventScroll:true});
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
   addEventListener('scroll',schedule,{passive:true});
   addEventListener('resize',() => { closeProfiles(); schedule(); });
   addEventListener('pageshow',schedule);
+  reduced.addEventListener('change',schedule);
   update();
  }
 
