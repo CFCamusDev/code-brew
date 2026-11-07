@@ -1,5 +1,7 @@
 ---
 import Pouch from './Pouch.astro';
+import { Image } from 'astro:assets';
+import coffeeBean from '../assets/decor/roasted-coffee-bean.webp';
 ---
 <section id="top" class="cb-hero" aria-labelledby="hero-title">
  <div class="cb-wrap cb-hero-grid">
@@ -15,7 +17,7 @@ import Pouch from './Pouch.astro';
    <div class="cb-hero-bag cb-hero-left cb-float"><Pouch product="coldstart" view="front2" locked scale={1.05} /></div>
    <div class="cb-hero-bag cb-hero-right cb-float"><Pouch product="deploy" locked scale={1} /></div>
    <div class="cb-hero-bag cb-hero-main cb-float"><Pouch product="hotfix" scale={1.5} eager /></div>
-   <span class="cb-bean cb-bean-one" aria-hidden="true"></span><span class="cb-bean cb-bean-two" aria-hidden="true"></span>
+   <span class="cb-bean cb-bean-one" aria-hidden="true"><Image src={coffeeBean} width={96} height={79} alt="" loading="lazy" /></span><span class="cb-bean cb-bean-two" aria-hidden="true"><Image src={coffeeBean} width={96} height={79} alt="" loading="lazy" /></span>
    <span class="cb-glass cb-hotspot cb-hotspot-one"><i></i>Dulzor a chancaca</span>
    <div class="cb-glass cb-release"><span class="cb-label">PIPELINE</span><p><b>01</b> de 05 lanzado</p><div aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div>
   </div>
