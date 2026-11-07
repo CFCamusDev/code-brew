@@ -8,7 +8,7 @@ interface Props { title?: string; description?: string; noindex?: boolean; pageT
 const { pageTransitions = false, noindex = false, title = 'CodeBrew — Buen café. Grandes ideas.', description = 'Café de especialidad de Amazonas, Perú, para quienes crean. Descubre tu próximo ritual y elige tu café en grano o molido.' } = Astro.props;
 ---
 <!doctype html>
-<html lang="es">
+<html lang="es" class="cb-public">
   <head>
     <meta charset="UTF-8" />
     {pageTransitions && <style is:inline>@view-transition { navigation: auto; } @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }</style>}

@@ -425,3 +425,7 @@
 
 /* Keep gallery captions readable over both cream packaging and dark backgrounds. */
 .cb-site .cb-gallery-method.cb-glass,.cb-site .cb-gallery-roast.cb-glass{background:linear-gradient(135deg,rgba(15,31,25,.84),rgba(15,31,25,.76));-webkit-backdrop-filter:blur(28px) saturate(140%);backdrop-filter:blur(28px) saturate(140%);color:#f4f1e9;font-weight:600;border:1px solid #f4f1e94d;box-shadow:inset 0 1px #ffffff26,0 8px 20px #0003;text-shadow:0 1px 2px #0005}
+/* Native anchor navigation on public pages, with clearance for the sticky header. */
+html.cb-public{scroll-behavior:smooth;scroll-padding-top:104px}
+@media(max-width:560px){html.cb-public{scroll-padding-top:88px}}
+@media(prefers-reduced-motion:reduce){html.cb-public{scroll-behavior:auto}}
