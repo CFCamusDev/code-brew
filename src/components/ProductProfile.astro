@@ -9,7 +9,7 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
 ---
 <div class="cb-product" style={'--profile-color:'+p.color+';--profile-tint:'+p.tint+';--profile-glow:'+p.glow}>
  <section id="top" class="cb-product-hero cb-dark"><div class="cb-wrap">
-  <div class="cb-profile-home"><nav class="cb-product-profiles" aria-label="Perfiles del Pipeline">{PIPELINE.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.status==='available'?'Disponible':'Próximamente'}</small></a>)}</nav></div>
+  <div class="cb-profile-home"><nav id="product-profiles" class="cb-product-profiles" aria-label="Perfiles del Pipeline">{PIPELINE.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.status==='available'?'Disponible':'Próximamente'}</small></a>)}</nav></div>
   <div class="cb-product-grid"><div class="cb-gallery"><div class="cb-gallery-stage">{views.map((view,i)=><div data-pouch-view={view} hidden={i!==0} class="cb-gallery-view cb-float"><Pouch transitionName={i===0 ? `pipeline-${p.slug}` : undefined} product={p.slug} view={view} scale={1.9} eager={i===0} /></div>)}<span class="cb-orbit" aria-hidden="true"></span><span class="cb-glass cb-gallery-method">{p.method}</span><span class="cb-glass cb-gallery-roast">{p.roast}</span></div><div class="cb-gallery-thumbs" role="group" aria-label="Vistas de la bolsa">{views.map((view,i)=><button type="button" data-view={view} aria-label={'Ver '+({front:'frente',front2:'frente en perspectiva',flat:'vista plana',back:'reverso',back3d:'reverso en perspectiva'}[view])} aria-pressed={i===0?'true':'false'}><Pouch product={p.slug} view={view} scale={.24} /></button>)}</div></div>
   <div class="cb-product-copy cb-stack"><p class="cb-label">Pipeline {p.num} · {available?'STABLE · DISPONIBLE':'QUEUED · PRÓXIMAMENTE'}</p><h1>{p.name}</h1><p class="cb-product-tagline">{p.tagline}</p><div class="cb-product-chips"><span>{p.method}</span><span>{p.roast}</span><span>Hecho en Perú</span></div>
   {available ? <ProductPurchase catalogSlug={p.catalogSlug} productName={p.name} /> : <div class="cb-product-queued cb-glass"><div class="cb-queued-price"><span class="cb-label">Precio</span><span class="cb-redacted" aria-hidden="true">Por revelar</span></div><p>Este perfil ya tiene nombre y receta. Su origen, proceso y notas de cata se revelan en el lanzamiento.</p><form aria-label={'Aviso de lanzamiento de '+p.name}><label for="mail2">Tu correo</label><input id="mail2" name="email" type="email" placeholder="tu@correo.com" disabled /><button type="button" class="cb-btn cb-accent" disabled>Avísame</button><p>Los avisos todavía no están habilitados.</p></form></div>}
@@ -29,6 +29,13 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
  const selector = home?.querySelector<HTMLElement>('.cb-product-profiles');
  const dock = header?.querySelector<HTMLElement>('.cb-profile-dock');
  if (header && home && selector && dock) {
+  const trigger = dock.querySelector<HTMLButtonElement>('.cb-profile-trigger');
+  const current = dock.querySelector<HTMLElement>('.cb-current-profile');
+  if (current) { const dot = document.createElement('i'); dot.style.background = getComputedStyle(selector.querySelector('[aria-current="page"] i')!).backgroundColor; current.append(dot, document.createTextNode(document.querySelector('.cb-product-copy h1')?.textContent || 'Pipeline')); }
+  const closeProfiles = () => { header.classList.remove('cb-profiles-open'); trigger?.setAttribute('aria-expanded','false'); };
+  trigger?.addEventListener('click', () => { const open = trigger.getAttribute('aria-expanded') !== 'true'; header.classList.toggle('cb-profiles-open',open); trigger.setAttribute('aria-expanded',String(open)); });
+  document.addEventListener('click', event => { if (!dock.contains(event.target as Node)) closeProfiles(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && trigger?.getAttribute('aria-expanded') === 'true') { closeProfiles(); trigger.focus(); } });
   let docked = false;
   let frame = 0;
   const update = () => {
@@ -50,6 +57,7 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
     const active = selector.querySelector<HTMLElement>('[aria-current="page"]');
     if (active) selector.scrollLeft = Math.max(0, active.offsetLeft - selector.offsetLeft - (selector.clientWidth - active.clientWidth) / 2);
    } else {
+    closeProfiles();
     home.append(selector);
     home.style.height = '';
     header.classList.remove('cb-nav-profile-mode');
@@ -60,7 +68,7 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
   addEventListener('scroll',schedule,{passive:true});
-  addEventListener('resize',schedule);
+  addEventListener('resize',() => { closeProfiles(); schedule(); });
   addEventListener('pageshow',schedule);
   update();
  }
