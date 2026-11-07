@@ -112,13 +112,20 @@ describe('pedidos en el panel', () => {
 });
 
 describe('productos y stock', () => {
-  it('el operador no cambia precios, el administrador sí y se ve en la landing', async () => {
+  it('el operador no cambia precios, el administrador sí y se ve en la página de compra de Hotfix', async () => {
     const id = await variantId('monteverde-250');
     const update = { action: 'update', format: '250 g', priceCents: 3700, bags: 1, active: true };
     expect((await api(`/api/admin/products/variants/${id}`, { body: update, cookie: operatorCookie })).status).toBe(403);
     expect((await api(`/api/admin/products/variants/${id}`, { body: update, cookie: adminCookie })).status).toBe(200);
-    expect((await api('/')).text).toContain('S/ 37.00');
-    await api(`/api/admin/products/variants/${id}`, { body: { ...update, priceCents: 3400 }, cookie: adminCookie });
+    try {
+      const page = await api('/producto/hotfix');
+      expect(page.status).toBe(200);
+      expect(page.text).toContain('S/ 37.00');
+      expect(page.text).toContain('data-price="37"');
+    } finally {
+      const restored = await api(`/api/admin/products/variants/${id}`, { body: { ...update, priceCents: 3400 }, cookie: adminCookie });
+      expect(restored.status).toBe(200);
+    }
   });
 
   it('ajusta stock con historial y nunca lo deja en negativo', async () => {

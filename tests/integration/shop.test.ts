@@ -6,14 +6,18 @@ const espresso = { sku: 'espresso-250', grind: 'Grano entero', quantity: 1 };
 const pack = { sku: 'pack-developer', grind: 'Ambos en grano', quantity: 1 };
 
 describe('sitio', () => {
-  it('muestra Hotfix y tres próximos lanzamientos sin revelar los otros productos', async () => {
+  it('muestra los cinco perfiles del Pipeline y cuatro próximos lanzamientos', async () => {
     const { status, text } = await api('/');
     expect(status).toBe(200);
-    const section = text.match(/<section id="productos"[\s\S]*?<\/section>/)?.[0];
+    const section = text.match(/<section id="pipeline"[\s\S]*?<\/section>/)?.[0];
     expect(section).toBeTruthy();
     expect(section).toContain('Hotfix');
-    expect(section).toContain('Muy pronto');
-    expect(section?.match(/class="blend-panel pipeline-preview"/g)).toHaveLength(3);
+    expect(section?.match(/class="cb-pouch-lock"/g)).toHaveLength(4);
+    for (const slug of ['hotfix', 'coldstart', 'deploy', 'merge', 'rollback']) {
+      expect(section).toContain(`href="/producto/${slug}"`);
+    }
+    expect(section).toContain('Comprar Hotfix');
+    expect(text).not.toContain('id="productos"');
     for (const name of ['Espresso Amazonas', 'Pack Developer', 'Microlote de Temporada', 'demo/espresso', 'demo/microlote']) {
       expect(section).not.toContain(name);
     }
@@ -26,10 +30,21 @@ describe('sitio', () => {
     expect(json).toEqual({ status: 'ok', database: 'ok', version });
   });
 
-  it('la landing muestra precios desde la base de datos', async () => {
-    const { status, text } = await api('/');
+  it('la página de Hotfix muestra precios y SKU desde la base de datos', async () => {
+    const { status, text } = await api('/producto/hotfix');
     expect(status).toBe(200);
     expect(text).toContain('S/ 34.00');
+    expect(text).toContain('data-sku="monteverde-250"');
+    expect(text).toContain('data-price="34"');
+  });
+
+  it.each(['coldstart', 'deploy', 'merge', 'rollback'])('el perfil %s no revela precio ni permite comprar antes de su lanzamiento', async slug => {
+    const page = await api(`/producto/${slug}`);
+    expect(page.status).toBe(200);
+    expect(page.text).toContain('PRÓXIMAMENTE');
+    expect(page.text).toContain('Se revela en su lanzamiento.');
+    expect(page.text).not.toContain('class="product-price"');
+    expect(page.text).not.toContain('add-to-cart');
   });
 
   it('sirve los recursos y el video de la landing con soporte de rangos', async () => {
