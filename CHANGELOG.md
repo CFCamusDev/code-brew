@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0
+
+- Rediseño completo del cliente: portada, navegación, footer, carrito, checkout, pedido, reclamos y políticas.
+- Pipeline como acceso a cinco perfiles con páginas propias; Hotfix concentra la compra y los otros cuatro mantienen su estado de próximos lanzamientos.
+- Galería de empaques con cambios de vista animados y selector lateral en escritorio.
+- Selector de perfiles integrado progresivamente al header según el scroll, con menú compacto en móvil.
+- Scroll suave, transiciones entre portada y producto, efectos glass legibles y respeto a movimiento reducido.
+- Fuentes locales, renders responsivos optimizados y grano de café realista generado.
+- Limpieza de componentes, estilos e imágenes obsoletos, conservando los recursos 3D reservados y los archivos compartidos.
+- Pruebas de integración actualizadas al nuevo recorrido de compra, incluidos precios en vivo y protección de los perfiles no lanzados.
+- Sin cambios en admin, API, backend, middleware ni esquema o datos de la BD. Se conservan SKU y contratos comerciales.
+
 ## 1.6.0
 
 - Acceso flotante a WhatsApp Business en las páginas públicas, con icono compacto en móvil y etiqueta de ayuda en escritorio.
