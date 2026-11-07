@@ -90,9 +90,41 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
  }
 
  document.querySelectorAll<HTMLElement>('.cb-gallery').forEach(gallery=>{
-  gallery.querySelectorAll<HTMLButtonElement>('[data-view]').forEach(button=>button.addEventListener('click',()=>{
-   gallery.querySelectorAll<HTMLElement>('[data-pouch-view]').forEach(view=>view.hidden=view.dataset.pouchView!==button.dataset.view);
-   gallery.querySelectorAll<HTMLButtonElement>('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  const views = [...gallery.querySelectorAll<HTMLElement>('[data-pouch-view]')];
+  const buttons = [...gallery.querySelectorAll<HTMLButtonElement>('[data-view]')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let request = 0;
+  let running: Animation | undefined;
+  buttons.forEach(button=>button.addEventListener('click',async()=>{
+   const next = views.find(view=>view.dataset.pouchView===button.dataset.view);
+   if (!next) return;
+   const ticket = ++request;
+   running?.cancel();
+   buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+   // Decode before fading out so a slower image never leaves the gallery blank.
+   const image = next.querySelector<HTMLImageElement>('img');
+   if (image) image.loading = 'eager';
+   await image?.decode().catch(()=>{});
+   if (ticket !== request) return;
+   const previous = views.find(view=>!view.hidden);
+   if (previous === next) return;
+   if (!reduced.matches && previous) {
+    running = previous.querySelector<HTMLElement>('.cb-pouch')!.animate(
+     [{opacity:1,transform:'translateX(0) scale(1)'},{opacity:0,transform:'translateX(-6px) scale(.99)'}],
+     {duration:120,easing:'ease-in',fill:'forwards'}
+    );
+    await running.finished.catch(()=>{});
+    if (ticket !== request) return;
+   }
+   views.forEach(view=>view.hidden=view!==next);
+   running?.cancel();
+   if (!reduced.matches) {
+    running = next.querySelector<HTMLElement>('.cb-pouch')!.animate(
+     [{opacity:0,transform:'translateX(6px) scale(.99)'},{opacity:1,transform:'translateX(0) scale(1)'}],
+     {duration:260,easing:'cubic-bezier(.2,.8,.2,1)'}
+    );
+   }
   }));
+  reduced.addEventListener('change',()=>{ if (reduced.matches) running?.finish(); });
  });
 </script>
