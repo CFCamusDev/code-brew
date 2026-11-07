@@ -18,6 +18,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Referencias de diseño y resultados locales (no forman parte de la web)
+/docs/redesign/
+/Claude outputs/
+/output/
+
 # Archivos del sistema y del editor
 .DS_Store
 Thumbs.db

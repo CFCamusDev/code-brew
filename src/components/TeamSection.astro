@@ -1,5 +1,5 @@
 ---
-import WorldStage from './WorldStage.astro';
+import Pouch from './Pouch.astro';
 import { getWhatsAppUrl } from '../data/config';
 
 // Para equipos: isla oscura con los empaques en 3D, una tarjeta de código y tres formas de llevar el café a la empresa.
@@ -35,8 +35,8 @@ const steps = [
 const teamWhatsapp = await getWhatsAppUrl('¡Hola CodeBrew! Me interesa café para mi equipo. Quisiera coordinar una propuesta para oficina o regalos.');
 const offerUrls = await Promise.all(offers.map(offer => getWhatsAppUrl(offer.message)));
 ---
-<section id="empresas" class="team-section" aria-labelledby="team-title">
-  <WorldStage kind="team" label="Empaques Codebrew Hotfix: frente y reverso en 3D" />
+<section id="empresas" class="team-section cb-team cb-dark cb-section" aria-labelledby="team-title">
+  <div class="cb-team-bags"><Pouch product="hotfix" scale={1.2} /><Pouch product="hotfix" view="back3d" scale={1} /></div>
 
   <div class="team-copy">
     <p class="eyebrow">Para equipos que construyen</p>

@@ -7,3 +7,8 @@ dist
 .env.*
 !.env.example
 npm-debug.log
+
+# Referencias y resultados locales: no forman parte de la imagen
+docs/redesign
+Claude outputs
+output

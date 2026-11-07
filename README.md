@@ -90,36 +90,20 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 
 `docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
 
-## Experiencia
+## Cliente actual
 
-- Portada con bolsa y granos 3D, respuesta al cursor y rotación vinculada al scroll.
-- Selector de cuatro perfiles con PNG transparentes, transiciones GSAP, formato, molienda y precio.
-- Mapa de origen de Rodríguez de Mendoza, taza y pack para equipos con escenas Three.js.
-- Un renderizador WebGL compartido; viewport y scissor delimitan cada escena a su sección.
-- Animaciones de entrada y progreso de lectura con GSAP / ScrollTrigger.
-- Botón de pausa que conserva la escena, posición de lectura y selección de producto.
-- Desplazamiento nativo, encuadres móviles, resolución limitada y renderizado detenido cuando las escenas no son visibles o la pestaña está oculta.
-- `prefers-reduced-motion` muestra escenas estáticas. Si WebGL falla o pierde el contexto, queda visible la imagen de respaldo.
+La portada presenta la línea Pipeline. Hotfix permite elegir presentación y molienda desde `/producto/hotfix`; Cold Start, Deploy, Merge y Rollback tienen sus páginas de próximos lanzamientos. El carrito, checkout, pedidos, reclamos y políticas conservan sus contratos existentes.
 
-## Archivos principales
+- `src/pages/index.astro`: composición de la portada.
+- `src/components/Hero.astro` y `Pipeline.astro`: entrada al catálogo.
+- `src/components/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
+- `src/components/Pouch.astro`: renders optimizados y tamaños responsivos.
+- `src/data/pipeline.ts`: contenido y estado visual de los cinco perfiles.
+- `src/styles/brand.css`: estilos del cliente; `shop.css`: flujo de compra.
+- `src/data/config.ts`: configuración compartida; no sustituye precios y stock en vivo.
 
-- `src/pages/index.astro`: narrativa y composición.
-- `src/components/Hero.astro`: capítulo de portada.
-- `src/components/Products.astro`: perfiles, selector y pedidos.
-- `src/components/WorldStage.astro`: zonas visuales y respaldo accesible.
-- `src/components/Experience.astro`: scroll, transiciones y control de pausa.
-- `src/scripts/worlds.ts`: modelos, iluminación, renderizado y liberación de recursos.
-- `src/styles/global.css`: sistema visual y adaptación.
-- `src/data/config.ts`: precios originales y número de WhatsApp.
+Las imágenes originales de `src/assets/pipeline/` alimentan `node scripts/prepare-client-images.mjs`. Las variantes de `optimized/` se cargan mediante un glob y nombres construidos en `Pouch.astro`; no son archivos huérfanos.
 
-## Imágenes de muestra y sustitución
+La experiencia 3D está reservada para retomarla: se conservan `CoffeeExperience3D.astro`, `WorldStage.astro`, `Experience.astro`, los módulos de `src/scripts/`, sus texturas y el respaldo `src/assets/demo/monteverde.png`. No se montan en la portada actual. Las dependencias Three.js y GSAP siguen siendo necesarias para ese código reservado.
 
-Los tres originales generados con transparencia real están en `src/assets/demo/`: `monteverde.png`, `espresso.png` y `microlote.png`. Astro produce WebP transparentes optimizados y miniaturas para su uso en la página. El Pack Developer combina las dos primeras bolsas.
-
-Los empaques son **conceptuales**, no fotografías del producto definitivo. La página lo indica junto al selector. Para reemplazarlos, cambia estos PNG manteniendo encuadre vertical, transparencia y proporciones semejantes, o actualiza sus importaciones en `Products.astro` y `WorldStage.astro`.
-
-Las texturas y geometrías de la bolsa 3D se configuran en `worlds.ts` y sus módulos asociados. Al cambiar el packaging, actualizar sus recursos y, si se requiere fidelidad fotográfica de pliegues y materiales, sustituir el modelo procedural por un GLB del producto.
-
-La tienda procesa pedidos y permite pagos por Culqi cuando sus llaves están configuradas; ofrece WhatsApp como alternativa. GA4 solo se activa en compilaciones de producción con `PUBLIC_ANALYTICS_ENV=production`.
-
-Los componentes antiguos no importados permanecen como referencia y no forman parte de la página activa.
+Se retiraron los componentes anteriores sin importaciones, la antigua sección Tienda, sus estilos exclusivos y cinco imágenes sin uso. Las imágenes que todavía importa la configuración compartida se conservan. La limpieza no modifica el admin, backend, BD ni catálogo comercial.

@@ -1,4 +1,5 @@
 ---
+import Footer from '../components/Footer.astro';
 import Layout from '../layouts/Layout.astro';
 import ShopHeader from '../components/shop/ShopHeader.astro';
 import ComplaintForm from '../components/shop/ComplaintForm';
@@ -6,9 +7,10 @@ import '../styles/shop.css';
 ---
 <Layout title="Libro de Reclamaciones — CodeBrew" description="Registra un reclamo o una queja sobre tu compra en CodeBrew." noindex>
   <ShopHeader />
-  <main id="main-content" class="shop-main">
+  <main id="main-content" class="shop-main cb-complaints-page">
     <ComplaintForm client:only="react">
       <p slot="fallback" class="cart-hint">Cargando…</p>
     </ComplaintForm>
   </main>
+<Footer staticContent />
 </Layout>
