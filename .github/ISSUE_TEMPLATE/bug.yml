@@ -1,0 +1,16 @@
+name: Bug
+description: Algo no funciona como debería
+labels: ["bug"]
+body:
+  - type: textarea
+    id: pasos
+    attributes: { label: Pasos para reproducir }
+    validations: { required: true }
+  - type: textarea
+    id: esperado
+    attributes: { label: Resultado esperado y obtenido }
+    validations: { required: true }
+  - type: dropdown
+    id: entorno
+    attributes: { label: Entorno, options: [Local, Staging, Producción] }
+    validations: { required: true }
