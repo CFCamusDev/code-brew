@@ -1,0 +1,15 @@
+# Revisión por defecto: cualquiera de los tres puede aprobar.
+# Cada persona hace de todo; esto solo enruta las solicitudes de revisión.
+*                       @Code-Chavez @doflamingo-ing @CFCamusDev
+
+# Arquitectura y datos: revisión cruzada entre desarrolladores
+/src/server/            @Code-Chavez @doflamingo-ing
+/src/pages/api/         @Code-Chavez @doflamingo-ing
+/drizzle/               @Code-Chavez @doflamingo-ing
+/src/lib/server/db/     @Code-Chavez @doflamingo-ing
+
+# Operación y configuración del repo: el propietario siempre
+/.github/               @CFCamusDev
+/Dockerfile             @CFCamusDev
+/docker-compose*.yml    @CFCamusDev
+/nginx.conf             @CFCamusDev

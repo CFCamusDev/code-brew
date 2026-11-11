@@ -1,0 +1,19 @@
+name: Historia
+description: Trabajo planificado con criterios de aceptación
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: objetivo
+    attributes: { label: Objetivo, description: Qué se logra y por qué }
+    validations: { required: true }
+  - type: textarea
+    id: tareas
+    attributes: { label: Tareas, description: "Lista con - [ ]" }
+    validations: { required: true }
+  - type: textarea
+    id: aceptacion
+    attributes: { label: Criterios de aceptación, description: "Lista con - [ ]" }
+    validations: { required: true }
+  - type: input
+    id: depende
+    attributes: { label: Depende de, placeholder: "#12, #15" }

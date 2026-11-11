@@ -1,0 +1,12 @@
+name: Spike (investigación)
+description: Investigar antes de decidir; entrega un documento o un ADR
+labels: ["type:spike"]
+body:
+  - type: textarea
+    id: pregunta
+    attributes: { label: Pregunta a responder }
+    validations: { required: true }
+  - type: textarea
+    id: entregable
+    attributes: { label: Entregable, description: "Documento, comparación o ADR" }
+    validations: { required: true }
