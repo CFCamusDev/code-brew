@@ -45,6 +45,54 @@ describe('configuración del despliegue', () => {
     }
   });
 
+  describe('Culqi según APP_ENV', () => {
+    const live = { ...payments, CULQI_PUBLIC_KEY: 'pk_live_example123', CULQI_SECRET_KEY: 'sk_live_example123' };
+
+    it('sin APP_ENV mantiene Culqi opcional (CI, test:docker y despliegues actuales)', () => {
+      expect(validateEnvironment(base)).toEqual([]);
+      expect(validateEnvironment({ ...base, NODE_ENV: 'production' })).toEqual([]);
+    });
+
+    it('rechaza un APP_ENV desconocido', () => {
+      expect(validateEnvironment({ ...base, APP_ENV: 'prod' })).toEqual(['APP_ENV debe ser local, staging o production.']);
+    });
+
+    it.each(['staging', 'production'])('en %s exige las tres variables y dice cuáles faltan', appEnv => {
+      expect(validateEnvironment({ ...base, APP_ENV: appEnv })).toEqual([
+        `En APP_ENV=${appEnv} faltan CULQI_PUBLIC_KEY, CULQI_SECRET_KEY, CULQI_WEBHOOK_SECRET.`
+      ]);
+      const errors = validateEnvironment({ ...(appEnv === 'production' ? live : payments), APP_ENV: appEnv, CULQI_WEBHOOK_SECRET: '' });
+      expect(errors.some(error => error.includes('faltan CULQI_WEBHOOK_SECRET'))).toBe(true);
+    });
+
+    it('en producción solo acepta llaves live', () => {
+      expect(validateEnvironment({ ...live, APP_ENV: 'production' })).toEqual([]);
+      expect(validateEnvironment({ ...payments, APP_ENV: 'production' })).toEqual([
+        'En APP_ENV=production las llaves Culqi deben ser de producción (pk_live_/sk_live_), no de prueba.'
+      ]);
+    });
+
+    it('en staging y local acepta llaves de prueba; staging rechaza llaves live', () => {
+      expect(validateEnvironment({ ...payments, APP_ENV: 'staging' })).toEqual([]);
+      expect(validateEnvironment({ ...payments, APP_ENV: 'local' })).toEqual([]);
+      expect(validateEnvironment({ ...live, APP_ENV: 'staging' }).length).toBe(1);
+    });
+
+    it('rechaza llaves mezcladas en cualquier entorno', () => {
+      for (const APP_ENV of [undefined, 'local', 'staging', 'production']) {
+        expect(validateEnvironment({ ...payments, APP_ENV, CULQI_SECRET_KEY: 'sk_live_example123' }).length, String(APP_ENV)).toBeGreaterThan(0);
+      }
+    });
+
+    it('nunca muestra las llaves ni el secreto en los mensajes', () => {
+      const secrets = { ...payments, APP_ENV: 'production', CULQI_SECRET_KEY: 'sk_live_supersecreto999', CULQI_WEBHOOK_SECRET: 'w'.repeat(40) };
+      const text = validateEnvironment(secrets).join(' ');
+      expect(text).not.toContain('example123');
+      expect(text).not.toContain('supersecreto999');
+      expect(text).not.toContain('w'.repeat(40));
+    });
+  });
+
   it('exige remitente y URL pública al habilitar correo', () => {
     expect(validateEnvironment({ ...base, RESEND_API_KEY: 'test-only' })).toHaveLength(2);
     expect(validateEnvironment({ ...base, RESEND_API_KEY: 'test-only', EMAIL_FROM: 'test@example.com', SITE_URL: 'https://coffeecodebrew.com' })).toEqual([]);
