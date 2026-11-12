@@ -1,9 +1,10 @@
-import { and, desc, eq, gt, gte, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 import type { Quote } from '../shop/checkout';
 import { formatOrderNumber } from '../shop/format';
 import { getDb } from './db';
-import { orderItems, orders, payments, productVariants, stockMovements } from './db/schema';
+import { orderItems, orders, payments } from './db/schema';
 import { sendOrderPaidEmails } from './email';
+import { inventoryFor } from '../../server/modules/inventory';
 import { getPaymentGateway } from '../../server/modules/payments';
 import { getOrder, quoteOrder } from './shop';
 
@@ -51,26 +52,8 @@ async function markPaid(orderId: string, payment: { reference: string; method: s
       return false;
     }
 
-    let stockShortage = false;
-    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
-    for (const item of items) {
-      const updated = await tx
-        .update(productVariants)
-        .set({ stock: sql`${productVariants.stock} - ${item.quantity}` })
-        .where(and(eq(productVariants.id, item.variantId), gte(productVariants.stock, item.quantity)))
-        .returning({ stock: productVariants.stock });
-      if (!updated.length) {
-        stockShortage = true;
-        continue;
-      }
-      await tx.insert(stockMovements).values({
-        variantId: item.variantId,
-        delta: -item.quantity,
-        stockAfter: updated[0].stock,
-        reason: 'sale',
-        orderId
-      });
-    }
+    const items = await tx.select({ variantId: orderItems.variantId, quantity: orderItems.quantity }).from(orderItems).where(eq(orderItems.orderId, orderId));
+    const { shortage: stockShortage } = await inventoryFor(tx).registerSale(orderId, items);
 
     await tx.update(orders).set({ status: 'paid', paidAt: new Date(), stockShortage }).where(eq(orders.id, orderId));
     return true;

@@ -1,7 +1,8 @@
 import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { getPaymentGateway, type RefundReason } from '../../../server/modules/payments';
 import { getDb } from '../db';
-import { adminUsers, orderEvents, orderItems, orders, payments, productVariants, stockMovements } from '../db/schema';
+import { inventoryFor } from '../../../server/modules/inventory';
+import { adminUsers, orderEvents, orderItems, orders, payments } from '../db/schema';
 import { sendOrderShippedEmail } from '../email';
 import { getOrder } from '../shop';
 
@@ -182,26 +183,6 @@ export async function changeStatus(
   }
 }
 
-/** Repone el stock de las líneas del pedido (devolución). */
-async function restock(tx: Parameters<Parameters<ReturnType<typeof getDb>['transaction']>[0]>[0], orderId: string, adminUserId: number) {
-  const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
-  for (const item of items) {
-    const [variant] = await tx
-      .update(productVariants)
-      .set({ stock: sql`${productVariants.stock} + ${item.quantity}` })
-      .where(eq(productVariants.id, item.variantId))
-      .returning({ stock: productVariants.stock });
-    await tx.insert(stockMovements).values({
-      variantId: item.variantId,
-      delta: item.quantity,
-      stockAfter: variant.stock,
-      reason: 'refund',
-      orderId,
-      adminUserId
-    });
-  }
-}
-
 /**
  * Reembolsa el pedido completo. Con un cargo de tarjeta o Yape la devolución se hace en Culqi;
  * los pagos por orden (PagoEfectivo, billeteras) se devuelven desde CulqiPanel y aquí solo se registran (`manual`).
@@ -236,7 +217,10 @@ export async function refundOrder(
       .update(payments)
       .set({ status: 'refunded' })
       .where(and(eq(payments.orderId, orderId), eq(payments.status, 'paid')));
-    if (restockItems) await restock(tx, orderId, adminUserId);
+    if (restockItems) {
+      const items = await tx.select({ variantId: orderItems.variantId, quantity: orderItems.quantity }).from(orderItems).where(eq(orderItems.orderId, orderId));
+      await inventoryFor(tx).restockOrder(orderId, adminUserId, items);
+    }
     await tx.insert(orderEvents).values({
       orderId,
       type: 'refund',
