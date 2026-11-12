@@ -78,6 +78,13 @@
       "when": 1793664000000,
       "tag": "0010_update_tiktok",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794444605032,
+      "tag": "0011_product_lines",
+      "breakpoints": true
     }
   ]
 }
