@@ -4,9 +4,10 @@ import { formatOrderNumber } from '../shop/format';
 import { getDb } from './db';
 import { orderItems, orders, payments } from './db/schema';
 import { sendOrderPaidEmails } from './email';
+import { orderingFor } from '../../server/modules/ordering';
 import { inventoryFor } from '../../server/modules/inventory';
 import { getPaymentGateway } from '../../server/modules/payments';
-import { getOrder, quoteOrder } from './shop';
+import { getOrder } from './shop';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -14,7 +15,7 @@ type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
 /** ¿Hay stock para todas las líneas, a precios/zona vigentes? Se revisa antes de cobrar; el descuento real ocurre al confirmar el pago. */
 async function stockIssue(order: Order): Promise<{ message: string; issues: Quote['issues'] } | null> {
-  const quote = await quoteOrder(getDb(), order);
+  const quote = await orderingFor(getDb()).quoteOrder(order);
   if (!quote.issues.length) return null;
   return { message: 'Uno de los cafés de tu pedido se agotó. Ajusta tu pedido abajo o escríbenos por WhatsApp.', issues: quote.issues };
 }
