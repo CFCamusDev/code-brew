@@ -1,8 +1,8 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { CartLine, Customer, Quote } from '../shop/checkout';
-import { isFreeShipping } from '../shop/shipping';
+import { calculateShipping, shippingFor } from '../../server/modules/shipping';
 import { getDb } from './db';
-import { orderItems, orders, products, productVariants, shippingRegionRates, shippingZones } from './db/schema';
+import { orderItems, orders, products, productVariants, shippingZones } from './db/schema';
 
 type Db = ReturnType<typeof getDb>;
 type Executor = Db | Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -20,7 +20,7 @@ export class CartIssuesError extends Error {
  */
 export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: string, region?: string): Promise<Quote> {
   const skus = [...new Set(items.map(item => item.sku))];
-  const [rows, zoneRows, rates] = await Promise.all([
+  const [rows, { summaries: zones, zones: shippingZoneList }] = await Promise.all([
     skus.length
       ? db
           .select({
@@ -38,25 +38,8 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
           .innerJoin(products, eq(products.id, productVariants.productId))
           .where(inArray(productVariants.sku, skus))
       : Promise.resolve([]),
-    db
-      .select({
-        slug: shippingZones.slug,
-        name: shippingZones.name,
-        eta: shippingZones.eta,
-        priceCents: shippingZones.priceCents,
-        freeFromCents: shippingZones.freeFromCents,
-        freeFromBags: shippingZones.freeFromBags,
-        regions: shippingZones.regions
-      })
-      .from(shippingZones)
-      .where(eq(shippingZones.active, true))
-      .orderBy(asc(shippingZones.sortOrder)),
-    db
-      .select({ zone: shippingZones.slug, region: shippingRegionRates.region, priceCents: shippingRegionRates.priceCents })
-      .from(shippingRegionRates)
-      .innerJoin(shippingZones, eq(shippingZones.id, shippingRegionRates.zoneId))
+    shippingFor(db).listZones()
   ]);
-  const zones: Quote['zones'] = zoneRows.map(zone => ({ ...zone, hasRegionRates: rates.some(rate => rate.zone === zone.slug) }));
 
   const bySku = new Map(rows.map(row => [row.sku, row]));
   const requestedBySku = new Map<string, number>();
@@ -106,14 +89,9 @@ export async function quoteCart(db: Executor, items: CartLine[], zoneSlug?: stri
   }
 
   const subtotalCents = lines.reduce((sum, line) => sum + line.lineTotalCents, 0);
-  let zone = zones.find(z => z.slug === zoneSlug);
-  if (zone && region && zone.regions && !zone.regions.includes(region)) {
-    issues.push({ sku: '', message: `${zone.name} no atiende ${region}. Elige otra zona de envío.` });
-    zone = undefined;
-  }
-  // Tarifa del departamento si existe; si no, la base de la zona.
-  const zonePrice = zone && (rates.find(rate => rate.zone === zone.slug && rate.region === region)?.priceCents ?? zone.priceCents);
-  const shippingCents = zone ? (isFreeShipping(zone, subtotalCents, bags) ? 0 : zonePrice!) : null;
+  const shipping = calculateShipping(shippingZoneList, { zoneSlug, region, subtotalCents, bags });
+  if (shipping.status === 'region_not_served') issues.push({ sku: '', message: shipping.message });
+  const shippingCents = shipping.status === 'ok' ? shipping.shippingCents : null;
 
   return {
     lines,
