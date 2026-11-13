@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { and, asc, eq, ne } from 'drizzle-orm';
 import { hashPassword } from '../../../../scripts/lib/password.mjs';
-import { deleteUserSessions, type AdminRole } from '../auth';
+import { deleteUserSessions, type AdminRole } from '../../../server/modules/identity';
 import { getDb } from '../db';
 import { adminUsers } from '../db/schema';
 import { AdminActionError } from './orders';

@@ -30,6 +30,8 @@ jobs:
         run: pnpm audit --audit-level=high
       - name: Revisión de tipos
         run: pnpm typecheck
+      - name: Reglas de arquitectura
+        run: pnpm deps:check
       - name: Pruebas unitarias
         run: pnpm test
       - name: Build

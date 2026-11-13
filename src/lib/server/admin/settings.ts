@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
 import { siteSettings } from '../db/schema';
-import { invalidateSetting, POLICY_KEYS, SOCIAL_LINKS_KEY, type PolicyContent, type SocialLinks } from '../settings';
+import { invalidateSetting, POLICY_KEYS, SOCIAL_LINKS_KEY, type PolicyContent, type SocialLinks } from '../../../server/modules/settings';
 
 const DEFAULT_SOCIAL_LINKS: SocialLinks = { instagram: '', tiktok: '', facebook: '', whatsapp: '' };
 const DEFAULT_POLICY: PolicyContent = { title: '', body: '' };

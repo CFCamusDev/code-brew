@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { MIN_PASSWORD_LENGTH } from '../../../../../scripts/lib/password.mjs';
-import { changePassword, createSession, deleteUserSessions, SESSION_COOKIE } from '../../../../lib/server/auth';
+import { changePassword, createSession, deleteUserSessions, SESSION_COOKIE } from '../../../../server/modules/identity';
 
 export const prerender = false;
 

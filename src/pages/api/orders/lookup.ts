@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { clientIp } from '../../../lib/server/auth';
+import { clientIp } from '../../../server/modules/identity';
 import { createRateLimiter } from '../../../lib/server/rate-limit';
 import { findOrderIdByNumberAndEmail } from '../../../lib/server/shop';
 import { parseOrderNumber } from '../../../lib/shop/format';
