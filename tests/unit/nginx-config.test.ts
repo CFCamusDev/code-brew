@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const conf = readFileSync(new URL('../../nginx.conf', import.meta.url), 'utf8');
+const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+const conf = read('nginx.conf');
 
 describe('nginx.conf: límite de peticiones', () => {
   it('define una zona por tipo de endpoint sensible', () => {
@@ -26,5 +27,16 @@ describe('nginx.conf: límite de peticiones', () => {
 
   it('la clave es la IP real del cliente: CF-Connecting-IP o, si falta, la del socket', () => {
     expect(conf).toMatch(/map \$http_cf_connecting_ip \$limit_ip \{[^}]*''\s+\$remote_addr;/s);
+  });
+
+  it('los topes son variables NGINX_RATE_*: producción en el Dockerfile y el stack de pruebas los sube', () => {
+    const dockerfile = read('Dockerfile');
+    const testStack = read('docker-compose.test.yml');
+    for (const zone of ['LOGIN', 'ORDERS', 'LOOKUP', 'PAYMENTS', 'CONTACT']) {
+      expect(conf, zone).toContain(`rate=\${NGINX_RATE_${zone}}`);
+      expect(dockerfile, zone).toMatch(new RegExp(String.raw`NGINX_RATE_${zone}=\d+r/m`));
+      expect(testStack, zone).toMatch(new RegExp(String.raw`NGINX_RATE_${zone}=\d{5,}r/m`));
+    }
+    expect(dockerfile).toContain('NGINX_ENVSUBST_FILTER=NGINX_RATE_');
   });
 });
