@@ -1,4 +1,8 @@
-/** Limitador de intentos en memoria por clave (IP, correo, etc.), con ventana deslizante. */
+/**
+ * Limitador de intentos en memoria por clave (IP, correo, etc.), con ventana deslizante.
+ * Es la segunda barrera: la primera es `limit_req` en nginx.conf, que corta antes de llegar a Node y sobrevive a
+ * reinicios. Este se queda porque limita por clave de negocio (correo, número de pedido), que Nginx no ve.
+ */
 export function createRateLimiter(windowMs: number, maxAttempts: number) {
   const attempts = new Map<string, { count: number; first: number }>();
 
