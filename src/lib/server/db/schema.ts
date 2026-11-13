@@ -25,20 +25,61 @@ const timestamps = {
     .$onUpdate(() => new Date())
 };
 
+/** Ciclo de vida de una línea: borrador, publicada o archivada (ADR 0003). */
+export const productLineStatus = pgEnum('product_line_status', ['draft', 'active', 'archived']);
+
+/** Línea de productos con identidad propia (Pipeline…). `theme` y `template` definen cómo se ve (ADR 0004). */
+export const productLines = pgTable(
+  'product_lines',
+  {
+    id: serial('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description'),
+    status: productLineStatus('status').notNull().default('draft'),
+    /** Variables CSS de la línea (nombre → valor), editables desde el panel. */
+    theme: jsonb('theme').$type<Record<string, string>>().notNull().default({}),
+    /** Plantilla de página registrada en src/lines/*; "base" si la línea no tiene una propia. */
+    template: text('template').notNull().default('base'),
+    launchAt: timestamp('launch_at', { withTimezone: true }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    ...timestamps
+  },
+  t => [index('product_lines_status_idx').on(t.status)]
+);
+
+/** Ciclo de vida de un producto: borrador, próximamente, a la venta o descontinuado (ADR 0003). */
+export const productStatus = pgEnum('product_status', ['draft', 'upcoming', 'active', 'discontinued']);
+
 /** Perfil de café (Origen Monteverde, Espresso Amazonas…). */
-export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-  roast: text('roast').notNull(),
-  /** Opciones de molienda que el cliente puede elegir. */
-  grinds: jsonb('grinds').$type<string[]>().notNull().default([]),
-  /** URL de Cloudinary; null usa un marcador de posición en el panel. */
-  imageUrl: text('image_url'),
-  active: boolean('active').notNull().default(true),
-  sortOrder: integer('sort_order').notNull().default(0),
-  ...timestamps
-});
+export const products = pgTable(
+  'products',
+  {
+    id: serial('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    roast: text('roast').notNull(),
+    /** Opciones de molienda que el cliente puede elegir. */
+    grinds: jsonb('grinds').$type<string[]>().notNull().default([]),
+    /** URL de Cloudinary; null usa un marcador de posición en el panel. */
+    imageUrl: text('image_url'),
+    active: boolean('active').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    // Línea y ciclo de vida. Nulos mientras se migra el catálogo (expand → migrate → contract).
+    lineId: integer('line_id').references(() => productLines.id, { onDelete: 'restrict' }),
+    /** Número de lanzamiento dentro de la línea (Hotfix 01, Cold Start 02…). */
+    releaseNumber: integer('release_number'),
+    status: productStatus('status'),
+    launchAt: timestamp('launch_at', { withTimezone: true }),
+    ...timestamps
+  },
+  t => [
+    index('products_line_idx').on(t.lineId),
+    index('products_status_idx').on(t.status),
+    uniqueIndex('products_line_release_idx').on(t.lineId, t.releaseNumber),
+    check('products_release_number_check', sql`${t.releaseNumber} > 0`)
+  ]
+);
 
 /** Presentación vendible de un perfil (250 g, 500 g…), con su precio y stock. */
 export const productVariants = pgTable(
