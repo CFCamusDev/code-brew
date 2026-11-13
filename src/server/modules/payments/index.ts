@@ -24,6 +24,7 @@ export type {
   RefundOutcome,
   RefundRequest
 } from './application/ports/payment-gateway';
+export { isValidWebhookKey } from './http/webhook-key';
 export { REFUND_REASONS, type RefundReason } from './domain/refund-reason';
 export { REFUNDABLE_STATUSES, isRefundableStatus, type ConfirmedPayment } from './domain/payment-rules';
 export type { ConfirmPaymentOutcome } from './application/confirm-payment';

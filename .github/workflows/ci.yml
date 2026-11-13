@@ -59,6 +59,7 @@ jobs:
       DATABASE_URL: postgres://codebrew:codebrew@localhost:5432/codebrew
       # Sin llaves de Culqi ni Resend: las pruebas no cobran ni envían correos reales.
       CULQI_WEBHOOK_SECRET: ci-secreto-webhook
+      CULQI_WEBHOOK_SECRET_PREVIOUS: ci-secreto-webhook-anterior
       CRON_SECRET: ci-secreto-cron
       INTEGRATION_BASE_URL: http://127.0.0.1:4321
     steps:

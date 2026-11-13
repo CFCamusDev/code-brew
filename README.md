@@ -60,6 +60,8 @@ Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321
 - Tarjeta y Yape: `POST /api/payments/charge` cobra el total guardado del pedido. Si el banco exige 3DS (`action_code: REVIEW`), Culqi3DS autentica y se reintenta el cargo.
 - PagoEfectivo, billeteras y agentes usan una orden de Culqi (`POST /api/payments/session`) y se confirman por webhook.
 - Webhook: en CulqiPanel > Eventos > Webhook registra `order.status.changed` con la URL `https://<dominio>/api/webhooks/culqi?key=<CULQI_WEBHOOK_SECRET>`. El servidor no confía en el cuerpo: vuelve a consultar la orden a Culqi.
+- **Rotar la clave del webhook** (sin perder eventos): 1) genera una nueva (`node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`); 2) en la stack, pon la nueva en `CULQI_WEBHOOK_SECRET` y la que estaba en `CULQI_WEBHOOK_SECRET_PREVIOUS`, y redespliega: el servidor acepta las dos; 3) en CulqiPanel cambia la URL del webhook a `?key=<nueva>`; 4) cuando ya no lleguen eventos con la clave vieja (revisa los accesos de `/api/webhooks/culqi`), vacía `CULQI_WEBHOOK_SECRET_PREVIOUS` y redespliega. La clave viaja en la URL, así que no se registra: el servidor no la escribe en sus logs y Nginx guarda esa ruta sin la cadena de consulta y sin registro de errores.
+- Si el webhook llega antes de que termine la respuesta del cargo (o al revés), da igual: confirmar el mismo pago dos veces no tiene efecto y el orden no cambia el resultado.
 - Al confirmarse un pago se descuenta el stock en la misma transacción; si no alcanza, el pedido queda con `stock_shortage` y se avisa al administrador. Confirmar dos veces el mismo pago no tiene efecto.
 - Correos con Resend (`RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `SITE_URL`); sin API key solo se registran en los logs.
 - Pruebas: tarjetas en https://docs.culqi.com/es/documentacion/pagos-online/tarjetas-de-prueba (Visa 4111 1111 1111 1111, 09/30, CVV 123).
@@ -91,8 +93,8 @@ Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321
 docker exec codebrew-db-dev psql -U codebrew -c "create database codebrew_test"
 export DATABASE_URL=postgres://codebrew:codebrew@localhost:5434/codebrew_test
 pnpm db:migrate && pnpm db:seed && pnpm build
-CULQI_WEBHOOK_SECRET=ci-secreto PORT=4398 node dist/server/entry.mjs &   # sin llaves de Culqi ni Resend
-INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto pnpm test:integration
+CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior PORT=4398 node dist/server/entry.mjs &   # sin llaves de Culqi ni Resend
+INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior pnpm test:integration
 ```
 
 ## CI / CD (GitHub Actions)

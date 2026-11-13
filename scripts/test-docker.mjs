@@ -13,6 +13,7 @@ const environment = {
   ...process.env,
   POSTGRES_PASSWORD: randomBytes(24).toString('hex'),
   CULQI_WEBHOOK_SECRET: randomBytes(32).toString('hex'),
+  CULQI_WEBHOOK_SECRET_PREVIOUS: randomBytes(32).toString('hex'),
   CRON_SECRET: randomBytes(32).toString('hex'),
   CULQI_PUBLIC_KEY: '',
   CULQI_SECRET_KEY: '',
