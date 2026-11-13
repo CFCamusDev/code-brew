@@ -67,6 +67,19 @@ describe('ConfirmarPago', () => {
     expect(payments.has('chr_1')).toBe(true);
   });
 
+  it('el webhook puede llegar antes que la respuesta del cargo (o después): el resultado es el mismo', async () => {
+    // El pedido de PagoEfectivo/billetera lo confirma el webhook; si la respuesta del cargo llega después, no suma nada.
+    const first = memoryConfirmStore();
+    expect(await confirmPayment({ store: first.store, clock }, 'o-1', payment({ reference: 'ord_1', method: 'order' }))).toBe('confirmed');
+    expect(await confirmPayment({ store: first.store, clock }, 'o-1', payment({ reference: 'ord_1', method: 'order' }))).toBe('already_processed');
+
+    const reversed = memoryConfirmStore();
+    await confirmPayment({ store: reversed.store, clock }, 'o-1', payment({ reference: 'ord_1', method: 'order' }));
+    await confirmPayment({ store: reversed.store, clock }, 'o-1', payment({ reference: 'ord_1', method: 'order' }));
+    expect(reversed.state).toEqual(first.state);
+    expect(first.state.sales).toBe(1);
+  });
+
   it('falla si el pedido no existe', async () => {
     const { store } = memoryConfirmStore();
     await expect(confirmPayment({ store, clock }, 'otro', payment())).rejects.toThrow(/no existe/);

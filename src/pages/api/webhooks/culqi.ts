@@ -1,26 +1,20 @@
 import type { APIRoute } from 'astro';
-import { timingSafeEqual } from 'node:crypto';
-import { CULQI_WEBHOOK_SECRET } from 'astro:env/server';
+import { CULQI_WEBHOOK_SECRET, CULQI_WEBHOOK_SECRET_PREVIOUS } from 'astro:env/server';
+import { isValidWebhookKey } from '../../../server/modules/payments';
 import { syncCulqiOrder } from '../../../lib/server/payments';
 
 export const prerender = false;
 
-function validKey(received: string | null) {
-  if (!CULQI_WEBHOOK_SECRET) return false;
-  if (!received) return false;
-  const a = Buffer.from(received);
-  const b = Buffer.from(CULQI_WEBHOOK_SECRET);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 /**
  * Webhook de Culqi (evento order.status.changed). URL a registrar en CulqiPanel:
  * https://<dominio>/api/webhooks/culqi?key=<CULQI_WEBHOOK_SECRET>
+ * La clave va en la URL porque CulqiPanel no permite cabeceras propias: por eso nunca se escribe en logs (ni aquí ni
+ * en Nginx, que la quita del registro de accesos) y se puede rotar con CULQI_WEBHOOK_SECRET_PREVIOUS (ver README).
  * El cuerpo solo se usa para saber qué orden cambió; el estado real se consulta a la API de Culqi.
  */
 export const POST: APIRoute = async ({ request, url }) => {
   if (!CULQI_WEBHOOK_SECRET) return Response.json({ error: 'Webhook desactivado (falta CULQI_WEBHOOK_SECRET).' }, { status: 503 });
-  if (!validKey(url.searchParams.get('key'))) return new Response('No autorizado', { status: 401 });
+  if (!isValidWebhookKey(url.searchParams.get('key'), [CULQI_WEBHOOK_SECRET, CULQI_WEBHOOK_SECRET_PREVIOUS])) return new Response('No autorizado', { status: 401 });
 
   const event = (await request.json().catch(() => null)) as { type?: string; data?: unknown } | null;
   if (!event?.type) return Response.json({ received: false }, { status: 400 });

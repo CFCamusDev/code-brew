@@ -25,9 +25,14 @@ export function validateEnvironment(environment) {
     if (!environment.CULQI_WEBHOOK_SECRET?.trim()) errors.push('Configura CULQI_WEBHOOK_SECRET antes de habilitar Culqi.');
   }
 
-  for (const name of ['CULQI_WEBHOOK_SECRET', 'CRON_SECRET']) {
+  for (const name of ['CULQI_WEBHOOK_SECRET', 'CULQI_WEBHOOK_SECRET_PREVIOUS', 'CRON_SECRET']) {
     const value = environment[name];
     if (value && value.trim().length < 32) errors.push(`${name} debe tener al menos 32 caracteres.`);
+  }
+
+  const previousWebhook = environment.CULQI_WEBHOOK_SECRET_PREVIOUS?.trim();
+  if (previousWebhook && previousWebhook === environment.CULQI_WEBHOOK_SECRET?.trim()) {
+    errors.push('CULQI_WEBHOOK_SECRET_PREVIOUS debe ser distinta de CULQI_WEBHOOK_SECRET; retírala al terminar la rotación.');
   }
 
   const siteUrl = environment.SITE_URL?.trim();
