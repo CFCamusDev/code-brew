@@ -1,10 +1,10 @@
 import { and, desc, eq, gt, gte, inArray, sql } from 'drizzle-orm';
 import type { Quote } from '../shop/checkout';
 import { formatOrderNumber } from '../shop/format';
-import * as culqi from './culqi';
 import { getDb } from './db';
 import { orderItems, orders, payments, productVariants, stockMovements } from './db/schema';
 import { sendOrderPaidEmails } from './email';
+import { getPaymentGateway } from '../../server/modules/payments';
 import { getOrder, quoteOrder } from './shop';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
@@ -94,7 +94,8 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
   if (!order) return { status: 'not_found' };
   if (order.status === 'paid') return { status: 'paid' };
   if (order.status !== 'pending') return { status: 'invalid', message: 'Este pedido ya no admite pagos.' };
-  if (!culqi.culqiEnabled()) return { status: 'disabled' };
+  const gateway = getPaymentGateway();
+  if (!gateway.isEnabled()) return { status: 'disabled' };
   const issue = await stockIssue(order);
   if (issue) return { status: 'unavailable', message: issue.message, issues: issue.issues };
 
@@ -117,17 +118,16 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
   let culqiOrderId = existing?.reference ?? null;
   if (!culqiOrderId) {
     const expiresAt = new Date(Date.now() + CULQI_ORDER_TTL_MS);
-    const { firstName, lastName } = culqi.splitName(order.customerName);
-    const response = await culqi.createOrder({
+    const created = await gateway.createOrder({
       amountCents: order.totalCents,
-      // Culqi exige order_number único por intento.
+      // La pasarela exige order_number único por intento.
       orderNumber: `${formatOrderNumber(order.number)}-${Date.now().toString(36)}`,
       orderId: order.id,
       expiresAt,
-      client: { firstName, lastName, email: order.customerEmail, phone: order.customerPhone }
+      client: { fullName: order.customerName, email: order.customerEmail, phone: order.customerPhone }
     });
-    if (response.status === 201 && !culqi.isCulqiError(response.data)) {
-      culqiOrderId = response.data.id;
+    if (created.ok) {
+      culqiOrderId = created.order.id;
       await db.insert(payments).values({
         orderId: order.id,
         providerReference: culqiOrderId,
@@ -135,17 +135,17 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
         status: 'pending',
         amountCents: order.totalCents,
         expiresAt,
-        raw: response.data
+        raw: created.order.raw
       });
     } else {
       // Sin orden el checkout igual ofrece tarjeta y Yape.
-      console.warn('[culqi] no se pudo crear la orden; solo tarjeta y Yape', response.status, response.data);
+      console.warn('[culqi] no se pudo crear la orden; solo tarjeta y Yape', created.status, created.raw);
     }
   }
 
   return {
     status: 'ready',
-    publicKey: culqi.culqiPublicKey()!,
+    publicKey: gateway.publicKey()!,
     amountCents: order.totalCents,
     culqiOrderId,
     email: order.customerEmail,
@@ -167,64 +167,57 @@ export async function payWithToken(
   if (!order) return { status: 'not_found' };
   if (order.status === 'paid') return { status: 'paid' };
   if (order.status !== 'pending') return { status: 'invalid', message: 'Este pedido ya no admite pagos.' };
-  if (!culqi.culqiEnabled()) return { status: 'disabled' };
+  const gateway = getPaymentGateway();
+  if (!gateway.isEnabled()) return { status: 'disabled' };
   const issue = await stockIssue(order);
   if (issue) return { status: 'unavailable', message: issue.message, issues: issue.issues };
 
-  const { firstName, lastName } = culqi.splitName(order.customerName);
-  const response = await culqi.createCharge({
+  const outcome = await gateway.charge({
     amountCents: order.totalCents,
     email: input.email,
     tokenId: input.tokenId,
     deviceId: input.deviceId,
     orderNumber: formatOrderNumber(order.number),
     orderId: order.id,
-    customer: {
-      firstName,
-      lastName,
-      phone: order.customerPhone,
-      address: order.shippingAddress,
-      city: order.shippingCity
-    },
+    customer: { fullName: order.customerName, phone: order.customerPhone, address: order.shippingAddress, city: order.shippingCity },
     authentication3DS: input.authentication3DS
   });
-  const data = response.data;
 
-  if (response.status === 201 && !culqi.isCulqiError(data)) {
-    if (data.amount !== order.totalCents) {
-      console.error(`[culqi] cargo ${data.id} por ${data.amount} no coincide con el pedido ${order.id} (${order.totalCents})`);
-      return { status: 'error', message: 'No pudimos validar el pago. Escríbenos por WhatsApp.' };
-    }
-    await markPaid(order.id, { reference: data.id, method: data.source?.type ?? 'card', amountCents: data.amount, raw: data });
-    return { status: 'paid' };
+  switch (outcome.kind) {
+    case 'paid':
+      if (outcome.amountCents !== order.totalCents) {
+        console.error(`[culqi] cargo ${outcome.chargeId} por ${outcome.amountCents} no coincide con el pedido ${order.id} (${order.totalCents})`);
+        return { status: 'error', message: 'No pudimos validar el pago. Escríbenos por WhatsApp.' };
+      }
+      await markPaid(order.id, { reference: outcome.chargeId, method: outcome.method, amountCents: outcome.amountCents, raw: outcome.raw });
+      return { status: 'paid' };
+
+    case 'requires_3ds':
+      return { status: '3ds_required' };
+
+    case 'declined':
+    case 'failed':
+      await getDb()
+        .insert(payments)
+        .values({
+          orderId: order.id,
+          providerReference: outcome.chargeId ?? null,
+          method: 'card',
+          status: 'failed',
+          amountCents: order.totalCents,
+          raw: outcome.raw
+        })
+        .onConflictDoNothing();
+      if (outcome.kind === 'declined') {
+        return { status: 'declined', message: outcome.userMessage ?? 'Tu banco rechazó el pago. Prueba con otra tarjeta o con Yape.' };
+      }
+      console.error('[culqi] error al crear cargo', outcome.raw);
+      return { status: 'error', message: outcome.userMessage ?? 'No pudimos procesar el pago. Inténtalo de nuevo.' };
+
+    default:
+      console.error('[culqi] respuesta inesperada al crear cargo', outcome.status, outcome.raw);
+      return { status: 'error', message: 'No pudimos procesar el pago. Inténtalo de nuevo.' };
   }
-
-  if (response.status === 200 && !culqi.isCulqiError(data) && data.action_code === 'REVIEW') {
-    return { status: '3ds_required' };
-  }
-
-  if (culqi.isCulqiError(data)) {
-    await getDb()
-      .insert(payments)
-      .values({
-        orderId: order.id,
-        providerReference: data.charge_id ?? null,
-        method: 'card',
-        status: 'failed',
-        amountCents: order.totalCents,
-        raw: data
-      })
-      .onConflictDoNothing();
-    // La documentación indica card_error (402); el sandbox responde operacion_denegada (400) con decline_code.
-    if (data.type === 'card_error' || data.type === 'operacion_denegada' || data.decline_code) {
-      return { status: 'declined', message: data.user_message ?? 'Tu banco rechazó el pago. Prueba con otra tarjeta o con Yape.' };
-    }
-    console.error('[culqi] error al crear cargo', response.status, data);
-    return { status: 'error', message: data.user_message ?? 'No pudimos procesar el pago. Inténtalo de nuevo.' };
-  }
-
-  console.error('[culqi] respuesta inesperada al crear cargo', response.status, data);
-  return { status: 'error', message: 'No pudimos procesar el pago. Inténtalo de nuevo.' };
 }
 
 /**
@@ -239,22 +232,22 @@ export async function syncCulqiOrder(culqiOrderId: string) {
     return 'ignored';
   }
 
-  const response = await culqi.getOrder(culqiOrderId);
-  if (response.status !== 200 || culqi.isCulqiError(response.data)) {
-    throw new Error(`No se pudo consultar la orden ${culqiOrderId} en Culqi (${response.status})`);
+  const fetched = await getPaymentGateway().fetchOrder(culqiOrderId);
+  if (!fetched.ok) {
+    throw new Error(`No se pudo consultar la orden ${culqiOrderId} en Culqi (${fetched.status})`);
   }
-  const remote = response.data;
+  const remote = fetched.order;
 
   if (remote.state === 'paid') {
-    if (remote.amount !== payment.amountCents) {
-      console.error(`[culqi] orden ${remote.id} pagada por ${remote.amount}, se esperaba ${payment.amountCents}`);
+    if (remote.amountCents !== payment.amountCents) {
+      console.error(`[culqi] orden ${remote.id} pagada por ${remote.amountCents}, se esperaba ${payment.amountCents}`);
       return 'amount_mismatch';
     }
-    await markPaid(payment.orderId, { reference: remote.id, method: 'order', amountCents: remote.amount, raw: remote });
+    await markPaid(payment.orderId, { reference: remote.id, method: 'order', amountCents: remote.amountCents, raw: remote.raw });
     return 'paid';
   }
   if (remote.state === 'expired' || remote.state === 'deleted') {
-    await db.update(payments).set({ status: 'failed', raw: remote }).where(eq(payments.id, payment.id));
+    await db.update(payments).set({ status: 'failed', raw: remote.raw }).where(eq(payments.id, payment.id));
     return remote.state;
   }
   return 'unchanged';

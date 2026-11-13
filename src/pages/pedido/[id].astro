@@ -5,7 +5,7 @@ import ShopHeader from '../../components/shop/ShopHeader.astro';
 import { getOrder, isOrderId } from '../../lib/server/shop';
 import { formatDateTime, formatOrderNumber, formatPEN } from '../../lib/shop/format';
 import { getWhatsAppUrl } from '../../data/config';
-import { culqiEnabled } from '../../lib/server/culqi';
+import { getPaymentGateway } from '../../server/modules/payments';
 import OrderPaymentPanel from '../../components/shop/OrderPaymentPanel';
 import '../../styles/shop.css';
 
@@ -91,7 +91,7 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
         client:load
         orderId={order.id}
         whatsappUrl={whatsapp}
-        culqiEnabled={culqiEnabled()}
+        culqiEnabled={getPaymentGateway().isEnabled()}
         items={order.items.map(item => ({
           sku: item.sku,
           grind: item.grind,

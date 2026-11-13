@@ -1,5 +1,5 @@
 import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
-import * as culqi from '../culqi';
+import { getPaymentGateway, type RefundReason } from '../../../server/modules/payments';
 import { getDb } from '../db';
 import { adminUsers, orderEvents, orderItems, orders, payments, productVariants, stockMovements } from '../db/schema';
 import { sendOrderShippedEmail } from '../email';
@@ -209,7 +209,7 @@ async function restock(tx: Parameters<Parameters<ReturnType<typeof getDb>['trans
 export async function refundOrder(
   orderId: string,
   adminUserId: number,
-  { reason, restockItems, manual, note }: { reason: culqi.RefundReason; restockItems: boolean; manual: boolean; note?: string }
+  { reason, restockItems, manual, note }: { reason: RefundReason; restockItems: boolean; manual: boolean; note?: string }
 ) {
   const detail = await getOrderDetail(orderId);
   if (!detail) throw new AdminActionError('Pedido no encontrado.');
@@ -221,13 +221,12 @@ export async function refundOrder(
     if (!charge?.reference) {
       throw new AdminActionError('Este pago no se puede devolver automáticamente. Hazlo desde CulqiPanel y regístralo como reembolso manual.');
     }
-    const response = await culqi.createRefund(charge.reference, charge.amountCents, reason);
-    if (response.status !== 201 || culqi.isCulqiError(response.data)) {
-      console.error('[culqi] reembolso fallido', response.status, response.data);
-      const message = culqi.isCulqiError(response.data) ? response.data.merchant_message : undefined;
-      throw new AdminActionError(`Culqi rechazó el reembolso${message ? `: ${message}` : '.'}`);
+    const result = await getPaymentGateway().refund({ chargeId: charge.reference, amountCents: charge.amountCents, reason });
+    if (!result.ok) {
+      console.error('[culqi] reembolso fallido', result.status, result.raw);
+      throw new AdminActionError(`Culqi rechazó el reembolso${result.message ? `: ${result.message}` : '.'}`);
     }
-    refundId = response.data.id;
+    refundId = result.refundId;
   }
 
   await getDb().transaction(async tx => {
