@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { adminAction } from '../../../lib/server/admin/api';
 import { updateSetting } from '../../../lib/server/admin/settings';
-import { POLICY_KEYS, SOCIAL_LINKS_KEY } from '../../../lib/server/settings';
+import { POLICY_KEYS, SOCIAL_LINKS_KEY } from '../../../server/modules/settings';
 
 export const prerender = false;
 

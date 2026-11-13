@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { clientIp, createSession, login, SESSION_COOKIE } from '../../../lib/server/auth';
+import { clientIp, createSession, login, SESSION_COOKIE } from '../../../server/modules/identity';
 
 export const prerender = false;
 
