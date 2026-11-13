@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { siteSettings } from './db/schema';
+import { logger } from './logger';
 
 // Config del sitio editable desde /admin/configuracion (redes sociales, WhatsApp, políticas).
 // Se cachea un minuto en memoria: el valor cambia poco y así no se golpea la base en cada
@@ -19,7 +20,7 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
     cache.set(key, { value, at: Date.now() });
     return value;
   } catch (error) {
-    console.error(`[settings] no se pudo leer "${key}"`, error);
+    logger.error('[settings] no se pudo leer la configuración', error, { key });
     return (cached?.value as T) ?? fallback;
   }
 }

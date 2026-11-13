@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { adminUsers, orderEvents, orderItems, orders, payments, productVariants, stockMovements } from '../db/schema';
 import { sendOrderShippedEmail } from '../email';
 import { getOrder } from '../shop';
+import { logger } from '../logger';
 
 export type OrderStatus = (typeof orders.$inferSelect)['status'];
 
@@ -223,7 +224,7 @@ export async function refundOrder(
     }
     const response = await culqi.createRefund(charge.reference, charge.amountCents, reason);
     if (response.status !== 201 || culqi.isCulqiError(response.data)) {
-      console.error('[culqi] reembolso fallido', response.status, response.data);
+      logger.error('[culqi] reembolso fallido', new Error(`Culqi respondió ${response.status}`), { status: response.status, response: response.data });
       const message = culqi.isCulqiError(response.data) ? response.data.merchant_message : undefined;
       throw new AdminActionError(`Culqi rechazó el reembolso${message ? `: ${message}` : '.'}`);
     }

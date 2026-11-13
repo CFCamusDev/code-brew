@@ -27,7 +27,9 @@ describe('sitio', () => {
   it('responde la salud de app y base de datos', async () => {
     const { status, json } = await api('/api/health');
     expect(status).toBe(200);
-    expect(json).toEqual({ status: 'ok', database: 'ok', version });
+    expect(json).toMatchObject({ status: 'ok', database: 'ok', migrations: 'ok', version });
+    expect(typeof json.databaseLatencyMs).toBe('number');
+    expect(['enabled', 'disabled']).toContain(json.errorTracking);
   });
 
   it('la página de Hotfix muestra precios y SKU desde la base de datos', async () => {

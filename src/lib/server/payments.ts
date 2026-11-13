@@ -6,6 +6,7 @@ import { getDb } from './db';
 import { orderItems, orders, payments, productVariants, stockMovements } from './db/schema';
 import { sendOrderPaidEmails } from './email';
 import { getOrder, quoteOrder } from './shop';
+import { logger } from './logger';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -46,7 +47,11 @@ async function markPaid(orderId: string, payment: { reference: string; method: s
     if (order.status !== 'pending') {
       // Pago nuevo sobre un pedido ya pagado o cerrado (p. ej. pagó con tarjeta y luego también el código de PagoEfectivo).
       if (previous?.status !== 'paid') {
-        console.error(`[pagos] PAGO ADICIONAL ${payment.reference} para pedido ${orderId} en estado ${order.status}: revisar devolución`);
+        logger.error('[pagos] pago adicional: revisar devolución', new Error(`Pago adicional ${payment.reference} sobre un pedido en estado ${order.status}`), {
+          reference: payment.reference,
+          orderId,
+          orderStatus: order.status
+        });
       }
       return false;
     }
@@ -139,7 +144,7 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
       });
     } else {
       // Sin orden el checkout igual ofrece tarjeta y Yape.
-      console.warn('[culqi] no se pudo crear la orden; solo tarjeta y Yape', response.status, response.data);
+      logger.warn('[culqi] no se pudo crear la orden; solo tarjeta y Yape', { status: response.status, response: response.data });
     }
   }
 
@@ -192,7 +197,10 @@ export async function payWithToken(
 
   if (response.status === 201 && !culqi.isCulqiError(data)) {
     if (data.amount !== order.totalCents) {
-      console.error(`[culqi] cargo ${data.id} por ${data.amount} no coincide con el pedido ${order.id} (${order.totalCents})`);
+      logger.error('[culqi] el monto del cargo no coincide con el pedido', new Error(`Cargo ${data.id} por ${data.amount}, pedido por ${order.totalCents}`), {
+        orderId: order.id,
+        chargeId: data.id
+      });
       return { status: 'error', message: 'No pudimos validar el pago. Escríbenos por WhatsApp.' };
     }
     await markPaid(order.id, { reference: data.id, method: data.source?.type ?? 'card', amountCents: data.amount, raw: data });
@@ -219,11 +227,11 @@ export async function payWithToken(
     if (data.type === 'card_error' || data.type === 'operacion_denegada' || data.decline_code) {
       return { status: 'declined', message: data.user_message ?? 'Tu banco rechazó el pago. Prueba con otra tarjeta o con Yape.' };
     }
-    console.error('[culqi] error al crear cargo', response.status, data);
+    logger.error('[culqi] error al crear cargo', new Error(`Culqi respondió ${response.status}`), { status: response.status, response: data, orderId: order.id });
     return { status: 'error', message: data.user_message ?? 'No pudimos procesar el pago. Inténtalo de nuevo.' };
   }
 
-  console.error('[culqi] respuesta inesperada al crear cargo', response.status, data);
+  logger.error('[culqi] respuesta inesperada al crear cargo', new Error(`Culqi respondió ${response.status}`), { status: response.status, response: data, orderId: order.id });
   return { status: 'error', message: 'No pudimos procesar el pago. Inténtalo de nuevo.' };
 }
 
@@ -235,7 +243,7 @@ export async function syncCulqiOrder(culqiOrderId: string) {
   const db = getDb();
   const [payment] = await db.select().from(payments).where(eq(payments.providerReference, culqiOrderId));
   if (!payment) {
-    console.warn(`[culqi] webhook de orden desconocida ${culqiOrderId}`);
+    logger.warn('[culqi] webhook de orden desconocida', { culqiOrderId });
     return 'ignored';
   }
 
@@ -247,7 +255,10 @@ export async function syncCulqiOrder(culqiOrderId: string) {
 
   if (remote.state === 'paid') {
     if (remote.amount !== payment.amountCents) {
-      console.error(`[culqi] orden ${remote.id} pagada por ${remote.amount}, se esperaba ${payment.amountCents}`);
+      logger.error('[culqi] el monto de la orden pagada no coincide', new Error(`Orden ${remote.id} pagada por ${remote.amount}, se esperaba ${payment.amountCents}`), {
+        orderId: payment.orderId,
+        culqiOrderId: remote.id
+      });
       return 'amount_mismatch';
     }
     await markPaid(payment.orderId, { reference: remote.id, method: 'order', amountCents: remote.amount, raw: remote });

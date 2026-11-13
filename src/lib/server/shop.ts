@@ -3,6 +3,7 @@ import type { CartLine, Customer, Quote } from '../shop/checkout';
 import { isFreeShipping } from '../shop/shipping';
 import { getDb } from './db';
 import { orderItems, orders, products, productVariants, shippingRegionRates, shippingZones } from './db/schema';
+import { logger, serializeError } from './logger';
 
 type Db = ReturnType<typeof getDb>;
 type Executor = Db | Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -305,7 +306,7 @@ export async function getLiveCatalog() {
       grinds: new Map(rows.map(row => [row.slug, row.grinds]))
     };
   } catch (error) {
-    console.error('[catalogo] base de datos no disponible; se usa catalog.json', error);
+    logger.warn('[catalogo] base de datos no disponible; se usa catalog.json', { error: serializeError(error) });
     return null;
   }
 }
