@@ -88,7 +88,7 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 
 ## Producción (Docker / Portainer)
 
-`docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
+`docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip, cabeceras de seguridad y `limit_req` por IP en login, pedidos, pagos, consulta de pedido y contacto; superar el límite devuelve 429 sin llegar a la app), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
 
 ## Cliente actual
 

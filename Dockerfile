@@ -26,6 +26,8 @@ RUN pnpm install --frozen-lockfile --prod
 # Proxy Nginx público (se construye con `target: web` desde docker-compose)
 FROM nginx:alpine AS web
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Falla la construcción si la configuración de Nginx no es válida (zonas de limit_req, mapas, rutas).
+RUN nginx -t
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/api/health || exit 1
 
 # Stage 3: servidor Node de producción (etapa por defecto)
