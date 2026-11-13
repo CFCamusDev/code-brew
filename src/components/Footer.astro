@@ -1,6 +1,6 @@
 ---
 import { getWhatsAppUrl } from '../data/config';
-import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/settings';
+import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../server/modules/settings';
 interface Props { staticContent?: boolean; }
 const { staticContent = false } = Astro.props;
 const whatsappUrl = staticContent ? '/api/contact/whatsapp' : await getWhatsAppUrl();

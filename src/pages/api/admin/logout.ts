@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { deleteSession, SESSION_COOKIE } from '../../../lib/server/auth';
+import { deleteSession, SESSION_COOKIE } from '../../../server/modules/identity';
 
 export const prerender = false;
 
