@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
-import { getPaymentGateway, type RefundReason } from '../../../server/modules/payments';
+import { REFUNDABLE_STATUSES, refundPaidOrder, type RefundReason } from '../../../server/modules/payments';
+import { DomainError } from '../../../server/shared';
 import { getDb } from '../db';
-import { inventoryFor } from '../../../server/modules/inventory';
 import { adminUsers, orderEvents, orderItems, orders, payments } from '../db/schema';
 import { sendOrderShippedEmail } from '../email';
 import { getOrder } from '../shop';
@@ -33,7 +33,7 @@ export const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 export const SOLD_STATUSES = ['paid', 'preparing', 'shipped', 'delivered'] as const satisfies readonly OrderStatus[];
 
 /** Estados desde los que se puede reembolsar (antes de despachar). */
-export const REFUNDABLE: OrderStatus[] = ['paid', 'preparing'];
+export const REFUNDABLE: OrderStatus[] = [...REFUNDABLE_STATUSES];
 
 const PAGE_SIZE = 25;
 
@@ -184,52 +184,20 @@ export async function changeStatus(
 }
 
 /**
- * Reembolsa el pedido completo. Con un cargo de tarjeta o Yape la devolución se hace en Culqi;
- * los pagos por orden (PagoEfectivo, billeteras) se devuelven desde CulqiPanel y aquí solo se registran (`manual`).
+ * Reembolsa el pedido completo (caso de uso Reembolsar del módulo payments). Las reglas de negocio que lo impiden
+ * se traducen a AdminActionError, que el panel muestra como 409.
  */
 export async function refundOrder(
   orderId: string,
   adminUserId: number,
-  { reason, restockItems, manual, note }: { reason: RefundReason; restockItems: boolean; manual: boolean; note?: string }
+  options: { reason: RefundReason; restockItems: boolean; manual: boolean; note?: string }
 ) {
-  const detail = await getOrderDetail(orderId);
-  if (!detail) throw new AdminActionError('Pedido no encontrado.');
-  if (!REFUNDABLE.includes(detail.status)) throw new AdminActionError('Solo se reembolsan pedidos pagados que aún no se despachan.');
-
-  let refundId: string | null = null;
-  if (!manual) {
-    const charge = detail.refundableCharge;
-    if (!charge?.reference) {
-      throw new AdminActionError('Este pago no se puede devolver automáticamente. Hazlo desde CulqiPanel y regístralo como reembolso manual.');
-    }
-    const result = await getPaymentGateway().refund({ chargeId: charge.reference, amountCents: charge.amountCents, reason });
-    if (!result.ok) {
-      console.error('[culqi] reembolso fallido', result.status, result.raw);
-      throw new AdminActionError(`Culqi rechazó el reembolso${result.message ? `: ${result.message}` : '.'}`);
-    }
-    refundId = result.refundId;
+  try {
+    await refundPaidOrder(orderId, adminUserId, options);
+  } catch (error) {
+    if (error instanceof DomainError) throw new AdminActionError(error.message);
+    throw error;
   }
-
-  await getDb().transaction(async tx => {
-    const [order] = await tx.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).for('update');
-    await tx.update(orders).set({ status: 'refunded' }).where(eq(orders.id, orderId));
-    await tx
-      .update(payments)
-      .set({ status: 'refunded' })
-      .where(and(eq(payments.orderId, orderId), eq(payments.status, 'paid')));
-    if (restockItems) {
-      const items = await tx.select({ variantId: orderItems.variantId, quantity: orderItems.quantity }).from(orderItems).where(eq(orderItems.orderId, orderId));
-      await inventoryFor(tx).restockOrder(orderId, adminUserId, items);
-    }
-    await tx.insert(orderEvents).values({
-      orderId,
-      type: 'refund',
-      fromStatus: order.status,
-      toStatus: 'refunded',
-      note: [manual ? 'Reembolso manual (CulqiPanel)' : `Reembolso Culqi ${refundId}`, note].filter(Boolean).join(' · '),
-      adminUserId
-    });
-  });
 }
 
 export async function saveAdminNotes(orderId: string, adminNotes: string) {

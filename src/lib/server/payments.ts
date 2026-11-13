@@ -2,11 +2,10 @@ import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 import type { Quote } from '../shop/checkout';
 import { formatOrderNumber } from '../shop/format';
 import { getDb } from './db';
-import { orderItems, orders, payments } from './db/schema';
+import { payments } from './db/schema';
 import { sendOrderPaidEmails } from './email';
 import { orderingFor } from '../../server/modules/ordering';
-import { inventoryFor } from '../../server/modules/inventory';
-import { getPaymentGateway } from '../../server/modules/payments';
+import { confirmOrderPayment, getPaymentGateway, type ConfirmedPayment } from '../../server/modules/payments';
 import { getOrder } from './shop';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
@@ -21,46 +20,16 @@ async function stockIssue(order: Order): Promise<{ message: string; issues: Quot
 }
 
 /**
- * Marca el pedido como pagado y descuenta stock en una sola transacción.
- * Idempotente: si llega dos veces (respuesta del cargo + webhook) solo actúa la primera.
+ * Marca el pedido como pagado y descuenta stock (caso de uso ConfirmarPago, en una transacción).
+ * Idempotente: si llega dos veces (respuesta del cargo + webhook) solo actúa la primera. Los correos salen después.
  */
-async function markPaid(orderId: string, payment: { reference: string; method: string; amountCents: number; raw: unknown }) {
-  const changed = await getDb().transaction(async tx => {
-    const [order] = await tx.select().from(orders).where(eq(orders.id, orderId)).for('update');
-    if (!order) throw new Error(`Pedido ${orderId} no existe`);
-    const [previous] = await tx
-      .select({ status: payments.status })
-      .from(payments)
-      .where(eq(payments.providerReference, payment.reference));
-
-    await tx
-      .insert(payments)
-      .values({
-        orderId,
-        providerReference: payment.reference,
-        method: payment.method,
-        status: 'paid',
-        amountCents: payment.amountCents,
-        raw: payment.raw
-      })
-      .onConflictDoUpdate({ target: payments.providerReference, set: { status: 'paid', raw: payment.raw } });
-
-    if (order.status !== 'pending') {
-      // Pago nuevo sobre un pedido ya pagado o cerrado (p. ej. pagó con tarjeta y luego también el código de PagoEfectivo).
-      if (previous?.status !== 'paid') {
-        console.error(`[pagos] PAGO ADICIONAL ${payment.reference} para pedido ${orderId} en estado ${order.status}: revisar devolución`);
-      }
-      return false;
-    }
-
-    const items = await tx.select({ variantId: orderItems.variantId, quantity: orderItems.quantity }).from(orderItems).where(eq(orderItems.orderId, orderId));
-    const { shortage: stockShortage } = await inventoryFor(tx).registerSale(orderId, items);
-
-    await tx.update(orders).set({ status: 'paid', paidAt: new Date(), stockShortage }).where(eq(orders.id, orderId));
-    return true;
-  });
-
-  if (changed) {
+async function markPaid(orderId: string, payment: ConfirmedPayment) {
+  const outcome = await confirmOrderPayment(orderId, payment);
+  if (outcome === 'additional_payment') {
+    // Pago nuevo sobre un pedido ya pagado o cerrado (p. ej. pagó con tarjeta y luego también el código de PagoEfectivo).
+    console.error(`[pagos] PAGO ADICIONAL ${payment.reference} para pedido ${orderId}: revisar devolución`);
+  }
+  if (outcome === 'confirmed') {
     const order = await getOrder(orderId);
     if (order) await sendOrderPaidEmails(order);
   }
