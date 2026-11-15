@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "admin:create": "node scripts/admin/create-user.mjs",
     "typecheck": "astro sync && tsc --noEmit",
+    "deps:check": "depcruise src/server --config .dependency-cruiser.cjs",
     "test": "vitest run",
     "config:check": "node scripts/validate-env.mjs",
     "test:docker": "node scripts/test-docker.mjs",
@@ -56,6 +57,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/three": "0.186.0",
+    "dependency-cruiser": "18.7.2",
     "drizzle-kit": "0.31.11",
     "typescript": "5.9.3",
     "vitest": "4.1.12"

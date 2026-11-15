@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { SENTRY_DSN, SENTRY_ENVIRONMENT } from 'astro:env/server';
-import { getSessionUser, SESSION_COOKIE } from './lib/server/auth';
 import { initErrorTracking } from './lib/server/error-tracking';
 import { logger, runWithRequestId, sanitizeRequestId } from './lib/server/logger';
+import { getSessionUser, SESSION_COOKIE } from './server/modules/identity';
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login', '/api/admin/login']);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);

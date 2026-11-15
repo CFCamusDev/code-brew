@@ -1,11 +1,3 @@
-import type { Quote } from './checkout';
-
-type FreeShippingRule = Pick<Quote['zones'][number], 'freeFromCents' | 'freeFromBags'>;
-
-/** Envío gratis por subtotal o por cantidad de bolsas. La comparten el servidor (cobro) y el checkout (vista previa). */
-export function isFreeShipping(zone: FreeShippingRule, subtotalCents: number, bags: number) {
-  return (
-    (zone.freeFromCents !== null && subtotalCents >= zone.freeFromCents) ||
-    (zone.freeFromBags !== null && bags >= zone.freeFromBags)
-  );
-}
+// La regla vive en el dominio del módulo shipping; se reexporta aquí para el checkout (navegador), que no debe
+// importar el índice del módulo (arrastraría la base de datos).
+export { isFreeShipping } from '../../server/modules/shipping/domain/shipping-zone';

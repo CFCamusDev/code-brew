@@ -25,7 +25,12 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Proxy Nginx público (se construye con `target: web` desde docker-compose)
 FROM nginx:alpine AS web
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# La imagen de Nginx procesa /etc/nginx/templates/*.template al arrancar y sustituye solo las variables NGINX_RATE_*
+# (los topes de limit_req). Los valores de aquí son los de producción; el stack de pruebas los sube.
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV NGINX_ENVSUBST_FILTER=NGINX_RATE_     NGINX_RATE_LOGIN=10r/m     NGINX_RATE_ORDERS=20r/m     NGINX_RATE_LOOKUP=10r/m     NGINX_RATE_PAYMENTS=30r/m     NGINX_RATE_CONTACT=30r/m
+# Falla la construcción si la configuración resultante no es válida (zonas de limit_req, mapas, rutas).
+RUN /docker-entrypoint.d/20-envsubst-on-templates.sh && nginx -t
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/api/health || exit 1
 
 # Stage 3: servidor Node de producción (etapa por defecto)

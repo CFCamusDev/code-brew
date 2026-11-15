@@ -1,5 +1,7 @@
-import { asc, desc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { getDb } from '../db';
+import { InsufficientStockError, inventoryFor } from '../../../server/modules/inventory';
+import { unitOfWork } from '../../../server/shared';
 import { adminUsers, orders, products, productVariants, stockMovements } from '../db/schema';
 import { AdminActionError } from './orders';
 
@@ -91,16 +93,12 @@ export async function adjustStock(
   adminUserId: number,
   { delta, reason, note }: { delta: number; reason: 'adjustment' | 'purchase'; note?: string }
 ) {
-  return getDb().transaction(async tx => {
-    const [variant] = await tx
-      .update(productVariants)
-      .set({ stock: sql`${productVariants.stock} + ${delta}` })
-      .where(sql`${productVariants.id} = ${variantId} and ${productVariants.stock} + ${delta} >= 0`)
-      .returning({ stock: productVariants.stock });
-    if (!variant) throw new AdminActionError('El ajuste dejaría el stock en negativo.');
-    await tx.insert(stockMovements).values({ variantId, delta, stockAfter: variant.stock, reason, adminUserId, note: note || null });
-    return variant.stock;
-  });
+  try {
+    return await unitOfWork.run(tx => inventoryFor(tx).adjustStock({ variantId, adminUserId, delta, reason, note }));
+  } catch (error) {
+    if (error instanceof InsufficientStockError) throw new AdminActionError(error.message);
+    throw error;
+  }
 }
 
 export async function recentStockMovements(limit = 40) {

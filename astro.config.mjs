@@ -19,6 +19,7 @@ export default defineConfig({
       CULQI_SECRET_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Clave que va en la URL del webhook registrada en CulqiPanel (?key=...).
       CULQI_WEBHOOK_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      CULQI_WEBHOOK_SECRET_PREVIOUS: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Correo (Resend): sin API key los correos solo se registran en los logs.
       RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       EMAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),

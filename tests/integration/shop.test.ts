@@ -160,6 +160,15 @@ describe('webhook de Culqi', () => {
     expect((await api('/api/webhooks/culqi?key=adivinando', { body: event })).status).toBe(401);
   });
 
+  const previous = process.env.CULQI_WEBHOOK_SECRET_PREVIOUS;
+
+  it.runIf(secret && previous)('durante una rotación acepta la clave anterior además de la vigente', async () => {
+    const withPrevious = await api(`/api/webhooks/culqi?key=${previous}`, { body: event });
+    expect(withPrevious.status).toBe(200);
+    expect(withPrevious.json.result).toBe('ignored');
+    expect((await api(`/api/webhooks/culqi?key=${previous}x`, { body: event })).status).toBe(401);
+  });
+
   it.runIf(secret)('ignora órdenes desconocidas y otros eventos sin tocar pedidos', async () => {
     const unknown = await api(`/api/webhooks/culqi?key=${secret}`, { body: event });
     expect(unknown.json.result).toBe('ignored');

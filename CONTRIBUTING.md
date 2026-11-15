@@ -20,6 +20,14 @@ Somos tres y todos tocamos todo. Para no pisarnos, el orden lo marca el tablero,
 - `src/server/modules/<módulo>/{domain,application,infrastructure,http}`.
 - El dominio no importa Drizzle, Astro ni nada de infraestructura (lo verifica el CI).
 - Las transacciones se abren en los casos de uso. Los endpoints validan con zod y delegan.
+- Las reglas están en `.dependency-cruiser.cjs` y el CI las ejecuta (`pnpm deps:check`, también en local). Lo que hacen cumplir:
+  - `domain` solo importa de sí mismo y de `shared`: nada de `application`, `infrastructure`, `http`, `src/lib`, Drizzle, Astro ni React, y tampoco `UnitOfWork`.
+  - `application` (casos de uso y `ports/`) habla con interfaces: no importa `infrastructure`, `http`, Drizzle ni Astro.
+  - `infrastructure` no importa `http` ni páginas; `http` no importa `infrastructure`, salvo en `composition.ts` (raíz de composición donde se conectan los adaptadores).
+  - Un módulo usa a otro solo por su `index.ts`, nunca por sus carpetas internas.
+  - `shared` no depende de módulos ni de Astro, y solo `unit-of-work.ts` conoce la base de datos.
+  - `src/server` no importa páginas ni componentes y no tiene ciclos.
+- Si una regla bloquea algo legítimo, no la desactives: abre un ADR o corrige la dirección de la dependencia. Las pruebas de las reglas están en `tests/unit/architecture.test.ts` (fixtures en `tests/fixtures/architecture`).
 - Frontend por funcionalidad en `src/features`, piezas base en `src/ui`, contratos zod en `src/contracts`.
 
 ## Definición de terminado

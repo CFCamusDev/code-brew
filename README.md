@@ -1,29 +1,48 @@
-# CodeBrew — 1.5.2
+# CodeBrew — 1.7.0
 
 Tienda en Astro con identidad de café de especialidad para programadores: **Buen café. Mejor código.** La landing con precios en vivo, los pedidos, las API y la administración se ejecutan en un servidor Node con PostgreSQL. Las rutas marcadas para prerenderizado se generan como HTML estático. Los componentes interactivos se escriben como islas React.
 
-## Desarrollo
+## Cómo trabajamos
 
-El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**, y **pnpm 10.30.3** (`corepack enable` si aún no lo tienes). Consulta `docs/releases/1.5.2.md` para este release y `docs/releases/1.1.0.md` para la configuración de producción.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): orden del tablero, ramas, commits, migraciones (una abierta a la vez) y definición de terminado.
+- [`docs/adr/`](docs/adr/README.md): decisiones de arquitectura acordadas (ORM, monolito modular hexagonal, catálogo por líneas, reserva de stock, Culqi y hosting).
+- Tablero: proyecto **CodeBrew · Migración a ecommerce** en [Projects del repositorio](https://github.com/CFCamusDev/code-brew/projects). Las historias son los [issues](https://github.com/CFCamusDev/code-brew/issues) con su épica, orden, pista y dependencias.
+- Cambios por versión: [`CHANGELOG.md`](CHANGELOG.md); notas de despliegue en [`docs/releases/`](docs/releases/).
 
-- `pnpm install --frozen-lockfile`
-- `cp .env.example .env`
-- `pnpm db:up` levanta PostgreSQL de desarrollo en Docker (puerto 5434).
-- `pnpm db:migrate` aplica las migraciones y `pnpm db:seed` carga el catálogo inicial.
-- `pnpm dev` usa el puerto definido en `astro.config.mjs`.
-- Puerto alternativo: `pnpm exec astro dev --host 127.0.0.1 --port 4321`.
+## Entorno local
+
+Requisitos: **Node 22.23.4 o una versión compatible indicada en `engines`**, **pnpm 10.30.3** (`corepack enable` si aún no lo tienes) y **Docker** (Docker Desktop en Windows y macOS) para la base de datos.
+
+1. `pnpm install --frozen-lockfile`
+2. `cp .env.example .env` y completa lo que necesites. Sin llaves de Culqi, Resend o Cloudinary la tienda funciona: el pago se coordina por WhatsApp, los correos solo se registran en los logs y la subida de imágenes queda deshabilitada.
+3. `pnpm db:up` levanta PostgreSQL de desarrollo en Docker (contenedor `codebrew-db-dev`, puerto 5434).
+4. `pnpm db:migrate` aplica las migraciones y `pnpm db:seed` carga el catálogo inicial.
+5. `pnpm admin:create tu@correo.com "Tu nombre" admin` crea tu usuario del panel e imprime una contraseña temporal.
+6. `pnpm dev` y abre http://localhost (el puerto 80 viene de `server.port` en `astro.config.mjs`); el panel está en http://localhost/admin.
+
+Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321`. Para verificar la configuración sin mostrar secretos: `pnpm config:check`.
+
+## Estructura
+
+- `src/pages`: páginas y API (`src/pages/api`); `src/components`: componentes de la tienda (`shop/`) y del panel (`admin/`); `src/layouts`, `src/styles`.
+- `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: código compartido con el navegador (carrito, validaciones, formato).
+- `src/data`: contenido y configuración estáticos (`pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
+- `drizzle/`: migraciones SQL; `scripts/`: base de datos, panel, validación del entorno y backlog de GitHub; `tests/unit` y `tests/integration`.
+- En migración (ADR 0002): el backend pasa a `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y el frontend a `src/features`, `src/ui` y `src/contracts`. Las historias del tablero mueven el código por partes.
+
+## Comandos
 - `pnpm build` genera `dist/client` (estático) y `dist/server` (servidor Node).
 - `pnpm preview` sirve la compilación.
 - `pnpm start` arranca el servidor de producción ya compilado; las variables deben estar exportadas en el entorno (Docker las inyecta).
-- `pnpm exec tsc --noEmit` comprueba los módulos TypeScript.
+- `pnpm typecheck` comprueba los tipos de todo el proyecto.
 
 ## Base de datos
 
 - Esquema en `src/lib/server/db/schema.ts` (Drizzle ORM). Montos en céntimos de sol.
 - Tras cambiar el esquema: `pnpm db:generate` crea la migración SQL en `drizzle/`; se versiona en git.
-- `src/data/catalog.json` es la fuente del catálogo inicial: la landing toma de ahí precios y moliendas, y el seed lo inserta en la base de datos sin pisar precios ni stock editados después.
+- `src/data/catalog.json` es la fuente del catálogo inicial: el seed lo inserta en la base de datos sin pisar precios ni stock editados después, y la tienda lo usa como respaldo si la base de datos no responde. El contenido de los perfiles vive en `src/data/pipeline.ts`. Ambos se retirarán como fuente cuando el catálogo pase a la base de datos (ADR 0003).
 - `src/data/shipping.json` define las zonas de envío iniciales (tarifas provisionales hasta confirmarlas).
-- `pnpm db:studio` abre un explorador de la base de datos (útil para ajustar stock mientras no exista el admin).
+- `pnpm db:studio` abre un explorador de la base de datos para inspeccionar datos en desarrollo.
 
 ## Tienda
 
@@ -31,7 +50,7 @@ El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**
 - `/checkout`: isla `CheckoutApp` con validación zod compartida con la API (`src/lib/shop/checkout.ts`).
 - `POST /api/cart/quote` recalcula precios, stock y envío con la base de datos; `POST /api/orders` crea el pedido pendiente de pago. El servidor nunca usa precios enviados por el navegador.
 - `/pedido/[id]`: resumen del pedido; el UUID funciona como enlace privado para compras como invitado.
-- Una presentación con stock 0 no se puede comprar: carga el stock real antes de abrir la tienda.
+- Una presentación con stock 0 no se puede comprar: muestra «Nuevo lote en camino» y un formulario que arma la reserva por WhatsApp.
 - Envío gratis: por subtotal (`free_from_cents`) o por bolsas (`free_from_bags`; el Pack Developer cuenta 2). Hoy: desde 3 bolsas en Lima y Callao.
 
 ## Pagos (Culqi)
@@ -41,6 +60,8 @@ El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**
 - Tarjeta y Yape: `POST /api/payments/charge` cobra el total guardado del pedido. Si el banco exige 3DS (`action_code: REVIEW`), Culqi3DS autentica y se reintenta el cargo.
 - PagoEfectivo, billeteras y agentes usan una orden de Culqi (`POST /api/payments/session`) y se confirman por webhook.
 - Webhook: en CulqiPanel > Eventos > Webhook registra `order.status.changed` con la URL `https://<dominio>/api/webhooks/culqi?key=<CULQI_WEBHOOK_SECRET>`. El servidor no confía en el cuerpo: vuelve a consultar la orden a Culqi.
+- **Rotar la clave del webhook** (sin perder eventos): 1) genera una nueva (`node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`); 2) en la stack, pon la nueva en `CULQI_WEBHOOK_SECRET` y la que estaba en `CULQI_WEBHOOK_SECRET_PREVIOUS`, y redespliega: el servidor acepta las dos; 3) en CulqiPanel cambia la URL del webhook a `?key=<nueva>`; 4) cuando ya no lleguen eventos con la clave vieja (revisa los accesos de `/api/webhooks/culqi`), vacía `CULQI_WEBHOOK_SECRET_PREVIOUS` y redespliega. La clave viaja en la URL, así que no se registra: el servidor no la escribe en sus logs y Nginx guarda esa ruta sin la cadena de consulta y sin registro de errores.
+- Si el webhook llega antes de que termine la respuesta del cargo (o al revés), da igual: confirmar el mismo pago dos veces no tiene efecto y el orden no cambia el resultado.
 - Al confirmarse un pago se descuenta el stock en la misma transacción; si no alcanza, el pedido queda con `stock_shortage` y se avisa al administrador. Confirmar dos veces el mismo pago no tiene efecto.
 - Correos con Resend (`RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `SITE_URL`); sin API key solo se registran en los logs.
 - Pruebas: tarjetas en https://docs.culqi.com/es/documentacion/pagos-online/tarjetas-de-prueba (Visa 4111 1111 1111 1111, 09/30, CVV 123).
@@ -72,8 +93,8 @@ El proyecto usa **Node 22.23.4 o una versión compatible indicada en `engines`**
 docker exec codebrew-db-dev psql -U codebrew -c "create database codebrew_test"
 export DATABASE_URL=postgres://codebrew:codebrew@localhost:5434/codebrew_test
 pnpm db:migrate && pnpm db:seed && pnpm build
-CULQI_WEBHOOK_SECRET=ci-secreto PORT=4398 node dist/server/entry.mjs &   # sin llaves de Culqi ni Resend
-INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto pnpm test:integration
+CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior PORT=4398 node dist/server/entry.mjs &   # sin llaves de Culqi ni Resend
+INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior pnpm test:integration
 ```
 
 ## Observabilidad
@@ -96,7 +117,7 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 
 ## Producción (Docker / Portainer)
 
-`docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip y cabeceras de seguridad), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
+`docker-compose.yml` levanta tres servicios: `codebrew-landing` (Nginx público en `PORT`, gzip, cabeceras de seguridad y `limit_req` por IP en login, pedidos, pagos, consulta de pedido y contacto; superar el límite devuelve 429 sin llegar a la app), `codebrew-app` (servidor Astro) y `codebrew-db` (PostgreSQL con volumen persistente). Requiere definir `POSTGRES_PASSWORD` en las variables de la stack. Al arrancar, la app aplica migraciones pendientes y carga el catálogo que falte. `GET /api/health` indica si la app y la base de datos responden.
 
 ## Cliente actual
 

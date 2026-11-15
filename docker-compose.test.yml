@@ -3,6 +3,13 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-web
     ports: !override
       - "127.0.0.1::80"
+    # La suite de integración crea decenas de pedidos y logins seguidos desde una sola IP: sin esto chocaría con limit_req.
+    environment:
+      - NGINX_RATE_LOGIN=100000r/m
+      - NGINX_RATE_ORDERS=100000r/m
+      - NGINX_RATE_LOOKUP=100000r/m
+      - NGINX_RATE_PAYMENTS=100000r/m
+      - NGINX_RATE_CONTACT=100000r/m
 
   codebrew-app:
     container_name: ${COMPOSE_PROJECT_NAME}-app
@@ -27,6 +34,7 @@ services:
       - INTEGRATION_BASE_URL=http://codebrew-landing
       - CULQI_SECRET_KEY=
       - CULQI_WEBHOOK_SECRET=${CULQI_WEBHOOK_SECRET}
+      - CULQI_WEBHOOK_SECRET_PREVIOUS=${CULQI_WEBHOOK_SECRET_PREVIOUS}
       - CRON_SECRET=${CRON_SECRET}
     command: ["sh", "-c", "pnpm typecheck && pnpm test && pnpm exec drizzle-kit check && pnpm test:integration"]
     depends_on:
