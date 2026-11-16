@@ -38,6 +38,13 @@ describe('configuración del despliegue', () => {
     expect(validateEnvironment({ ...payments, CULQI_SECRET_KEY: 'sk_test_xxxxxxxxxxxxxxxx' }).length).toBeGreaterThan(0);
   });
 
+  it('valida el DSN de Sentry: opcional, pero si se indica debe ser una URL HTTPS', () => {
+    expect(validateEnvironment({ ...payments, SENTRY_DSN: '' })).toEqual([]);
+    expect(validateEnvironment({ ...payments, SENTRY_DSN: 'https://publica@o123.ingest.sentry.io/456' })).toEqual([]);
+    expect(validateEnvironment({ ...payments, SENTRY_DSN: 'no-es-una-url' }).length).toBeGreaterThan(0);
+    expect(validateEnvironment({ ...payments, SENTRY_DSN: 'http://publica@o123.ingest.sentry.io/456' }).length).toBeGreaterThan(0);
+  });
+
   it('exige HTTPS público y permite HTTP local para pruebas', () => {
     expect(validateEnvironment({ ...payments, SITE_URL: 'http://127.0.0.1:4321' })).toEqual([]);
     for (const siteUrl of ['', 'http://coffeecodebrew.com', 'https://coffeecodebrew.com/admin', 'https://user:password@coffeecodebrew.com']) {

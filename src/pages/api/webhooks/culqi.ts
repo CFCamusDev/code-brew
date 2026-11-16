@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { CULQI_WEBHOOK_SECRET, CULQI_WEBHOOK_SECRET_PREVIOUS } from 'astro:env/server';
 import { isValidWebhookKey } from '../../../server/modules/payments';
 import { syncCulqiOrder } from '../../../lib/server/payments';
+import { logger } from '../../../lib/server/logger';
 
 export const prerender = false;
 
@@ -34,7 +35,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     return Response.json({ received: true, result });
   } catch (error) {
     // 500 para que Culqi reintente la notificación.
-    console.error('[culqi] webhook falló', error);
+    logger.error('[culqi] webhook falló', error);
     return Response.json({ received: false }, { status: 500 });
   }
 };

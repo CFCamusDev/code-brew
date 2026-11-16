@@ -3,6 +3,7 @@ import type { PaymentGateway } from './application/ports/payment-gateway';
 import { systemClock } from '../../shared/clock';
 import { unitOfWork } from '../../shared/unit-of-work';
 import { getDb } from '../../../lib/server/db';
+import { logger } from '../../../lib/server/logger';
 import { confirmPayment, type ConfirmPaymentOutcome } from './application/confirm-payment';
 import { refundOrder, type RefundOptions } from './application/refund-order';
 import type { ConfirmedPayment } from './domain/payment-rules';
@@ -53,7 +54,8 @@ export function refundPaidOrder(orderId: string, adminUserId: number, options: R
     {
       gateway: getPaymentGateway(),
       reader: createRefundReader(getDb()),
-      transact: work => unitOfWork.run(tx => work(createRefundStore(tx)))
+      transact: work => unitOfWork.run(tx => work(createRefundStore(tx))),
+      logError: (message, context) => logger.error(message, new Error(message), context)
     },
     orderId,
     adminUserId,
