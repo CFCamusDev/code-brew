@@ -92,6 +92,13 @@
       "when": 1794851230927,
       "tag": "0012_product_profiles_media",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794854648704,
+      "tag": "0013_bundle_items",
+      "breakpoints": true
     }
   ]
 }
