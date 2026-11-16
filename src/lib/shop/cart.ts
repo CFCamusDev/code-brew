@@ -2,8 +2,8 @@ import { track } from '../analytics';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, computed } from 'nanostores';
 import catalog from '../../data/catalog.json';
-import type { CartLine } from './checkout';
-import { MAX_LINES, MAX_QUANTITY } from './limits';
+import type { CartLine } from '../../contracts/cart';
+import { MAX_LINES, MAX_QUANTITY } from '../../contracts/limits';
 
 // Estado del carrito compartido entre islas React y scripts de la landing.
 // Solo guarda sku, molienda y cantidad: los precios vigentes siempre los calcula el servidor al cotizar.
