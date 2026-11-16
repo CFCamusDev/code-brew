@@ -125,3 +125,48 @@ export function assertProductTransition(product: ProductForPublication, target: 
 export function lineActivationIssues(line: { publishableProducts: number }): string[] {
   return line.publishableProducts > 0 ? [] : ['La línea necesita al menos un producto próximamente o a la venta.'];
 }
+
+// ---------- Visibilidad pública ----------
+
+/** Contenido editorial completo de un producto (product_profiles). */
+export interface ProfileContent {
+  tagline: string | null;
+  method: string | null;
+  description: string | null;
+  notes: string[];
+  facts: { label: string; value: string }[];
+  cupProfile: { attribute: string; level: number }[];
+  recipeFor: string | null;
+  recipe: { label: string; value: string }[];
+}
+
+export type RevealableField = 'tagline' | 'method' | 'description' | 'notes' | 'facts' | 'cupProfile' | 'recipe';
+
+/** Contenido publicado: cada campo está presente solo si se puede mostrar y no está vacío. */
+export type PublicProfile = { [K in keyof ProfileContent]?: NonNullable<ProfileContent[K]> };
+
+/** Solo se muestran al público los productos anunciados o a la venta, y solo si su línea está publicada. */
+export function isPubliclyVisible(productStatus: ProductStatus | null, lineStatus: LineStatus | null): productStatus is 'upcoming' | 'active' {
+  return lineStatus === 'active' && (productStatus === 'upcoming' || productStatus === 'active');
+}
+
+/**
+ * Lo que el público puede ver del contenido: todo si el producto está a la venta; si está «próximamente», solo los
+ * campos revelados. Los campos vacíos no se publican. `recipeFor` acompaña a la receta.
+ */
+export function revealProfile(status: 'upcoming' | 'active', profile: ProfileContent | null, revealed: readonly string[]): PublicProfile {
+  if (!profile) return {};
+  const shows = (field: RevealableField) => status === 'active' || revealed.includes(field);
+  const result: PublicProfile = {};
+  if (shows('tagline') && profile.tagline?.trim()) result.tagline = profile.tagline;
+  if (shows('method') && profile.method?.trim()) result.method = profile.method;
+  if (shows('description') && profile.description?.trim()) result.description = profile.description;
+  if (shows('notes') && profile.notes.length) result.notes = profile.notes;
+  if (shows('facts') && profile.facts.length) result.facts = profile.facts;
+  if (shows('cupProfile') && profile.cupProfile.length) result.cupProfile = profile.cupProfile;
+  if (shows('recipe') && profile.recipe.length) {
+    result.recipe = profile.recipe;
+    if (profile.recipeFor?.trim()) result.recipeFor = profile.recipeFor;
+  }
+  return result;
+}
