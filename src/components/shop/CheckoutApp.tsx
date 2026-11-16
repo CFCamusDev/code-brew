@@ -5,7 +5,8 @@ import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, type FieldError } from 'react-hook-form';
 import { cartLines, clearCart, removeFromCart } from '../../lib/shop/cart';
-import { customerSchema, REGIONS, type Customer, type CustomerForm, type Quote } from '../../lib/shop/checkout';
+import type { CartIssuesErrorResponse, Quote } from '../../contracts/cart';
+import { customerSchema, REGIONS, type CreateOrderResponse, type Customer, type CustomerForm } from '../../contracts/checkout';
 import { formatPEN } from '../../lib/shop/format';
 import { isFreeShipping } from '../../lib/shop/shipping';
 import '../../styles/shop.css';
@@ -60,7 +61,7 @@ export default function CheckoutApp() {
           signal: controller.signal
         });
         if (!response.ok) throw new Error(String(response.status));
-        setQuote(await response.json());
+        setQuote((await response.json()) as Quote);
         setQuoteError(false);
       } catch (error) {
         if (!controller.signal.aborted) setQuoteError(true);
@@ -81,7 +82,7 @@ export default function CheckoutApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: lines, customer, acceptedPolicies })
       });
-      const body = await response.json().catch(() => ({}));
+      const body = (await response.json().catch(() => ({}))) as Partial<CreateOrderResponse & CartIssuesErrorResponse>;
       if (response.status === 201) {
         clearCart();
         window.location.assign(`/pedido/${body.id}`);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createOrderSchema, customerSchema, MAX_QUANTITY } from '../../src/lib/shop/checkout';
+import { MAX_QUANTITY } from '../../src/contracts/limits';
+import { createOrderSchema, customerSchema } from '../../src/contracts/checkout';
 
 const customer = {
   name: 'Ana Pérez',
