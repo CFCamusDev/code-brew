@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { orderItems, orders, products, productVariants } from './db/schema';
+import { logger, serializeError } from './logger';
 
 /** Los ids de pedido son UUID aleatorios: funcionan como enlace privado para compras como invitado. */
 export function isOrderId(id: string | undefined): id is string {
@@ -56,7 +57,7 @@ export async function getLiveCatalog() {
       grinds: new Map(rows.map(row => [row.slug, row.grinds]))
     };
   } catch (error) {
-    console.error('[catalogo] base de datos no disponible; se usa catalog.json', error);
+    logger.warn('[catalogo] base de datos no disponible; se usa catalog.json', { error: serializeError(error) });
     return null;
   }
 }
