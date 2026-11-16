@@ -8,6 +8,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
@@ -162,6 +163,41 @@ export const productVariants = pgTable(
   ]
 );
 
+/**
+ * Composición de un pack (ADR 0003): la variante del pack contiene otras variantes en cierta cantidad. El pack no
+ * tiene stock propio; su disponibilidad sale de los componentes. Sin anidar packs (lo impide un trigger en 0013),
+ * así ningún pack puede contenerse a sí mismo ni de forma indirecta.
+ */
+export const bundleItems = pgTable(
+  'bundle_items',
+  {
+    bundleVariantId: integer('bundle_variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'cascade' }),
+    componentVariantId: integer('component_variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'restrict' }),
+    quantity: integer('quantity').notNull(),
+    ...timestamps
+  },
+  t => [
+    primaryKey({ columns: [t.bundleVariantId, t.componentVariantId] }),
+    index('bundle_items_component_idx').on(t.componentVariantId),
+    check('bundle_items_quantity_check', sql`${t.quantity} > 0`),
+    check('bundle_items_not_self_check', sql`${t.bundleVariantId} <> ${t.componentVariantId}`)
+  ]
+);
+
+/** Componente de un pack tal como se vendió, copiado en la línea del pedido. */
+export interface SoldBundleComponent {
+  variantId: number;
+  sku: string;
+  productName: string;
+  format: string;
+  /** Unidades del componente por cada pack vendido. */
+  quantity: number;
+}
+
 /** Zona de envío con su tarifa. Envío gratis desde `freeFromCents` de subtotal o desde `freeFromBags` bolsas. */
 export const shippingZones = pgTable(
   'shipping_zones',
@@ -270,7 +306,9 @@ export const orderItems = pgTable(
     grind: text('grind').notNull(),
     unitPriceCents: integer('unit_price_cents').notNull(),
     quantity: integer('quantity').notNull(),
-    lineTotalCents: integer('line_total_cents').notNull()
+    lineTotalCents: integer('line_total_cents').notNull(),
+    /** Si la línea es un pack: su composición al momento de la venta (el pack puede cambiar después). */
+    bundleComponents: jsonb('bundle_components').$type<SoldBundleComponent[]>()
   },
   t => [
     index('order_items_order_idx').on(t.orderId),
