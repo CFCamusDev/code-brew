@@ -1,5 +1,5 @@
 import { and, desc, eq, gt, inArray } from 'drizzle-orm';
-import type { Quote } from '../shop/checkout';
+import type { Quote } from '../../contracts/cart';
 import { formatOrderNumber } from '../shop/format';
 import { getDb } from './db';
 import { payments } from './db/schema';

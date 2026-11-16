@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { adminAction } from '../../../../lib/server/admin/api';
 import { deleteRegionRate, updateZone, upsertRegionRate } from '../../../../lib/server/admin/shipping';
-import { REGIONS } from '../../../../lib/shop/checkout';
+import { REGIONS } from '../../../../contracts/checkout';
 
 export const prerender = false;
 

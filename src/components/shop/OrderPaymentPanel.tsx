@@ -1,6 +1,7 @@
 import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { useEffect, useRef, useState } from 'react';
-import { MAX_QUANTITY } from '../../lib/shop/limits';
+import { MAX_QUANTITY } from '../../contracts/limits';
+import type { UpdateOrderItemsResponse } from '../../contracts/orders';
 import { formatPEN } from '../../lib/shop/format';
 import '../../styles/shop.css';
 
@@ -29,27 +30,15 @@ declare global {
   }
 }
 
-interface LineItem {
-  sku: string;
-  grind: string;
-  quantity: number;
-  productName: string;
-  format: string;
-  unitPriceCents: number;
-  lineTotalCents: number;
-}
+type LineItem = UpdateOrderItemsResponse['items'][number];
 
 interface OrderIssue {
   sku: string;
   message: string;
 }
 
-interface Summary {
-  items: LineItem[];
-  subtotalCents: number;
-  shippingCents: number;
-  totalCents: number;
-}
+/** Lo que devuelve POST /api/orders/[id]/items. */
+type Summary = UpdateOrderItemsResponse;
 
 interface Props {
   orderId: string;

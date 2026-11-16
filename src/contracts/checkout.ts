@@ -1,18 +1,8 @@
 import { z } from 'zod';
-import { MAX_LINES, MAX_QUANTITY } from './limits';
+import { cartSchema } from './cart';
 
-// Esquemas compartidos: el formulario los usa para validar en el navegador y la API los vuelve a aplicar en el servidor.
-
-export { MAX_LINES, MAX_QUANTITY };
-
-export const cartLineSchema = z.object({
-  sku: z.string().min(1).max(64),
-  grind: z.string().min(1).max(80),
-  quantity: z.number().int().min(1).max(MAX_QUANTITY)
-});
-export type CartLine = z.infer<typeof cartLineSchema>;
-
-export const cartSchema = z.array(cartLineSchema).min(1, 'Tu carrito está vacío.').max(MAX_LINES);
+// Contratos del checkout y de la creación del pedido (POST /api/orders). El formulario los usa para validar en el
+// navegador y la API los vuelve a aplicar en el servidor.
 
 const text = (max: number) => z.string().trim().max(max, `Máximo ${max} caracteres.`);
 const required = (max: number, message: string) => text(max).min(1, message);
@@ -37,54 +27,25 @@ export const customerSchema = z.object({
   reference: optional(200),
   notes: optional(500)
 });
+/** Lo que escribe el cliente en el formulario. */
 export type CustomerForm = z.input<typeof customerSchema>;
+/** Datos del cliente ya normalizados (celular sin prefijo, correo en minúsculas…). */
 export type Customer = z.output<typeof customerSchema>;
 
+/** Entrada de POST /api/orders. */
 export const createOrderSchema = z.object({
   items: cartSchema,
   customer: customerSchema,
   acceptedPolicies: z.literal(true, { message: 'Debes aceptar los Términos y la Política de privacidad para continuar.' })
 });
+export type CreateOrderRequest = z.input<typeof createOrderSchema>;
 
-export const quoteSchema = z.object({
-  items: z.array(cartLineSchema).max(MAX_LINES),
-  zone: z.string().max(40).optional(),
-  region: z.string().max(60).optional()
-});
+/** Respuesta 201 de POST /api/orders: el id funciona como enlace privado del pedido. */
+export const createOrderResponseSchema = z.object({ id: z.string().uuid(), number: z.number().int() });
+export type CreateOrderResponse = z.infer<typeof createOrderResponseSchema>;
 
 export const REGIONS = [
   'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca', 'Callao', 'Cusco', 'Huancavelica', 'Huánuco',
   'Ica', 'Junín', 'La Libertad', 'Lambayeque', 'Lima', 'Loreto', 'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno',
   'San Martín', 'Tacna', 'Tumbes', 'Ucayali'
 ] as const;
-
-/** Respuesta de /api/cart/quote: precios y stock vigentes calculados en el servidor. */
-export interface Quote {
-  lines: {
-    sku: string;
-    grind: string;
-    quantity: number;
-    productName: string;
-    format: string;
-    unitPriceCents: number;
-    lineTotalCents: number;
-  }[];
-  issues: { sku: string; message: string }[];
-  zones: {
-    slug: string;
-    name: string;
-    eta: string;
-    priceCents: number;
-    freeFromCents: number | null;
-    freeFromBags: number | null;
-    /** Departamentos que atiende; null = todos. */
-    regions: string[] | null;
-    /** Tiene tarifas distintas según el departamento (se muestra "desde"). */
-    hasRegionRates: boolean;
-  }[];
-  /** Bolsas en el pedido (el Pack Developer cuenta 2). */
-  bags: number;
-  subtotalCents: number;
-  shippingCents: number | null;
-  totalCents: number | null;
-}
