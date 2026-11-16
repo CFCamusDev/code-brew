@@ -1,5 +1,5 @@
 import type { ImageMetadata } from 'astro';
-import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../lib/server/settings';
+import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../server/modules/settings';
 import bagLight from '../assets/products/bag-light.png';
 import bagDark from '../assets/products/bag-dark.png';
 import lifestyleCup from '../assets/lifestyle/cup.png';

@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
-import { getSessionUser, SESSION_COOKIE } from './lib/server/auth';
+import { getSessionUser, SESSION_COOKIE } from './server/modules/identity';
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login', '/api/admin/login']);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
