@@ -53,6 +53,15 @@ export function validateEnvironment(environment) {
     errors.push('CULQI_WEBHOOK_SECRET_PREVIOUS debe ser distinta de CULQI_WEBHOOK_SECRET; retírala al terminar la rotación.');
   }
 
+  const sentryDsn = environment.SENTRY_DSN?.trim();
+  if (sentryDsn) {
+    try {
+      if (new URL(sentryDsn).protocol !== 'https:') errors.push('SENTRY_DSN debe usar HTTPS.');
+    } catch {
+      errors.push('SENTRY_DSN no es una URL válida (copia el DSN completo desde Sentry).');
+    }
+  }
+
   const siteUrl = environment.SITE_URL?.trim();
   if ((publicKey || secretKey || environment.RESEND_API_KEY) && !siteUrl) {
     errors.push('Configura SITE_URL para los pagos y correos.');

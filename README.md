@@ -97,6 +97,14 @@ CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior PORT=4
 INTEGRATION_BASE_URL=http://127.0.0.1:4398 CULQI_WEBHOOK_SECRET=ci-secreto CULQI_WEBHOOK_SECRET_PREVIOUS=ci-anterior pnpm test:integration
 ```
 
+## Observabilidad
+
+- **Logs JSON:** el servidor escribe una línea JSON por evento (`time`, `level`, `msg`, `requestId` y el contexto) en stdout/stderr, así que se leen y filtran desde Portainer. El nivel se controla con `LOG_LEVEL` (`debug`, `info` por defecto, `warn`, `error`).
+- **Id de petición:** Nginx asigna un `X-Request-Id` a cada petición; la app lo usa en todos sus logs y lo devuelve en la respuesta. Con el id de una respuesta se encuentra todo lo que pasó en ese caso.
+- **Errores con Sentry:** define `SENTRY_DSN` (y `SENTRY_ENVIRONMENT`, p. ej. `production`) en la stack. Sin DSN queda desactivado y la web funciona igual. Un error sin controlar, o cualquier `logger.error`, llega a Sentry con su `requestId`, ruta y método; nunca viajan la petición, las cookies ni la URL con su cadena de consulta, y los secretos como `?key=` se tachan.
+- **Comprobar que funciona:** con una sesión de administrador, `POST /api/admin/diagnostico` (cuerpo `{}`, `Content-Type: application/json`) lanza un error a propósito: debe responder 500, aparecer en los logs con su `requestId` y verse en el panel de Sentry con ese mismo id como etiqueta.
+- **Salud:** `GET /api/health` informa `database` (`ok`/`unavailable`), `migrations` (`ok`/`pending`/`unknown`, comparando las aplicadas con las que trae esta versión), `errorTracking` y la latencia de la base. Responde 503 si la base no responde o hay migraciones pendientes.
+
 ## CI / CD (GitHub Actions)
 
 - **CI** (`.github/workflows/ci.yml`) corre en cada PR y en cada push a `main`, `develop` y `release/**` con tres verificaciones: *Tipos, pruebas unitarias y build*, *Pruebas de integración (PostgreSQL)* e *Imagen Docker*.

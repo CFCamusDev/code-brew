@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { ADMIN, api, customer, db, login, OPERATOR } from './helpers';
+import { ADMIN, api, BASE_URL, customer, db, login, OPERATOR } from './helpers';
 
 let adminCookie: string;
 let operatorCookie: string;
@@ -108,6 +108,27 @@ describe('pedidos en el panel', () => {
       body: 'x'
     });
     expect([403, 415]).toContain(response.status);
+  });
+});
+
+describe('diagnóstico de errores', () => {
+  it('solo un administrador puede forzar un error, y el servidor responde 500', async () => {
+    expect((await api('/api/admin/diagnostico', { body: {} })).status).toBe(401);
+    expect((await api('/api/admin/diagnostico', { body: {}, cookie: operatorCookie })).status).toBe(403);
+    expect((await api('/api/admin/diagnostico', { body: {}, cookie: adminCookie })).status).toBe(500);
+  });
+
+  it('las respuestas del servidor llevan un X-Request-Id válido y distinto por petición', async () => {
+    // Directo a Node, el id es el que llega en la cabecera (o uno generado); detrás de Nginx lo fija Nginx. En ambos
+    // casos la respuesta devuelve un id seguro para buscar en los logs.
+    const ids = new Set<string>();
+    for (let i = 0; i < 3; i++) {
+      const response = await fetch(`${BASE_URL}/api/health`);
+      const id = response.headers.get('x-request-id') ?? '';
+      expect(id).toMatch(/^[A-Za-z0-9._-]{8,64}$/);
+      ids.add(id);
+    }
+    expect(ids.size).toBe(3);
   });
 });
 

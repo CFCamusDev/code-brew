@@ -17,6 +17,8 @@ export interface RefundDeps {
   reader: RefundReader;
   /** Abre la transacción del reembolso (UnitOfWork). */
   transact(work: (store: RefundStore) => Promise<void>): Promise<void>;
+  /** Registro de errores (por defecto la consola); lo enlaza la raíz de composición. */
+  logError?: (message: string, context: Record<string, unknown>) => void;
 }
 
 /**
@@ -37,7 +39,7 @@ export async function refundOrder(deps: RefundDeps, orderId: string, adminUserId
     }
     const result = await deps.gateway.refund({ chargeId: charge.reference, amountCents: charge.amountCents, reason: options.reason });
     if (!result.ok) {
-      console.error('[culqi] reembolso fallido', result.status, result.raw);
+      (deps.logError ?? console.error)('[culqi] reembolso fallido', { orderId, status: result.status });
       throw new ConflictError(`Culqi rechazó el reembolso${result.message ? `: ${result.message}` : '.'}`);
     }
     refundId = result.refundId;
