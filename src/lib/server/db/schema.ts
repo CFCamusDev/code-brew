@@ -81,6 +81,62 @@ export const products = pgTable(
   ]
 );
 
+/** Par etiqueta → valor de la ficha y de la receta («Proceso: Lavado», «dosis: 18 g»). */
+export interface ProfileEntry {
+  label: string;
+  value: string;
+}
+
+/** Campos de product_profiles que un producto «próximamente» puede mostrar antes de su lanzamiento. */
+export const PROFILE_FIELDS = ['tagline', 'method', 'description', 'notes', 'facts', 'cupProfile', 'recipe'] as const;
+export type ProfileField = (typeof PROFILE_FIELDS)[number];
+
+/** Contenido editorial de un producto (ADR 0003): lo que hoy vive en src/data/pipeline.ts. Uno por producto. */
+export const productProfiles = pgTable('product_profiles', {
+  productId: integer('product_id')
+    .primaryKey()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  tagline: text('tagline'),
+  /** Método de preparación sugerido (Espresso, Cold brew, Filtrado…). */
+  method: text('method'),
+  description: text('description'),
+  /** Notas de cata, en orden. */
+  notes: jsonb('notes').$type<string[]>().notNull().default([]),
+  /** Ficha técnica: origen, proceso, altitud, variedad… */
+  facts: jsonb('facts').$type<ProfileEntry[]>().notNull().default([]),
+  /** Perfil en taza: atributo y nivel (cuerpo 6, dulzor 5…). */
+  cupProfile: jsonb('cup_profile').$type<{ attribute: string; level: number }[]>().notNull().default([]),
+  /** Para qué método es la receta («espresso», «V60»…) y sus pasos. */
+  recipeFor: text('recipe_for'),
+  recipe: jsonb('recipe').$type<ProfileEntry[]>().notNull().default([]),
+  /** Colores propios del producto dentro del tema de su línea. */
+  colors: jsonb('colors').$type<{ color?: string; tint?: string; glow?: string }>().notNull().default({}),
+  /** Campos visibles mientras el producto está «próximamente». Uno activo los muestra todos. */
+  revealedFields: jsonb('revealed_fields').$type<ProfileField[]>().notNull().default([]),
+  ...timestamps
+});
+
+/** Imagen de un producto por vista (frente, reverso, en perspectiva…), alojada en Cloudinary o en el sitio. */
+export const productMedia = pgTable(
+  'product_media',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    /** Vista de la bolsa: front, front2, flat, back, back3d… */
+    view: text('view').notNull(),
+    url: text('url').notNull(),
+    alt: text('alt').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    ...timestamps
+  },
+  t => [
+    uniqueIndex('product_media_product_view_idx').on(t.productId, t.view),
+    check('product_media_view_check', sql`${t.view} ~ '^[a-z0-9-]+$'`)
+  ]
+);
+
 /** Presentación vendible de un perfil (250 g, 500 g…), con su precio y stock. */
 export const productVariants = pgTable(
   'product_variants',

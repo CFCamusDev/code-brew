@@ -85,6 +85,13 @@
       "when": 1794444605032,
       "tag": "0011_product_lines",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794851230927,
+      "tag": "0012_product_profiles_media",
+      "breakpoints": true
     }
   ]
 }
