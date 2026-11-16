@@ -1,6 +1,7 @@
 import { ADMIN_EMAIL, EMAIL_FROM, RESEND_API_KEY, SITE_URL } from 'astro:env/server';
 import { formatComplaintNumber, formatOrderNumber, formatPEN } from '../shop/format';
 import type { getOrder } from './shop';
+import { logger } from './logger';
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
@@ -23,9 +24,12 @@ async function sendEmail(to: string, subject: string, html: string) {
       body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
       signal: AbortSignal.timeout(15_000)
     });
-    if (!response.ok) console.error(`[email] Resend respondió ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      const body = (await response.text()).slice(0, 300);
+      logger.error('[email] Resend rechazó el envío', new Error(`Resend respondió ${response.status}`), { status: response.status, body });
+    }
   } catch (error) {
-    console.error('[email] no se pudo enviar', error);
+    logger.error('[email] no se pudo enviar', error);
   }
 }
 

@@ -27,6 +27,9 @@ export default defineConfig({
       SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Token para tareas programadas (Authorization: Bearer …), p. ej. cancelar pedidos abandonados.
       CRON_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Seguimiento de errores (Sentry): sin DSN queda desactivado y la web funciona igual.
+      SENTRY_DSN: envField.string({ context: 'server', access: 'secret', optional: true }),
+      SENTRY_ENVIRONMENT: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Cloudinary: sin estas tres, la subida de imágenes de producto queda deshabilitada.
       CLOUDINARY_CLOUD_NAME: envField.string({ context: 'server', access: 'secret', optional: true }),
       CLOUDINARY_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
