@@ -443,6 +443,12 @@
   border-left:3px solid var(--ink);
   font-size:14px
 }
+/* CIP de PagoEfectivo: el número debe leerse y copiarse fácil, también en el celular. */
+.pay-code{margin:0 0 16px;padding:16px 18px;border-radius:14px;background:#203c320d;border:1px solid #203c3226}
+.pay-code .cb-label{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.pay-code-value{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 8px}
+.pay-code-value strong{font:600 30px/1.1 var(--font-mono, ui-monospace, monospace);letter-spacing:.06em}
+.pay-code p:last-child{margin:0;font-size:14px;line-height:1.55}
 .order-status[data-status="paid"]{background:#2f6b4f}
 .zone-option:has(input:disabled){opacity:.45;cursor:not-allowed}
 .blend-info button.order-link:disabled{opacity:.55;cursor:not-allowed;transform:none}

@@ -48,6 +48,9 @@ export interface PaymentOrder {
   id: string;
   amountCents: number;
   state: PaymentOrderState;
+  /** Código con el que el cliente paga (CIP de PagoEfectivo); null hasta que elige el medio en el checkout. */
+  paymentCode: string | null;
+  expiresAt: Date | null;
   raw: unknown;
 }
 

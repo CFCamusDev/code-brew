@@ -45,6 +45,8 @@ interface CulqiOrder {
   /** created | pending | paid | expired | deleted */
   state: string;
   expiration_date: number;
+  /** CIP: aparece cuando el cliente confirma la orden eligiendo agentes, banca o billetera. */
+  payment_code?: string | null;
 }
 
 export function isCulqiError(data: unknown): data is CulqiError {
@@ -62,7 +64,14 @@ const ORDER_STATES: PaymentOrderState[] = ['created', 'pending', 'paid', 'expire
 
 function toOrder(data: CulqiOrder): PaymentOrder {
   const state = ORDER_STATES.find(candidate => candidate === data.state) ?? 'unknown';
-  return { id: data.id, amountCents: data.amount, state, raw: data };
+  return {
+    id: data.id,
+    amountCents: data.amount,
+    state,
+    paymentCode: data.payment_code ? String(data.payment_code) : null,
+    expiresAt: data.expiration_date ? new Date(data.expiration_date * 1000) : null,
+    raw: data
+  };
 }
 
 export interface CulqiGatewayConfig {
