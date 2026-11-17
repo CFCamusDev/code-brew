@@ -1,9 +1,11 @@
 ---
-import Pouch from '../../lines/pipeline/Pouch.astro';
-import ProductPurchase from './ProductPurchase.astro';
-import type { CatalogOffer, CatalogProfile } from '../catalog/page-catalog';
-interface Props { product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
-const { product: p, offer, siblings } = Astro.props;
+import Pouch from './Pouch.astro';
+import ProductPurchase from '../../features/product/ProductPurchase.astro';
+import type { CatalogLine, CatalogOffer, CatalogProfile } from '../../features/catalog/page-catalog';
+import { joinStyles, themeStyle } from '../theme';
+// Plantilla «pipeline» (ADR 0004): página de producto con la galería de bolsas y el selector de perfiles de la línea.
+interface Props { line: CatalogLine; product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
+const { line, product: p, offer, siblings } = Astro.props;
 const available = p.available;
 const fact = (label: string) => p.facts.find(entry => entry.label === label)?.value;
 const trace = [fact('Origen'), fact('Proceso')].filter(Boolean).join(' · ');
@@ -11,7 +13,7 @@ const placeholderFacts = ['Origen', 'Proceso', 'Tueste', 'Altitud', 'Variedad'].
 const placeholderCup = ['cuerpo', 'dulzor', 'acidez'].map(attribute => ({ attribute, level: 0 }));
 const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : ['front','front2','flat','back','back3d'] as const;
 ---
-<div class="cb-product" style={'--profile-color:'+p.colors.color+';--profile-tint:'+p.colors.tint+';--profile-glow:'+p.colors.glow}>
+<div class="cb-product" style={joinStyles('--profile-color:'+p.colors.color+';--profile-tint:'+p.colors.tint+';--profile-glow:'+p.colors.glow, themeStyle(line.theme))}>
  <section id="top" class="cb-product-hero cb-dark"><div class="cb-wrap">
   <div class="cb-profile-home"><nav id="product-profiles" class="cb-product-profiles" aria-label="Perfiles del Pipeline">{siblings.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.colors.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.available?'Disponible':'Próximamente'}</small></a>)}</nav></div>
   <div class="cb-product-grid"><div class="cb-gallery"><div class="cb-gallery-stage">{views.map((view,i)=><div data-pouch-view={view} hidden={i!==0} class="cb-gallery-view cb-float"><Pouch transitionName={i===0 ? `pipeline-${p.slug}` : undefined} product={p.slug} view={view} scale={1.9} eager={i===0} /></div>)}<span class="cb-orbit" aria-hidden="true"></span>{p.method && <span class="cb-glass cb-gallery-method">{p.method}</span>}{p.roast && <span class="cb-glass cb-gallery-roast">{p.roast}</span>}</div><div class="cb-gallery-thumbs" role="group" aria-label="Vistas de la bolsa">{views.map((view,i)=><button type="button" data-view={view} aria-label={'Ver '+({front:'frente',front2:'frente en perspectiva',flat:'vista plana',back:'reverso',back3d:'reverso en perspectiva'}[view])} aria-pressed={i===0?'true':'false'}><Pouch product={p.slug} view={view} scale={.24} /></button>)}</div></div>

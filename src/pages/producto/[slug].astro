@@ -2,11 +2,11 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../ui/Header.astro';
 import Footer from '../../ui/Footer.astro';
-import ProductProfile from '../../features/product/ProductProfile.astro';
+import ProductPage from '../../lines/ProductPage.astro';
 import { getProductPage } from '../../features/catalog/page-catalog';
 export const prerender = false;
 const page = await getProductPage(Astro.params.slug ?? '');
 if (!page) return new Response('Página no encontrada', {status:404});
-const { product } = page;
+const { line, product } = page;
 ---
-<Layout pageTransitions title={product.name+' · Pipeline — CodeBrew'} description={product.tagline ?? `${product.name}, café de especialidad de la línea Pipeline.`}><Header /><main id="main-content"><ProductProfile product={product} offer={page.offer} siblings={page.siblings} /></main><Footer /></Layout>
+<Layout pageTransitions title={product.name+' · '+line.name+' — CodeBrew'} description={product.tagline ?? `${product.name}, café de especialidad de la línea ${line.name}.`}><Header /><main id="main-content"><ProductPage line={line} product={product} offer={page.offer} siblings={page.siblings} /></main><Footer /></Layout>

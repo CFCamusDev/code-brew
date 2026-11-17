@@ -1,10 +1,12 @@
 ---
-import Pouch from '../../lines/pipeline/Pouch.astro';
-import type { CatalogProfile } from './page-catalog';
-interface Props { profiles: CatalogProfile[]; }
-const { profiles } = Astro.props;
+import Pouch from './Pouch.astro';
+import type { CatalogLine, CatalogProfile } from '../../features/catalog/page-catalog';
+import { themeStyle } from '../theme';
+// Plantilla «pipeline» (ADR 0004): sección de la línea en la portada, con las bolsas de cada perfil.
+interface Props { line: CatalogLine; products: CatalogProfile[]; }
+const { line, products: profiles } = Astro.props;
 ---
-<section id="pipeline" class="cb-pipeline cb-dark cb-section"><div class="cb-wrap">
+<section id="pipeline" class="cb-pipeline cb-dark cb-section" style={themeStyle(line.theme) || undefined}><div class="cb-wrap">
  <div class="cb-section-heading"><div><p class="cb-label">La línea Pipeline</p><h2>Cinco perfiles.<br />Un solo <em>pipeline.</em></h2></div><p>Cada lanzamiento es un perfil de café con su propio origen, tueste y carácter. Hotfix ya está disponible. Explora su perfil y compra desde su página; los próximos lanzamientos se revelarán uno a uno.</p></div>
  <div class="cb-pipeline-grid">{profiles.map(({slug,name,method,available}, i) => <a class="cb-pipeline-item" id={slug==='hotfix'?undefined:'blend-pipeline-'+profiles[i].num} data-profile={slug==='hotfix'?'hotfix':'pipeline-'+profiles[i].num} data-select={slug==='hotfix'?'hotfix':'pipeline-'+profiles[i].num} href={'/producto/'+slug} style={'--profile-tint:var(--pl-'+slug+'-tint)'}><span class:list={['cb-pipeline-node', {'is-live': available}]} aria-hidden="true"></span><Pouch transitionName={`pipeline-${slug}`} product={slug} scale={.78} locked={!available} /><span class="cb-label">0{i+1} · {available ? "STABLE" : "QUEUED"}</span><h3 data-profile-number={profiles[i].num}>{name}</h3><span class="cb-profile-method">{method}</span><span class="cb-profile-state">{available ? 'Comprar '+name+' ↗' : 'Explorar perfil ↗'}</span></a>)}</div>
 <div class="cb-notify cb-glass"><div><h3>Entérate primero del 02</h3><p>Un aviso cuando se revele el siguiente perfil.</p></div><form aria-label="Avisos del Pipeline"><label for="mail">Tu correo</label><input id="mail" name="email" type="email" placeholder="tu@correo.com" disabled /><button type="button" class="cb-btn cb-accent" disabled>Avísame ↗</button><p>Los avisos todavía no están habilitados.</p></form></div></div></section>

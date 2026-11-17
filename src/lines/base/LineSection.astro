@@ -1,0 +1,41 @@
+---
+import type { CatalogLine, CatalogProfile } from '../../features/catalog/page-catalog';
+import { themeStyle } from '../theme';
+// Plantilla «base» (ADR 0004): sección de una línea sin plantilla propia. Tarjetas con la primera imagen del producto
+// o una muestra de su color, y el tema de la línea como variables CSS.
+interface Props { line: CatalogLine; products: CatalogProfile[]; }
+const { line, products } = Astro.props;
+---
+<section id={'linea-' + line.slug} class="cb-section cb-line-base" data-template="base" style={themeStyle(line.theme) || undefined}>
+  <div class="cb-wrap">
+    <div class="cb-section-heading">
+      <div><p class="cb-label">La línea {line.name}</p><h2>{line.name}</h2></div>
+      {line.description && <p>{line.description}</p>}
+    </div>
+    <ul class="base-grid">
+      {products.map(product => (
+        <li>
+          <a class="base-card" href={'/producto/' + product.slug} style={themeStyle({ '--swatch': product.colors.tint ?? '' }) || undefined}>
+            {product.media[0]
+              ? <img src={product.media[0].url} alt={product.media[0].alt} width="480" height="480" loading="lazy" decoding="async" />
+              : <span class="base-swatch" aria-hidden="true"></span>}
+            <span class="cb-label">{product.num && product.num + ' · '}{product.available ? 'Disponible' : 'Próximamente'}</span>
+            <h3>{product.name}</h3>
+            {product.tagline && <p>{product.tagline}</p>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+<style>
+  .base-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+  .base-card { display: grid; gap: 10px; height: 100%; padding: 20px; border: 1px solid var(--cb-line); border-radius: 24px; background: var(--cb-cream-2); color: var(--cb-ink); text-decoration: none; transition: transform .2s ease; }
+  .base-card:hover { transform: translateY(-3px); }
+  .base-card:focus-visible { outline: 3px solid var(--cb-terracotta-bright); outline-offset: 4px; }
+  .base-card img, .base-swatch { width: 100%; aspect-ratio: 1; border-radius: 16px; object-fit: cover; }
+  .base-swatch { display: block; background: radial-gradient(60% 60% at 50% 40%, var(--swatch, var(--cb-terracotta-bright)), var(--cb-forest-900)); }
+  .base-card h3 { margin: 0; font: 500 28px/1.1 var(--font-display); }
+  .base-card p { margin: 0; color: var(--cb-muted); }
+  @media (prefers-reduced-motion: reduce) { .base-card { transition: none; } .base-card:hover { transform: none; } }
+</style>

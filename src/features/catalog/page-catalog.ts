@@ -11,6 +11,24 @@ import { findPublicLineProducts, findPublicProduct, type PublicProductView } fro
 
 export const PIPELINE_LINE = 'pipeline';
 
+/** Línea con su identidad (ADR 0004): theme son variables CSS y template elige la plantilla de src/lines. */
+export interface CatalogLine {
+  slug: string;
+  name: string;
+  description: string | null;
+  theme: Record<string, string>;
+  template: string;
+}
+
+/** Pipeline en el modo estático: sin tema propio (sus colores están en brand.css) y con su plantilla. */
+export const STATIC_PIPELINE_LINE: CatalogLine = {
+  slug: PIPELINE_LINE,
+  name: 'Pipeline',
+  description: 'Cinco perfiles de café de especialidad, uno para cada etapa del desarrollo.',
+  theme: {},
+  template: 'pipeline'
+};
+
 export interface Entry {
   label: string;
   value: string;
@@ -33,6 +51,8 @@ export interface CatalogProfile {
   cupProfile: { attribute: string; level: number }[];
   recipeFor?: string;
   recipe: Entry[];
+  /** Imágenes del producto a la venta (la plantilla base las usa; Pipeline pinta sus bolsas). */
+  media: { view: string; url: string; alt: string }[];
 }
 
 /** Lo que se puede comprar: precios en soles. */
@@ -42,6 +62,7 @@ export interface CatalogOffer {
 }
 
 export interface ProductPage {
+  line: CatalogLine;
   product: CatalogProfile;
   offer: CatalogOffer;
   /** Todos los perfiles de su línea, en orden de lanzamiento, para el selector. */
@@ -66,7 +87,8 @@ export function fromStatic(product: PipelineProduct): CatalogProfile {
     facts: entries(product.facts),
     cupProfile: product.profile.map(([attribute, level]) => ({ attribute: String(attribute), level: Number(level) })),
     recipeFor: product.recipeFor,
-    recipe: entries(product.recipe)
+    recipe: entries(product.recipe),
+    media: []
   };
 }
 
@@ -87,7 +109,8 @@ export function fromCatalog(product: PublicProductView): CatalogProfile {
     facts: profile.facts ?? [],
     cupProfile: profile.cupProfile ?? [],
     recipeFor: profile.recipeFor,
-    recipe: profile.recipe ?? []
+    recipe: profile.recipe ?? [],
+    media: product.media
   };
 }
 
@@ -132,11 +155,11 @@ async function fromDatabase<T>(read: () => Promise<T>): Promise<{ value: T } | n
   }
 }
 
-/** Perfiles visibles de una línea, en orden de lanzamiento. Vacío si la línea no está publicada. */
-export async function getLineProfiles(lineSlug = PIPELINE_LINE): Promise<CatalogProfile[]> {
+/** Una línea publicada con sus perfiles visibles, en orden de lanzamiento; null si no se publica. */
+export async function getLineCatalog(lineSlug = PIPELINE_LINE): Promise<{ line: CatalogLine; products: CatalogProfile[] } | null> {
   const found = await fromDatabase(() => findPublicLineProducts(lineSlug));
-  if (found) return found.value?.products.map(fromCatalog) ?? [];
-  return lineSlug === PIPELINE_LINE ? PIPELINE.map(fromStatic) : [];
+  if (found) return found.value && { line: found.value.line, products: found.value.products.map(fromCatalog) };
+  return lineSlug === PIPELINE_LINE ? { line: STATIC_PIPELINE_LINE, products: PIPELINE.map(fromStatic) } : null;
 }
 
 /** Datos de la página de un producto; null si no existe o el público no debe verlo. */
@@ -145,10 +168,11 @@ export async function getProductPage(slug: string): Promise<ProductPage | null> 
     const product = await findPublicProduct(slug);
     if (!product) return null;
     const line = await findPublicLineProducts(product.line.slug);
-    return { product: fromCatalog(product), offer: offerFromCatalog(product), siblings: (line?.products ?? [product]).map(fromCatalog) };
+    if (!line) return null;
+    return { line: line.line, product: fromCatalog(product), offer: offerFromCatalog(product), siblings: line.products.map(fromCatalog) };
   });
   if (found) return found.value;
   const product = PIPELINE.find(candidate => candidate.slug === slug);
   if (!product) return null;
-  return { product: fromStatic(product), offer: await staticOffer(product.catalogSlug), siblings: PIPELINE.map(fromStatic) };
+  return { line: STATIC_PIPELINE_LINE, product: fromStatic(product), offer: await staticOffer(product.catalogSlug), siblings: PIPELINE.map(fromStatic) };
 }
