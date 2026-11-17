@@ -38,6 +38,11 @@ export function canTransitionLine(from: LineStatus, to: LineStatus): boolean {
   return LINE_TRANSITIONS[from].includes(to);
 }
 
+/** Los identificadores públicos solo se pueden renombrar antes de publicar la línea. */
+export function assertLineSlugChange(status: LineStatus, current: string, next: string): void {
+  if (status !== 'draft' && current !== next) throw new ConflictError('El slug solo se puede cambiar mientras la línea está en borrador.', 'line_slug_locked');
+}
+
 /** Lo que el dominio necesita saber de un producto para decidir si se puede publicar. */
 export interface ProductForPublication {
   id: number;

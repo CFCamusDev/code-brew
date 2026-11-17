@@ -1,0 +1,11 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import LinesManager from '../../../components/admin/LinesManager';
+import { listAdminLines } from '../../../server/modules/catalog';
+export const prerender = false;
+const lines = await listAdminLines();
+---
+<AdminLayout title="Líneas">
+  <div class="admin-head"><div><h1>Líneas de productos</h1><p>Crea colecciones, elige su apariencia y decide cuándo mostrarlas en la tienda.</p></div><a class="btn ghost" href="/tienda">Ver tienda</a></div>
+  <LinesManager client:load initialLines={lines} canEdit={Astro.locals.admin!.role === 'admin'} />
+</AdminLayout>
