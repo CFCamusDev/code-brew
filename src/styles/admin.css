@@ -267,7 +267,7 @@
 .admin-card{border-radius:var(--r-lg);padding:22px}
 .admin-card h2{margin:0 0 14px;font-size:16px;font-weight:650;letter-spacing:-.02em;line-height:1.25}
 .admin-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:20px;align-items:start}
-.admin-stack{display:grid;gap:20px}
+.admin-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
 .card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
 .card-head h2{margin:0}
 
@@ -390,6 +390,8 @@
   box-shadow:var(--focus)
 }
 .admin-form{display:grid;gap:14px}
+.admin-form input,.admin-form select,.admin-form textarea{min-width:0;max-width:100%}
+.admin-image-picker input[type="file"]{width:100%;overflow:hidden}
 .admin-form label{display:grid;gap:6px;font-size:12px;font-weight:500;color:var(--muted)}
 .admin-form textarea{resize:vertical;min-height:80px}
 .admin-form .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
