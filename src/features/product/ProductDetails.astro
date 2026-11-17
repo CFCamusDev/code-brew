@@ -1,0 +1,35 @@
+---
+import type { CatalogProfile } from '../catalog/page-catalog';
+import RevealField from './RevealField.astro';
+interface Props { product: CatalogProfile; }
+// El dominio ya retiró los campos privados. Nunca se envían al componente para difuminarlos.
+const { product: p } = Astro.props;
+const description = Boolean(p.description);
+const notes = p.notes.length > 0;
+const facts = p.facts.length > 0;
+const cup = p.cupProfile.length > 0;
+const pending = !p.available && (!description || !notes || !facts || !cup || !p.recipe.length);
+---
+{(!p.available || description || notes || facts || cup) && <section class="cb-section cb-product-details">
+  <div class="cb-wrap">
+    {pending && <p class="cb-reveal-notice">Información por revelar. Los campos pendientes de {p.name} se publicarán en su lanzamiento.</p>}
+    <div class="cb-product-three">
+      {(!p.available || description || notes) && <div class="cb-stack">
+        <h2>Sobre este perfil</h2>
+        {(!p.available || description) && <RevealField field="description" label="Descripción" revealed={description}><p>{p.description}</p></RevealField>}
+        {(!p.available || notes) && <RevealField field="notes" label="Notas de cata" revealed={notes}><div class="cb-product-notes">{p.notes.map(note => <span>{note}</span>)}</div></RevealField>}
+      </div>}
+      {(!p.available || facts) && <div class="cb-product-card">
+        <h3 class="cb-label">Ficha técnica</h3>
+        <RevealField field="facts" label="Ficha técnica" revealed={facts}><dl>{p.facts.map(({ label, value }) => <div><dt>{label}</dt><dd>{value}</dd></div>)}</dl></RevealField>
+      </div>}
+      {(!p.available || cup) && <div class="cb-product-card">
+        <h3 class="cb-label">Perfil en taza</h3>
+        <RevealField field="cupProfile" label="Perfil en taza" revealed={cup}>
+          {p.cupProfile.map(({ attribute, level }) => <div class="cb-taste-row"><span>{attribute}</span><div class="cb-taste-bars" role="img" aria-label={`${attribute}: ${level} de 8`}>{Array.from({ length: 8 }, (_, i) => <i class:list={{ 'is-on': i < level }}></i>)}</div></div>)}
+          <p>Escala de 8 pasos impresa en la bolsa.</p>
+        </RevealField>
+      </div>}
+    </div>
+  </div>
+</section>}
