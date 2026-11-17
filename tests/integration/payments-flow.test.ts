@@ -85,6 +85,11 @@ describe.runIf(fake)('pagos con la pasarela de prueba', () => {
     // Abrir de nuevo el pago reutiliza la misma orden en lugar de crear otra.
     expect((await api('/api/payments/session', { body: { orderId } })).json.culqiOrderId).toBe(session.json.culqiOrderId);
 
+    // El CIP queda visible para pagarlo después (S4.6), y el sondeo normal no consulta la pasarela.
+    const withCode = await api(`/api/orders/${orderId}/status?code=1`);
+    expect(withCode.json).toMatchObject({ status: 'pending', payment: { code: expect.stringMatching(/^1\d{8}$/), amountCents: expect.any(Number) } });
+    expect((await api(`/api/orders/${orderId}/status`)).json).toEqual({ status: 'pending' });
+
     const secret = process.env.CULQI_WEBHOOK_SECRET;
     if (secret) {
       const event = { type: 'order.status.changed', data: JSON.stringify({ id: session.json.culqiOrderId }) };

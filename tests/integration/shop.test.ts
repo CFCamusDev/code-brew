@@ -36,7 +36,7 @@ describe('sitio', () => {
     const { status, text } = await api('/producto/hotfix');
     expect(status).toBe(200);
     expect(text).toContain('S/ 34.00');
-    expect(text).toContain('data-sku="monteverde-250"');
+    expect(text).toContain('data-sku="hotfix-250"');
     expect(text).toContain('data-price="34"');
   });
 

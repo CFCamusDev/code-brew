@@ -102,7 +102,7 @@ export default function CartWidget() {
                   const info = describeSku(line.sku);
                   return (
                     <li key={`${line.sku}|${line.grind}`} className="cart-line">
-                      {line.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
+                      {line.sku.startsWith("hotfix-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                       <div>
                         <p className="cart-line-name">{info?.productName ?? line.sku}</p>
                         <p className="cart-line-meta">

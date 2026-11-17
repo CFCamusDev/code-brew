@@ -199,7 +199,7 @@ export default function CheckoutApp() {
             <ul className="cart-lines">
               {quote.lines.map(line => (
                 <li key={`${line.sku}|${line.grind}`} className="cart-line">
-                  {line.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
+                  {line.sku.startsWith("hotfix-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                   <div>
                     <p className="cart-line-name">
                       {line.productName} <span className="cart-line-qty">× {line.quantity}</span>
