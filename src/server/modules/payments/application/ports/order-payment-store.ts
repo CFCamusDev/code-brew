@@ -12,6 +12,11 @@ export interface ConfirmPaymentStore {
   /** Descuenta el stock vendido (módulo inventory); una línea sin stock no se descuenta y se informa. */
   registerSale(orderId: string, lines: SaleLine[]): Promise<{ shortage: boolean }>;
   markOrderPaid(orderId: string, data: { paidAt: Date; stockShortage: boolean }): Promise<void>;
+  /**
+   * Libera las reservas de stock del pedido (released_at = now). Al confirmar el pago el stock físico ya se
+   * descontó, así que la reserva activa causaría un doble conteo hasta su vencimiento (ADR 0005, S3.4).
+   */
+  releaseReservations(orderId: string, now: Date): Promise<void>;
 }
 
 /** Lecturas previas al reembolso (fuera de la transacción). */

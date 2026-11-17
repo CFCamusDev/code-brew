@@ -30,13 +30,6 @@ Somos tres y todos tocamos todo. Para no pisarnos, el orden lo marca el tablero,
 - Si una regla bloquea algo legítimo, no la desactives: abre un ADR o corrige la dirección de la dependencia. Las pruebas de las reglas están en `tests/unit/architecture.test.ts` (fixtures en `tests/fixtures/architecture`).
 - Frontend por funcionalidad en `src/features`, piezas base en `src/ui`, contratos zod en `src/contracts`.
 
-## Auditoría de dependencias
-El CI corre `pnpm audit --audit-level=high` y falla con cualquier aviso alto o crítico. Si un aviso no tiene versión corregida y no aplica a cómo usamos el paquete, se ignora **solo ese aviso** en `package.json` → `pnpm.auditConfig.ignoreGhsas`, y se anota aquí con su motivo. Se retira apenas exista una versión corregida.
-
-| Aviso | Paquete | Por qué no aplica | Revisar |
-|---|---|---|---|
-| [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) | `picomatch` ≤ 4.0.7 (vía `dependency-cruiser` y `astro` → `unstorage` → `anymatch`) | El ReDoS requiere que el atacante controle el **patrón** glob. Todos los patrones salen del código o la configuración, nunca de lo que envía un usuario. Sin versión corregida al 17-nov-2026. | Cuando `picomatch` publique la corrección |
-
 ## Definición de terminado
 - [ ] Criterios de aceptación cumplidos
 - [ ] `pnpm typecheck`, `pnpm test` y, si aplica, `pnpm test:integration` en verde
