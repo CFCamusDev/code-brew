@@ -10,10 +10,14 @@ import type {
   RefundOutcome,
   RefundRequest
 } from '../application/ports/payment-gateway';
+import type { GatewayTransaction } from '../domain/reconciliation';
 
 // Adaptador de la API de Culqi v2 (https://apidocs.culqi.com). Montos en céntimos.
 
 const API = 'https://api.culqi.com/v2';
+// Listados para conciliar: 100 por página y hasta 50 páginas (5 000 cargos u órdenes por consulta).
+const LIST_PAGE_SIZE = 100;
+const LIST_MAX_PAGES = 50;
 
 interface CulqiError {
   object: 'error';
@@ -34,6 +38,11 @@ interface CulqiCharge {
   source?: { object?: string; type?: string; id?: string };
   action_code?: string;
   user_message?: string;
+  amount_refunded?: number;
+  outcome?: { type?: string };
+  metadata?: Record<string, unknown>;
+  /** Segundos desde 1970. */
+  creation_date?: number;
 }
 
 interface CulqiOrder {
@@ -47,6 +56,14 @@ interface CulqiOrder {
   expiration_date: number;
   /** CIP: aparece cuando el cliente confirma la orden eligiendo agentes, banca o billetera. */
   payment_code?: string | null;
+  metadata?: Record<string, unknown>;
+  /** Segundos desde 1970. */
+  creation_date?: number;
+}
+
+interface CulqiList<T> {
+  data: T[];
+  paging?: { cursors?: { before?: string; after?: string } };
 }
 
 export function isCulqiError(data: unknown): data is CulqiError {
@@ -178,5 +195,49 @@ export class CulqiGateway implements PaymentGateway {
     });
     if (status === 201 && !isCulqiError(data)) return { ok: true, refundId: data.id };
     return { ok: false, status, message: isCulqiError(data) ? data.merchant_message : undefined, raw: data };
+  }
+
+  /** Recorre una lista de Culqi página por página (cursor `after`) dentro del rango de fechas de creación. */
+  private async listAll<T extends { id: string }>(resource: 'charges' | 'orders', range: { from: Date; to: Date }): Promise<T[]> {
+    const items: T[] = [];
+    const base = `/${resource}?limit=${LIST_PAGE_SIZE}&creation_date_from=${Math.floor(range.from.getTime() / 1000)}&creation_date_to=${Math.floor(range.to.getTime() / 1000)}`;
+    let after: string | undefined;
+    for (let page = 0; page < LIST_MAX_PAGES; page++) {
+      const { status, data } = await this.request<CulqiList<T>>('GET', after ? `${base}&after=${encodeURIComponent(after)}` : base);
+      if (status !== 200 || isCulqiError(data)) throw new Error(`Culqi no pudo listar ${resource} (${status})`);
+      items.push(...data.data);
+      after = data.paging?.cursors?.after;
+      if (data.data.length < LIST_PAGE_SIZE || !after) return items;
+    }
+    throw new Error(`Culqi devolvió más de ${LIST_PAGE_SIZE * LIST_MAX_PAGES} ${resource}: acorta el rango de fechas`);
+  }
+
+  async listTransactions(range: { from: Date; to: Date }): Promise<GatewayTransaction[]> {
+    const [charges, orders] = await Promise.all([this.listAll<CulqiCharge>('charges', range), this.listAll<CulqiOrder>('orders', range)]);
+    return [
+      ...charges.map((charge): GatewayTransaction => {
+        const refunded = (charge.amount_refunded ?? 0) >= charge.amount && charge.amount > 0;
+        const paid = charge.paid === true || charge.outcome?.type === 'venta_exitosa';
+        return {
+          reference: charge.id,
+          kind: 'charge',
+          amountCents: charge.amount,
+          state: refunded ? 'refunded' : paid ? 'paid' : 'other',
+          orderId: typeof charge.metadata?.order_id === 'string' ? charge.metadata.order_id : null,
+          createdAt: new Date((charge.creation_date ?? 0) * 1000)
+        };
+      }),
+      ...orders.map((order): GatewayTransaction => {
+        const state = toOrder(order).state;
+        return {
+          reference: order.id,
+          kind: 'order',
+          amountCents: order.amount,
+          state: state === 'paid' || state === 'pending' || state === 'expired' || state === 'deleted' ? state : 'other',
+          orderId: typeof order.metadata?.order_id === 'string' ? order.metadata.order_id : null,
+          createdAt: new Date((order.creation_date ?? 0) * 1000)
+        };
+      })
+    ];
   }
 }

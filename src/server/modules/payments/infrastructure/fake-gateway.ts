@@ -10,6 +10,7 @@ import type {
   RefundOutcome,
   RefundRequest
 } from '../application/ports/payment-gateway';
+import type { GatewayTransaction } from '../domain/reconciliation';
 
 /**
  * Pasarela determinista para pruebas: el resultado de un cargo depende del token, sin red ni azar.
@@ -32,7 +33,9 @@ export class FakeGateway implements PaymentGateway {
   private chargeSeq = 0;
   private orderSeq = 0;
   private refundSeq = 0;
-  private readonly orderStates = new Map<string, { request: PaymentOrderRequest; state: PaymentOrderState }>();
+  private readonly orderStates = new Map<string, { request: PaymentOrderRequest; state: PaymentOrderState; createdAt: Date }>();
+  /** Cargos cobrados, para listarlos al conciliar. */
+  private readonly paidCharges = new Map<string, { amountCents: number; orderId: string; createdAt: Date }>();
   private readonly refunded = new Set<string>();
 
   constructor(private readonly options: { enabled?: boolean; publicKey?: string } = {}) {}
@@ -68,13 +71,14 @@ export class FakeGateway implements PaymentGateway {
   }
 
   private paid(chargeId: string, request: ChargeRequest): ChargeOutcome {
+    this.paidCharges.set(chargeId, { amountCents: request.amountCents, orderId: request.orderId, createdAt: new Date() });
     return { kind: 'paid', chargeId, amountCents: request.amountCents, method: 'card', raw: { object: 'charge', id: chargeId, amount: request.amountCents } };
   }
 
   async createOrder(request: PaymentOrderRequest): Promise<CreateOrderOutcome> {
     this.orders.push(request);
     const id = `ord_fake_${++this.orderSeq}`;
-    this.orderStates.set(id, { request, state: 'pending' });
+    this.orderStates.set(id, { request, state: 'pending', createdAt: new Date() });
     return { ok: true, order: this.order(id) };
   }
 
@@ -90,6 +94,27 @@ export class FakeGateway implements PaymentGateway {
     }
     this.refunded.add(request.chargeId);
     return { ok: true, refundId: `ref_fake_${++this.refundSeq}` };
+  }
+
+  async listTransactions(range: { from: Date; to: Date }): Promise<GatewayTransaction[]> {
+    const inRange = (date: Date) => date >= range.from && date <= range.to;
+    const charges = [...this.paidCharges].map(([reference, charge]): GatewayTransaction => ({
+      reference,
+      kind: 'charge',
+      amountCents: charge.amountCents,
+      state: this.refunded.has(reference) ? 'refunded' : 'paid',
+      orderId: charge.orderId,
+      createdAt: charge.createdAt
+    }));
+    const orders = [...this.orderStates].map(([reference, { request, state, createdAt }]): GatewayTransaction => ({
+      reference,
+      kind: 'order',
+      amountCents: request.amountCents,
+      state: state === 'paid' || state === 'pending' || state === 'expired' || state === 'deleted' ? state : 'other',
+      orderId: request.orderId,
+      createdAt
+    }));
+    return [...charges, ...orders].filter(transaction => inRange(transaction.createdAt));
   }
 
   /** Simula que el cliente pagó el código de PagoEfectivo o la billetera. */

@@ -18,6 +18,8 @@ const from = dateParam('desde');
 const to = dateParam('hasta');
 const { rows, total, pages, byStatus } = await listOrders({ q, status, from, to, page });
 const exportQuery = new URLSearchParams(Object.entries({ estado: status, q, desde: from, hasta: to }).filter((entry): entry is [string, string] => Boolean(entry[1])));
+// La conciliación usa el mismo rango de fechas que la lista (sin estado ni búsqueda: compara todos los pagos).
+const reconcileQuery = new URLSearchParams(Object.entries({ desde: from, hasta: to }).filter((entry): entry is [string, string] => Boolean(entry[1])));
 const rangeLabel = from && to ? `del ${from} al ${to}` : from ? `desde ${from}` : to ? `hasta ${to}` : '';
 
 const link = (changes: Record<string, string | undefined>) => {
@@ -39,6 +41,7 @@ const selectable = status === 'paid' || status === 'preparing';
     </div>
     <div class="head-actions">
       <a class="btn ghost" href={`/api/admin/export/pedidos?${exportQuery}`}>Exportar CSV</a>
+      <a class="btn ghost" href={`/api/admin/export/conciliacion?${reconcileQuery}`} title="Compara los pagos de la tienda con los cobros de Culqi (hasta 93 días; por defecto, los últimos 30)">Conciliar con Culqi</a>
     </div>
   </div>
 

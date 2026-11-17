@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 import { inventoryFor } from '../../inventory';
 import type { Transaction } from '../../../shared/unit-of-work';
 import type { getDb } from '../../../../lib/server/db';
 import { orderEvents, orderItems, orders, payments, stockReservations } from '../../../../lib/server/db/schema';
 import type { PendingOrderPaymentReader } from '../application/pending-payment-code';
+import type { LocalPaymentReader } from '../application/reconcile-payments';
 import type { ConfirmPaymentStore, RefundReader, RefundStore } from '../application/ports/order-payment-store';
 import { isGatewayCharge } from '../domain/payment-rules';
 
@@ -117,6 +118,27 @@ export function createPendingOrderPaymentReader(db: Db): PendingOrderPaymentRead
         .orderBy(desc(payments.createdAt))
         .limit(1);
       return row?.reference ?? null;
+    }
+  };
+}
+
+/** Pagos de la tienda con referencia de la pasarela (chr_… u ord_…), para conciliar. */
+export function createLocalPaymentReader(db: Db): LocalPaymentReader {
+  return {
+    async listPayments({ from, to }) {
+      const rows = await db
+        .select({
+          reference: payments.providerReference,
+          orderId: payments.orderId,
+          orderNumber: orders.number,
+          status: payments.status,
+          amountCents: payments.amountCents,
+          createdAt: payments.createdAt
+        })
+        .from(payments)
+        .innerJoin(orders, eq(orders.id, payments.orderId))
+        .where(and(isNotNull(payments.providerReference), gte(payments.createdAt, from), lte(payments.createdAt, to)));
+      return rows.map(row => ({ ...row, reference: row.reference! }));
     }
   };
 }
