@@ -13,7 +13,17 @@ export interface ProductRecord {
   grinds: string[];
   profile: (ProfileContent & { colors: { color?: string; tint?: string; glow?: string }; revealedFields: string[] }) | null;
   media: { view: string; url: string; alt: string }[];
-  variants: { sku: string; format: string; priceCents: number; stock: number; active: boolean }[];
+  variants: VariantRecord[];
+}
+
+/** Presentación; si es un pack, trae sus componentes (bundle_items) con el stock de cada uno. */
+export interface VariantRecord {
+  sku: string;
+  format: string;
+  priceCents: number;
+  stock: number;
+  active: boolean;
+  components: { productName: string; format: string; quantity: number; stock: number; active: boolean }[];
 }
 
 export interface LineRecord {
@@ -31,4 +41,6 @@ export interface CatalogReader {
   findLine(slug: string): Promise<{ line: LineRecord; products: ProductRecord[] } | null>;
   /** Producto por slug con su línea; null si no existe o no tiene línea. */
   findProduct(slug: string): Promise<{ line: LineRecord; product: ProductRecord } | null>;
+  /** Líneas publicadas (status active) en su orden, cada una con sus productos en orden de lanzamiento. */
+  listActiveLines(): Promise<{ line: LineRecord; products: ProductRecord[] }[]>;
 }

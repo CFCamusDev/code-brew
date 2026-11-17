@@ -1,0 +1,14 @@
+---
+import type { CatalogLine, StoreItem } from '../../features/catalog/page-catalog';
+import BaseCard from '../base/ProductCard.astro';
+import Pouch from './Pouch.astro';
+import { hasPouchRender } from './renders';
+// Tarjeta de la tienda para Pipeline: la de la base con la bolsa del perfil. Un perfil nuevo sin render usa la imagen
+// de la base en lugar de romper la página. El estado «Próximamente» lo marca el chip de la tarjeta, no el sello de Pouch.
+interface Props { line: CatalogLine; item: StoreItem; }
+const { line, item } = Astro.props;
+const { product } = item;
+---
+<BaseCard line={line} item={item}>
+  {hasPouchRender(product.slug) && <Pouch slot="visual" product={product.slug} scale={.72} />}
+</BaseCard>

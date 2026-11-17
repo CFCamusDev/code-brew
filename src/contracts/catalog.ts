@@ -27,7 +27,10 @@ export const publicVariantSchema = z.object({
   sku: z.string(),
   format: z.string(),
   priceCents: z.number().int(),
-  available: z.boolean()
+  /** Un pack está disponible si cada componente tiene stock para la cantidad que lleva (ADR 0003). */
+  available: z.boolean(),
+  /** Contenido del pack; vacío si no es un pack. */
+  components: z.array(z.object({ name: z.string(), format: z.string(), quantity: z.number().int() }))
 });
 
 export const publicProductSchema = z.object({
@@ -35,6 +38,7 @@ export const publicProductSchema = z.object({
   name: z.string(),
   releaseNumber: z.number().int().nullable(),
   status: z.enum(['upcoming', 'active']),
+  kind: z.enum(['product', 'pack']),
   launchAt: z.string().nullable(),
   line: z.object({ slug: z.string(), name: z.string() }),
   colors: colorsSchema,

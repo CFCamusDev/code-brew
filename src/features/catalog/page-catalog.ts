@@ -3,7 +3,7 @@ import catalog from '../../data/catalog.json';
 import { PIPELINE, type PipelineProduct } from '../../data/pipeline';
 import { logger, serializeError } from '../../lib/server/logger';
 import { getLiveCatalog } from '../../lib/server/shop';
-import { findPublicLineProducts, findPublicProduct, type PublicProductView } from '../../server/modules/catalog';
+import { findPublicLineProducts, findPublicLines, findPublicProduct, type PublicProductView } from '../../server/modules/catalog';
 
 // Catálogo para las páginas del sitio (S5.3). Con CATALOG_SOURCE=db sale del catálogo del panel (solo lo publicado y lo
 // revelado); con static, de pipeline.json y catalog.json como antes. Las dos fuentes se convierten a la misma forma para
@@ -41,6 +41,8 @@ export interface CatalogProfile {
   /** Número de lanzamiento con dos cifras («01»); vacío si no tiene. */
   num: string;
   available: boolean;
+  /** pack si se arma con otras presentaciones (ADR 0003). */
+  kind: 'product' | 'pack';
   colors: { color?: string; tint?: string; glow?: string };
   tagline?: string;
   method?: string;
@@ -57,8 +59,19 @@ export interface CatalogProfile {
 
 /** Lo que se puede comprar: precios en soles. */
 export interface CatalogOffer {
-  variants: { sku: string; format: string; price: number; available: boolean }[];
+  variants: { sku: string; format: string; price: number; available: boolean; components: { name: string; format: string; quantity: number }[] }[];
   grinds: string[];
+}
+
+/** Producto de la tienda: su perfil y lo que se puede comprar. */
+export interface StoreItem {
+  product: CatalogProfile;
+  offer: CatalogOffer;
+}
+
+export interface StoreLine {
+  line: CatalogLine;
+  items: StoreItem[];
 }
 
 export interface ProductPage {
@@ -79,6 +92,7 @@ export function fromStatic(product: PipelineProduct): CatalogProfile {
     name: product.name,
     num: product.num,
     available,
+    kind: 'product',
     colors: { color: product.color, tint: product.tint, glow: product.glow },
     tagline: product.tagline,
     method: product.method,
@@ -101,6 +115,7 @@ export function fromCatalog(product: PublicProductView): CatalogProfile {
     name: product.name,
     num: product.releaseNumber === null ? '' : String(product.releaseNumber).padStart(2, '0'),
     available: product.status === 'active',
+    kind: product.kind,
     colors: product.colors,
     tagline: profile.tagline,
     method: profile.method,
@@ -118,14 +133,15 @@ export function fromCatalog(product: PublicProductView): CatalogProfile {
 /** Vista pública del catálogo → oferta. */
 export function offerFromCatalog(product: PublicProductView): CatalogOffer {
   return {
-    variants: product.variants.map(({ sku, format, priceCents, available }) => ({ sku, format, price: priceCents / 100, available })),
+    variants: product.variants.map(({ sku, format, priceCents, available, components }) => ({ sku, format, price: priceCents / 100, available, components })),
     grinds: product.grinds
   };
 }
 
 /** Oferta del modo estático: presentaciones de catalog.json con el precio y el stock de la base si responde. */
-async function staticOffer(slug: string): Promise<CatalogOffer> {
-  const live = await getLiveCatalog();
+async function staticOffer(slug: string, live?: Awaited<ReturnType<typeof getLiveCatalog>>): Promise<CatalogOffer> {
+  // null significa «la base no respondió»: no se vuelve a intentar por cada producto.
+  if (live === undefined) live = await getLiveCatalog();
   const fallback = catalog.products.find(product => product.slug === slug);
   const known = fallback?.variants ?? [];
   // Un lanzamiento sin entrada en catalog.json usa sus SKU de la base (<slug>-250 / <slug>-500).
@@ -139,7 +155,8 @@ async function staticOffer(slug: string): Promise<CatalogOffer> {
       sku: variant.sku,
       format: variant.format,
       price: live?.variants.get(variant.sku)?.price ?? variant.price,
-      available: live ? (live.variants.get(variant.sku)?.available ?? false) : true
+      available: live ? (live.variants.get(variant.sku)?.available ?? false) : true,
+      components: []
     })),
     grinds: live?.grinds.get(slug) ?? fallback?.grinds ?? []
   };
@@ -161,6 +178,25 @@ export async function getLineCatalog(lineSlug = PIPELINE_LINE): Promise<{ line: 
   const found = await fromDatabase(() => findPublicLineProducts(lineSlug));
   if (found) return found.value && { line: found.value.line, products: found.value.products.map(fromCatalog) };
   return lineSlug === PIPELINE_LINE ? { line: STATIC_PIPELINE_LINE, products: PIPELINE.map(fromStatic) } : null;
+}
+
+/** Tienda: las líneas publicadas con sus productos y packs visibles, en su orden. */
+export async function getStoreCatalog(): Promise<StoreLine[]> {
+  const found = await fromDatabase(() => findPublicLines());
+  if (found) {
+    return found.value.map(({ line, products }) => ({
+      line,
+      items: products.map(product => ({ product: fromCatalog(product), offer: offerFromCatalog(product) }))
+    }));
+  }
+  const live = await getLiveCatalog();
+  const items = await Promise.all(
+    PIPELINE.map(async product => ({
+      product: fromStatic(product),
+      offer: product.status === 'available' ? await staticOffer(product.catalogSlug, live) : { variants: [], grinds: [] }
+    }))
+  );
+  return [{ line: STATIC_PIPELINE_LINE, items }];
 }
 
 /** Datos de la página de un producto; null si no existe o el público no debe verlo. */

@@ -68,8 +68,8 @@ describe('GET /api/catalog/products/[slug]', () => {
     const product = publicProductSchema.parse(json);
     expect(product.profile).toMatchObject({ tagline: 'Frase activa', method: 'Espresso', description: 'Descripción completa', notes: ['Cacao'] });
     expect(product.variants).toEqual([
-      { sku: 'qa-activo-250', format: '250 g', priceCents: 3400, available: true },
-      { sku: 'qa-activo-500', format: '500 g', priceCents: 6000, available: false }
+      { sku: 'qa-activo-250', format: '250 g', priceCents: 3400, available: true, components: [] },
+      { sku: 'qa-activo-500', format: '500 g', priceCents: 6000, available: false, components: [] }
     ]);
     expect(product.media).toEqual([{ view: 'front', url: '/qa/front.webp', alt: 'Frente' }]);
   });

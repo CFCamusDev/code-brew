@@ -1,4 +1,4 @@
-import { isPubliclyVisible, revealProfile, type PublicProfile } from '../domain/catalog';
+import { isPubliclyVisible, isVariantAvailable, revealProfile, type PublicProfile } from '../domain/catalog';
 import type { CatalogReader, LineRecord, ProductRecord } from './ports/catalog-reader';
 
 // Consultas públicas del catálogo. Devuelven null cuando el público no debe ver la línea o el producto, para que el
@@ -9,6 +9,8 @@ export interface PublicVariant {
   format: string;
   priceCents: number;
   available: boolean;
+  /** Contenido del pack («2 × Hotfix 250 g»); vacío si no es un pack. */
+  components: { name: string; format: string; quantity: number }[];
 }
 
 export interface PublicProductView {
@@ -16,6 +18,8 @@ export interface PublicProductView {
   name: string;
   releaseNumber: number | null;
   status: 'upcoming' | 'active';
+  /** pack si alguna de sus presentaciones se arma con otras (bundle_items). */
+  kind: 'product' | 'pack';
   launchAt: string | null;
   line: { slug: string; name: string };
   colors: { color?: string; tint?: string; glow?: string };
@@ -35,6 +39,7 @@ function toPublicProduct(line: LineRecord, product: ProductRecord): PublicProduc
     name: product.name,
     releaseNumber: product.releaseNumber,
     status,
+    kind: product.variants.some(variant => variant.components.length > 0) ? 'pack' : 'product',
     launchAt: product.launchAt?.toISOString() ?? null,
     line: { slug: line.slug, name: line.name },
     colors: product.profile?.colors ?? {},
@@ -42,7 +47,15 @@ function toPublicProduct(line: LineRecord, product: ProductRecord): PublicProduc
     roast: onSale ? product.roast : null,
     grinds: onSale ? product.grinds : [],
     variants: onSale
-      ? product.variants.filter(variant => variant.active).map(({ sku, format, priceCents, stock }) => ({ sku, format, priceCents, available: stock > 0 }))
+      ? product.variants
+          .filter(variant => variant.active)
+          .map(variant => ({
+            sku: variant.sku,
+            format: variant.format,
+            priceCents: variant.priceCents,
+            available: isVariantAvailable(variant),
+            components: variant.components.map(({ productName, format, quantity }) => ({ name: productName, format, quantity }))
+          }))
       : [],
     media: onSale ? product.media : []
   };
@@ -63,6 +76,17 @@ export async function getPublicLineProducts(reader: CatalogReader, slug: string)
     .map(product => toPublicProduct(line, product))
     .filter((product): product is PublicProductView => product !== null);
   return { line, products };
+}
+
+/** Caso de uso VerTienda: las líneas publicadas en su orden, cada una con sus productos visibles (sin líneas vacías). */
+export async function getPublicLines(reader: CatalogReader) {
+  const lines = await reader.listActiveLines();
+  return lines
+    .map(({ line, products }) => ({
+      line,
+      products: products.map(product => toPublicProduct(line, product)).filter((product): product is PublicProductView => product !== null)
+    }))
+    .filter(({ products }) => products.length > 0);
 }
 
 /** Caso de uso VerLinea: la línea publicada con sus productos visibles, en orden de lanzamiento. */
