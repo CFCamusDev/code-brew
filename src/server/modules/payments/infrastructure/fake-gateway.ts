@@ -110,6 +110,8 @@ export class FakeGateway implements PaymentGateway {
 
   private order(id: string): PaymentOrder {
     const { request, state } = this.orderStates.get(id)!;
-    return { id, amountCents: request.amountCents, state, raw: { object: 'order', id, state } };
+    // CIP determinista por orden: ord_fake_3 → 100000003.
+    const paymentCode = String(100000000 + Number(id.split('_').pop()));
+    return { id, amountCents: request.amountCents, state, paymentCode, expiresAt: request.expiresAt, raw: { object: 'order', id, state, payment_code: paymentCode } };
   }
 }

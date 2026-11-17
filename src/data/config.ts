@@ -1,9 +1,7 @@
 import type { ImageMetadata } from 'astro';
 import { getSetting, SOCIAL_LINKS_KEY, type SocialLinks } from '../server/modules/settings';
 import bagLight from '../assets/products/bag-light.png';
-import bagDark from '../assets/products/bag-dark.png';
 import lifestyleCup from '../assets/lifestyle/cup.png';
-import lifestyleBeans from '../assets/lifestyle/beans.png';
 import lifestyleLaptop from '../assets/lifestyle/laptop-code.png';
 import catalog from './catalog.json';
 
@@ -76,76 +74,26 @@ function priceOf(sku: string): number {
 
 export const PRODUCTS: ProductItem[] = [
   {
-    id: 'monteverde-250',
+    id: 'hotfix-250',
     name: 'Hotfix',
     format: '250 g',
     grind: 'Grano entero o molido',
     roast: 'Tueste medio-oscuro',
-    price: priceOf('monteverde-250'),
-    imgSlotId: 'img-producto-monteverde-250',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 250 g | 1:1 ]',
-    images: bagGallery(bagLight, lifestyleCup, 'Taza de café de especialidad recién preparado', 'Origen Monteverde 250 g')
+    price: priceOf('hotfix-250'),
+    imgSlotId: 'img-producto-hotfix-250',
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Hotfix 250 g | 1:1 ]',
+    images: bagGallery(bagLight, lifestyleCup, 'Taza de café de especialidad recién preparado', 'Hotfix 250 g')
   },
   {
-    id: 'monteverde-500',
+    id: 'hotfix-500',
     name: 'Hotfix',
     format: '500 g',
     grind: 'Grano entero o molido',
     roast: 'Tueste medio-oscuro',
-    price: priceOf('monteverde-500'),
-    imgSlotId: 'img-producto-monteverde-500',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Monteverde 500 g | 1:1 ]',
-    images: bagGallery(bagLight, lifestyleLaptop, 'Laptop con código junto a café CodeBrew', 'Origen Monteverde 500 g')
-  },
-  {
-    id: 'espresso-250',
-    name: 'Espresso Amazonas',
-    format: '250 g',
-    grind: 'Grano entero o molido para espresso',
-    roast: 'Tueste medio-oscuro',
-    price: priceOf('espresso-250'),
-    imgSlotId: 'img-producto-espresso-250',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 250 g | 1:1 ]',
-    images: bagGallery(bagDark, lifestyleBeans, 'Granos de café de especialidad CodeBrew', 'Espresso Amazonas 250 g')
-  },
-  {
-    id: 'espresso-500',
-    name: 'Espresso Amazonas',
-    format: '500 g',
-    grind: 'Grano entero o molido para espresso',
-    roast: 'Tueste medio-oscuro',
-    price: priceOf('espresso-500'),
-    imgSlotId: 'img-producto-espresso-500',
-    imgSlotLabel: '[ IMG: bolsa CodeBrew Espresso 500 g | 1:1 ]',
-    images: bagGallery(bagDark, lifestyleCup, 'Taza de café de especialidad recién preparado', 'Espresso Amazonas 500 g')
-  },
-  {
-    id: 'pack-developer',
-    name: 'Pack Developer',
-    format: '2 × 250 g',
-    grind: 'Combinación personalizable',
-    roast: 'Tueste medio + medio-oscuro',
-    price: priceOf('pack-developer'),
-    highlighted: true,
-    highlightTag: 'const favorito = true;',
-    imgSlotId: 'img-producto-pack-developer',
-    imgSlotLabel: '[ IMG: Pack Developer Dúo 2x250 g con packaging exclusivo | 1:1 ]',
-    images: [
-      { src: bagLight, alt: 'Bolsa Origen Monteverde del Pack Developer' },
-      { src: bagDark, alt: 'Bolsa Espresso Amazonas del Pack Developer' }
-    ],
-    galleryMode: 'duo'
-  },
-  {
-    id: 'microlote-temporada',
-    name: 'Microlote de Temporada',
-    format: '250 g',
-    grind: 'Grano entero o filtrado',
-    roast: 'Tueste claro',
-    price: priceOf('microlote-temporada'),
-    imgSlotId: 'img-producto-microlote',
-    imgSlotLabel: '[ IMG: bolsa Microlote Selección Especial 250 g | 1:1 ]',
-    images: bagGallery(bagLight, lifestyleBeans, 'Granos de café de especialidad CodeBrew', 'Microlote de Temporada 250 g')
+    price: priceOf('hotfix-500'),
+    imgSlotId: 'img-producto-hotfix-500',
+    imgSlotLabel: '[ IMG: bolsa CodeBrew Hotfix 500 g | 1:1 ]',
+    images: bagGallery(bagLight, lifestyleLaptop, 'Laptop con código junto a café CodeBrew', 'Hotfix 500 g')
   }
 ];
 

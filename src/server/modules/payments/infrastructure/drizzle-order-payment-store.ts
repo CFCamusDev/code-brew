@@ -1,8 +1,9 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, gt } from 'drizzle-orm';
 import { inventoryFor } from '../../inventory';
 import type { Transaction } from '../../../shared/unit-of-work';
 import type { getDb } from '../../../../lib/server/db';
 import { orderEvents, orderItems, orders, payments } from '../../../../lib/server/db/schema';
+import type { PendingOrderPaymentReader } from '../application/pending-payment-code';
 import type { ConfirmPaymentStore, RefundReader, RefundStore } from '../application/ports/order-payment-store';
 import { isGatewayCharge } from '../domain/payment-rules';
 
@@ -94,6 +95,21 @@ export function createRefundStore(tx: Transaction): RefundStore {
         note,
         adminUserId
       });
+    }
+  };
+}
+
+/** Pago por orden pendiente de un pedido, sobre la conexión (solo lee). */
+export function createPendingOrderPaymentReader(db: Db): PendingOrderPaymentReader {
+  return {
+    async findPendingOrderReference(orderId, now) {
+      const [row] = await db
+        .select({ reference: payments.providerReference })
+        .from(payments)
+        .where(and(eq(payments.orderId, orderId), eq(payments.method, 'order'), eq(payments.status, 'pending'), gt(payments.expiresAt, now)))
+        .orderBy(desc(payments.createdAt))
+        .limit(1);
+      return row?.reference ?? null;
     }
   };
 }

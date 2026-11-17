@@ -1,7 +1,7 @@
 import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { useEffect, useRef, useState } from 'react';
 import { MAX_QUANTITY } from '../../contracts/limits';
-import type { UpdateOrderItemsResponse } from '../../contracts/orders';
+import type { OrderStatusResponse, PendingPayment, UpdateOrderItemsResponse } from '../../contracts/orders';
 import { formatPEN } from '../../lib/shop/format';
 import '../../styles/shop.css';
 
@@ -49,6 +49,33 @@ interface Props {
   shippingCents: number;
   shippingZoneName: string | null;
   totalCents: number;
+  /** CIP vigente si el cliente ya eligió pagar en agentes, banca o billetera. */
+  pendingPayment?: PendingPayment | null;
+}
+
+/** Código para pagar en agentes, bodegas o banca (PagoEfectivo), con botón para copiarlo. */
+function PaymentCodeCard({ payment }: { payment: PendingPayment }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard?.writeText(payment.code).catch(() => undefined);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="pay-code" role="group" aria-label="Código de pago">
+      <p className="cb-label">Tu código de pago (CIP)</p>
+      <p className="pay-code-value">
+        <strong>{payment.code}</strong>
+        <button type="button" className="button ghost small" onClick={copy}>
+          {copied ? 'Copiado' : 'Copiar'}
+        </button>
+      </p>
+      <p>
+        Paga <strong>{formatPEN(payment.amountCents)}</strong> en agentes, bodegas o en tu banca móvil o por internet, en la opción <strong>PagoEfectivo</strong>, antes del{' '}
+        {payment.expiresLabel}.
+      </p>
+    </div>
+  );
 }
 
 type Session = { status: 'ready'; publicKey: string; amountCents: number; culqiOrderId: string | null; email: string; orderNumber: string };
@@ -85,8 +112,9 @@ async function postJson(url: string, body: unknown) {
   return { status: response.status, data: await response.json().catch(() => ({})) };
 }
 
-export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, items, subtotalCents, shippingCents, shippingZoneName, totalCents }: Props) {
+export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, items, subtotalCents, shippingCents, shippingZoneName, totalCents, pendingPayment = null }: Props) {
   const [summary, setSummary] = useState<Summary>({ items, subtotalCents, shippingCents, totalCents });
+  const [paymentCode, setPaymentCode] = useState<PendingPayment | null>(pendingPayment);
   const [view, setView] = useState<View>({ kind: 'idle' });
   const pending = useRef<{ tokenId: string; email: string; deviceId?: string } | null>(null);
 
@@ -126,6 +154,14 @@ export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, 
   // Pagos por orden (PagoEfectivo, billeteras): esperamos al webhook consultando el estado.
   useEffect(() => {
     if (view.kind !== 'waiting') return;
+    // Al cerrar la ventana de Culqi pedimos el CIP una vez para mostrarlo; luego solo sondeamos el estado.
+    fetch(`/api/orders/${orderId}/status?code=1`)
+      .then(response => response.json() as Promise<OrderStatusResponse>)
+      .then(data => {
+        if (data.status && data.status !== 'pending') window.location.reload();
+        else if (data.payment) setPaymentCode(data.payment);
+      })
+      .catch(() => undefined);
     const timer = setInterval(async () => {
       const response = await fetch(`/api/orders/${orderId}/status`).catch(() => null);
       const data = await response?.json().catch(() => null);
@@ -252,9 +288,13 @@ export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, 
   if (view.kind === 'waiting') {
     return (
       <div className="pay-status" role="status">
-        <p>
-          <strong>Completa el pago con el código o la app que te indicó Culqi.</strong>
-        </p>
+        {paymentCode ? (
+          <PaymentCodeCard payment={paymentCode} />
+        ) : (
+          <p>
+            <strong>Completa el pago con el código o la app que te indicó Culqi.</strong>
+          </p>
+        )}
         <p>Esta página se actualizará sola cuando recibamos la confirmación. También te enviaremos un correo.</p>
       </div>
     );
@@ -319,7 +359,7 @@ export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, 
             <ul className="cart-lines">
               {summary.items.map(item => (
                 <li key={`${item.sku}|${item.grind}`} className="cart-line">
-                  {item.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
+                  {item.sku.startsWith("hotfix-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                   <div>
                     <p className="cart-line-name">
                       {item.productName} <span className="cart-line-qty">× {item.quantity}</span>
@@ -354,11 +394,12 @@ export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, 
         <section className="order-card">
           <h2>Siguiente paso: el pago</h2>
           <p>Guardamos tu pedido; reservamos tu café en cuanto se confirme el pago.</p>
+          {culqiEnabled && paymentCode && <PaymentCodeCard payment={paymentCode} />}
           {culqiEnabled ? (
             <div className="pay-box">
               <div className="order-actions">
                 <button type="button" className="button primary" onClick={pay} disabled={view.kind === 'busy'}>
-                  {view.kind === 'busy' ? view.message : 'Pagar ahora'} <span aria-hidden="true">↗</span>
+                  {view.kind === 'busy' ? view.message : paymentCode ? 'Pagar con otro medio' : 'Pagar ahora'} <span aria-hidden="true">↗</span>
                 </button>
                 <a className="order-alt" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   ¿Problemas? Escríbenos por WhatsApp ↗
