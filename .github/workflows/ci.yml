@@ -27,7 +27,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Auditoría de dependencias
-        run: pnpm audit --audit-level=high
+        # GHSA-fc5q-39xc-vjpf: picomatch ReDoS via dependency-cruiser y astro/unstorage, sin parche (Patched: <0.0.0)
+        run: pnpm audit --audit-level=high --ignore-advisories GHSA-fc5q-39xc-vjpf
       - name: Revisión de tipos
         run: pnpm typecheck
       - name: Reglas de arquitectura
