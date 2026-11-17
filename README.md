@@ -27,7 +27,7 @@ Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir e
 ## Estructura
 
 - `src/pages`: páginas y API (`src/pages/api`). Las páginas solo cargan datos y componen; `src/layouts`, `src/styles`.
-- `src/features/<funcionalidad>`: la tienda por funcionalidad: `landing`, `catalog`, `product`, `cart`, `checkout`, `order`, `complaints` y `experience-3d` (reservada).
+- `src/features/<funcionalidad>`: la tienda por funcionalidad: `landing`, `catalog`, `store`, `product`, `cart`, `checkout`, `order`, `complaints` y `experience-3d` (reservada).
 - `src/ui`: piezas base compartidas (`Header`, `Footer`, `ShopHeader`, `LogoMark`, `FloatingWhatsApp`, `ScrollAnimations`).
 - `src/lines`: plantillas de línea (ADR 0004). `registry.ts` las registra y `LineSection.astro`/`ProductPage.astro` eligen la de cada línea; `base/` es la de cualquier línea sin plantilla propia y `pipeline/` la de Pipeline (`LineSection`, `ProductPage`, `Pouch`). `theme.ts` aplica el tema de la línea. Cómo agregar una: [docs/lineas.md](docs/lineas.md).
 - `src/contracts`: esquemas zod compartidos por la API y las islas; `src/components/admin`: panel de administración.
@@ -132,6 +132,7 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 La portada presenta la línea Pipeline. Hotfix permite elegir presentación y molienda desde `/producto/hotfix`; Cold Start, Deploy, Merge y Rollback tienen sus páginas de próximos lanzamientos. El carrito, checkout, pedidos, reclamos y políticas conservan sus contratos existentes.
 
 - `src/pages/index.astro`: composición de la portada.
+- `src/pages/tienda.astro` y `src/features/store/`: la tienda, con todas las líneas publicadas, sus productos y packs, y filtros por enlace (`?linea=`, `?estado=`, `?tipo=`).
 - `src/features/landing/Hero.astro` y la sección de la línea según su plantilla (`src/lines/pipeline/LineSection.astro`): entrada al catálogo.
 - `src/lines/pipeline/ProductPage.astro` (galería y selector de perfiles) y `src/features/product/ProductPurchase.astro` (compra).
 - `src/lines/pipeline/Pouch.astro`: renders optimizados y tamaños responsivos.

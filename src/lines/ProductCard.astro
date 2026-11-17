@@ -1,0 +1,11 @@
+---
+import type { CatalogLine, StoreItem } from '../features/catalog/page-catalog';
+import Base from './base/ProductCard.astro';
+import Pipeline from './pipeline/ProductCard.astro';
+import { resolveTemplate, type TemplateName } from './registry';
+// Tarjeta de un producto en la tienda, con la plantilla de su línea (o la base).
+interface Props { line: CatalogLine; item: StoreItem; }
+const CARDS = { base: Base, pipeline: Pipeline } satisfies Record<TemplateName, unknown>;
+const Card = CARDS[resolveTemplate(Astro.props.line.template)];
+---
+<Card {...Astro.props} />

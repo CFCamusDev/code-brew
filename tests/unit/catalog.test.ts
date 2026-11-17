@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPublicLine, getPublicProduct } from '../../src/server/modules/catalog/application/catalog-queries';
+import { getPublicLine, getPublicLines, getPublicProduct } from '../../src/server/modules/catalog/application/catalog-queries';
 import { activateLine, archiveLine, publishProduct, type CatalogDeps } from '../../src/server/modules/catalog/application/catalog-use-cases';
 import type { CatalogLine } from '../../src/server/modules/catalog/application/ports/catalog-repositories';
 import {
@@ -229,10 +229,16 @@ describe('consultas públicas', () => {
   });
   const records = [
     { ...base, id: 1, slug: 'hotfix', name: 'Hotfix', releaseNumber: 1, status: 'active' as const, profile: productProfile('Hay bugs.', []),
-      variants: [{ sku: 'hotfix-500', format: '500 g', priceCents: 6000, stock: 0, active: true }, { sku: 'hotfix-250', format: '250 g', priceCents: 3400, stock: 5, active: true }, { sku: 'hotfix-1k', format: '1 kg', priceCents: 9000, stock: 9, active: false }] },
+      variants: [{ sku: 'hotfix-500', format: '500 g', priceCents: 6000, stock: 0, active: true, components: [] }, { sku: 'hotfix-250', format: '250 g', priceCents: 3400, stock: 5, active: true, components: [] }, { sku: 'hotfix-1k', format: '1 kg', priceCents: 9000, stock: 9, active: false, components: [] }] },
     { ...base, id: 2, slug: 'coldstart', name: 'Cold Start', releaseNumber: 2, status: 'upcoming' as const, profile: productProfile('Arranca en frío.', ['tagline']),
-      variants: [{ sku: 'coldstart-250', format: '250 g', priceCents: 3600, stock: 5, active: true }] },
-    { ...base, id: 3, slug: 'borrador', name: 'Borrador', releaseNumber: 3, status: 'draft' as const, profile: null, variants: [] }
+      variants: [{ sku: 'coldstart-250', format: '250 g', priceCents: 3600, stock: 5, active: true, components: [] }] },
+    { ...base, id: 3, slug: 'borrador', name: 'Borrador', releaseNumber: 3, status: 'draft' as const, profile: null, variants: [] },
+    // Pack sin stock propio: dos Hotfix 250 g y un Cold Start 250 g.
+    { ...base, id: 4, slug: 'pack-duo', name: 'Pack Dúo', releaseNumber: 4, status: 'active' as const, profile: productProfile('Para compartir.', []),
+      variants: [{ sku: 'pack-duo', format: 'Pack', priceCents: 6500, stock: 0, active: true, components: [
+        { productName: 'Hotfix', format: '250 g', quantity: 2, stock: 5, active: true },
+        { productName: 'Cold Start', format: '250 g', quantity: 1, stock: 5, active: true }
+      ] }] }
   ];
   const reader = (lineStatus: 'active' | 'draft' | 'archived' = 'active') => ({
     async findLine(slug: string) {
@@ -241,6 +247,9 @@ describe('consultas públicas', () => {
     async findProduct(slug: string) {
       const product = records.find(record => record.slug === slug);
       return product ? { line: { ...line, status: lineStatus }, product } : null;
+    },
+    async listActiveLines() {
+      return lineStatus === 'active' ? [{ line, products: records }, { line: { ...line, id: 11, slug: 'vacia', name: 'Vacía' }, products: [records[2]] }] : [];
     }
   });
 
@@ -248,7 +257,8 @@ describe('consultas públicas', () => {
     const result = await getPublicLine(reader(), 'pipeline');
     expect(result?.products).toEqual([
       { slug: 'hotfix', name: 'Hotfix', releaseNumber: 1, status: 'active', colors: { color: '#1f4a35' }, tagline: 'Hay bugs.', fromPriceCents: 3400 },
-      { slug: 'coldstart', name: 'Cold Start', releaseNumber: 2, status: 'upcoming', colors: { color: '#1f4a35' }, tagline: 'Arranca en frío.', fromPriceCents: null }
+      { slug: 'coldstart', name: 'Cold Start', releaseNumber: 2, status: 'upcoming', colors: { color: '#1f4a35' }, tagline: 'Arranca en frío.', fromPriceCents: null },
+      { slug: 'pack-duo', name: 'Pack Dúo', releaseNumber: 4, status: 'active', colors: { color: '#1f4a35' }, tagline: 'Para compartir.', fromPriceCents: 6500 }
     ]);
   });
 
@@ -261,10 +271,25 @@ describe('consultas públicas', () => {
   it('a la venta muestra presentaciones activas con disponibilidad, sin el stock exacto', async () => {
     const result = await getPublicProduct(reader(), 'hotfix');
     expect(result?.variants).toEqual([
-      { sku: 'hotfix-500', format: '500 g', priceCents: 6000, available: false },
-      { sku: 'hotfix-250', format: '250 g', priceCents: 3400, available: true }
+      { sku: 'hotfix-500', format: '500 g', priceCents: 6000, available: false, components: [] },
+      { sku: 'hotfix-250', format: '250 g', priceCents: 3400, available: true, components: [] }
     ]);
+    expect(result?.kind).toBe('product');
     expect(JSON.stringify(result)).not.toContain('"stock"');
+  });
+
+  it('un pack se disponibiliza por sus componentes y muestra qué trae', async () => {
+    const result = await getPublicProduct(reader(), 'pack-duo');
+    expect(result?.kind).toBe('pack');
+    expect(result?.variants).toEqual([
+      { sku: 'pack-duo', format: 'Pack', priceCents: 6500, available: true, components: [{ name: 'Hotfix', format: '250 g', quantity: 2 }, { name: 'Cold Start', format: '250 g', quantity: 1 }] }
+    ]);
+  });
+
+  it('la tienda trae las líneas publicadas con lo visible y omite las que quedan vacías', async () => {
+    const lines = await getPublicLines(reader());
+    expect(lines.map(({ line: { slug }, products }) => [slug, products.map(product => product.slug)])).toEqual([['pipeline', ['hotfix', 'coldstart', 'pack-duo']]]);
+    expect(await getPublicLines(reader('draft'))).toEqual([]);
   });
 
   it('borradores, líneas no publicadas y slugs desconocidos no se ven', async () => {

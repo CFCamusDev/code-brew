@@ -51,8 +51,8 @@ describe('plantilla de una línea', () => {
     expect(resolveTemplate(null)).toBe('base');
   });
 
-  it('cada plantilla registrada está en los dos despachadores', () => {
-    for (const dispatcher of ['src/lines/LineSection.astro', 'src/lines/ProductPage.astro']) {
+  it('cada plantilla registrada está en los tres despachadores', () => {
+    for (const dispatcher of ['src/lines/LineSection.astro', 'src/lines/ProductPage.astro', 'src/lines/ProductCard.astro']) {
       const source = readFileSync(dispatcher, 'utf8');
       for (const name of TEMPLATE_NAMES) {
         expect(source, `${dispatcher} no tiene la plantilla ${name}`).toMatch(new RegExp(`['"]?${name}['"]?\\s*:`));

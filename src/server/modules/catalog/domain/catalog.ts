@@ -170,3 +170,19 @@ export function revealProfile(status: 'upcoming' | 'active', profile: ProfileCon
   }
   return result;
 }
+
+/** Componente de un pack: otra presentación, en cierta cantidad (bundle_items). */
+export interface BundleComponentStock {
+  quantity: number;
+  stock: number;
+  active: boolean;
+}
+
+/**
+ * Si una presentación se puede comprar ahora (ADR 0003). Un pack no tiene stock propio: está disponible solo si cada
+ * componente está activo y tiene stock para la cantidad que lleva. Una presentación normal, si le queda stock.
+ */
+export function isVariantAvailable(variant: { stock: number; components: readonly BundleComponentStock[] }): boolean {
+  if (variant.components.length) return variant.components.every(component => component.active && component.stock >= component.quantity);
+  return variant.stock > 0;
+}

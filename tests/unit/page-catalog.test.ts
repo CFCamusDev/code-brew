@@ -37,9 +37,9 @@ function seeded(slug: string): ProductRecord {
     media: [],
     variants: onSale
       ? [
-          { sku: `${slug}-250`, format: '250 g', priceCents: 3400, stock: 5, active: true },
-          { sku: `${slug}-500`, format: '500 g', priceCents: 6000, stock: 0, active: true },
-          { sku: `${slug}-1kg`, format: '1 kg', priceCents: 11000, stock: 9, active: false }
+          { sku: `${slug}-250`, format: '250 g', priceCents: 3400, stock: 5, active: true, components: [] },
+          { sku: `${slug}-500`, format: '500 g', priceCents: 6000, stock: 0, active: true, components: [] },
+          { sku: `${slug}-1kg`, format: '1 kg', priceCents: 11000, stock: 9, active: false, components: [] }
         ]
       : []
   };
@@ -47,7 +47,8 @@ function seeded(slug: string): ProductRecord {
 
 const reader: CatalogReader = {
   findLine: async () => null,
-  findProduct: async slug => ({ line, product: seeded(slug) })
+  findProduct: async slug => ({ line, product: seeded(slug) }),
+  listActiveLines: async () => []
 };
 const view = async (slug: string) => (await getPublicProduct(reader, slug))!;
 
@@ -71,8 +72,8 @@ describe('catálogo de las páginas', () => {
   it('la oferta lleva precios en soles y solo presentaciones activas', async () => {
     expect(offerFromCatalog(await view('hotfix'))).toEqual({
       variants: [
-        { sku: 'hotfix-250', format: '250 g', price: 34, available: true },
-        { sku: 'hotfix-500', format: '500 g', price: 60, available: false }
+        { sku: 'hotfix-250', format: '250 g', price: 34, available: true, components: [] },
+        { sku: 'hotfix-500', format: '500 g', price: 60, available: false, components: [] }
       ],
       grinds: ['Grano entero', 'Molido para espresso']
     });

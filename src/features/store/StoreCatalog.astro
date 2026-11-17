@@ -1,0 +1,76 @@
+---
+import type { StoreLine } from '../catalog/page-catalog';
+import ProductCard from '../../lines/ProductCard.astro';
+import { themeStyle } from '../../lines/theme';
+import { AVAILABILITY, KINDS, applyFilters, filterHref, type StoreFilters } from './store-filters';
+// Tienda (S5.6): todas las líneas publicadas con sus productos y packs, y filtros simples por enlace.
+interface Props { lines: StoreLine[]; filters: StoreFilters; }
+const { lines, filters } = Astro.props;
+const visible = applyFilters(lines, filters);
+const hasPacks = lines.some(({ items }) => items.some(({ product }) => product.kind === 'pack'));
+const filtered = Boolean(filters.line || filters.availability || filters.kind);
+const groups = [
+  { label: 'Línea', key: 'line', options: lines.map(({ line }) => [line.slug, line.name] as const), show: lines.length > 1 },
+  { label: 'Disponibilidad', key: 'availability', options: Object.entries(AVAILABILITY), show: true },
+  { label: 'Tipo', key: 'kind', options: Object.entries(KINDS), show: hasPacks }
+] as const;
+---
+<section class="cb-dark store-hero">
+  <div class="cb-wrap cb-stack">
+    <p class="cb-label">Tienda</p>
+    <h1>Todo el café, <em>en un solo lugar.</em></h1>
+    <p class="store-hero-copy">Cada línea con sus perfiles y packs. Los que llevan «Próximamente» se revelan pronto.</p>
+  </div>
+</section>
+<section class="cb-section store-catalog">
+  <div class="cb-wrap">
+    <nav class="store-filters" aria-label="Filtros de la tienda">
+      {groups.filter(group => group.show).map(group => (
+        <div class="store-filter-group">
+          <span class="cb-label">{group.label}</span>
+          <ul>
+            <li><a href={filterHref(filters, { [group.key]: null })} aria-current={filters[group.key] === null ? 'true' : undefined}>Todos</a></li>
+            {group.options.map(([value, label]) => (
+              <li><a href={filterHref(filters, { [group.key]: value })} aria-current={filters[group.key] === value ? 'true' : undefined}>{label}</a></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+    {visible.length === 0 && (
+      <div class="store-empty" role="status">
+        <p>No hay productos con esos filtros.</p>
+        {filtered && <a class="cb-btn cb-accent" href="/tienda">Ver toda la tienda</a>}
+      </div>
+    )}
+    {visible.map(({ line, items }) => (
+      <section class="store-line" id={'linea-' + line.slug} aria-labelledby={'tienda-' + line.slug} style={themeStyle(line.theme) || undefined}>
+        <header class="store-line-head">
+          <h2 id={'tienda-' + line.slug}>{line.name}</h2>
+          {line.description && <p>{line.description}</p>}
+        </header>
+        <ul class="store-grid">
+          {items.map(item => <li><ProductCard line={line} item={item} /></li>)}
+        </ul>
+      </section>
+    ))}
+  </div>
+</section>
+<style>
+  .store-hero { padding: 150px 0 72px; background: radial-gradient(50% 60% at 80% 30%, #3e805c66, transparent 70%), var(--cb-forest-950); }
+  .store-hero h1 { margin: 0; font: 500 clamp(48px, 7vw, 96px)/.95 var(--font-display); letter-spacing: -.04em; }
+  .store-hero-copy { max-width: 520px; font-size: 18px; line-height: 1.6; color: #f4f1e9d6; }
+  .store-filters { display: flex; flex-wrap: wrap; gap: 20px 40px; padding-bottom: 32px; margin-bottom: 40px; border-bottom: 1px solid var(--cb-line); }
+  .store-filter-group { display: grid; gap: 10px; }
+  .store-filter-group ul { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+  .store-filter-group a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--cb-line); border-radius: 999px; color: var(--cb-ink); text-decoration: none; font-size: 14px; background: var(--cb-cream-2); }
+  .store-filter-group a:hover { border-color: var(--cb-text); }
+  .store-filter-group a[aria-current='true'] { background: var(--cb-forest-950); border-color: var(--cb-forest-950); color: var(--cb-cream); }
+  .store-line + .store-line { margin-top: 72px; }
+  .store-line-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 32px; margin-bottom: 28px; }
+  .store-line-head h2 { margin: 0; font: 500 clamp(36px, 4vw, 56px)/1 var(--font-display); letter-spacing: -.03em; }
+  .store-line-head p { margin: 0; max-width: 480px; color: var(--cb-muted); }
+  .store-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); list-style: none; margin: 0; padding: 0; }
+  .store-empty { display: grid; justify-items: start; gap: 16px; padding: 48px 0; font-size: 18px; }
+  @media (max-width: 560px) { .store-hero { padding: 128px 0 56px; } }
+</style>

@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../ui/Header.astro';
+import Footer from '../ui/Footer.astro';
+import StoreCatalog from '../features/store/StoreCatalog.astro';
+import { getStoreCatalog } from '../features/catalog/page-catalog';
+import { parseFilters } from '../features/store/store-filters';
+export const prerender = false;
+const lines = await getStoreCatalog();
+const filters = parseFilters(Astro.url.searchParams, lines.map(({ line }) => line.slug));
+---
+<Layout title="Tienda — CodeBrew" description="Todas las líneas de café de especialidad CodeBrew, con sus perfiles y packs.">
+  <Header />
+  <main id="main-content"><StoreCatalog lines={lines} filters={filters} /></main>
+  <Footer />
+</Layout>
