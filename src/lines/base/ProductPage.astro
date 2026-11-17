@@ -1,5 +1,8 @@
 ---
 import ProductPurchase from '../../features/product/ProductPurchase.astro';
+import ProductDetails from '../../features/product/ProductDetails.astro';
+import RevealField from '../../features/product/RevealField.astro';
+import LaunchPreview from '../../features/product/LaunchPreview.astro';
 import type { CatalogLine, CatalogOffer, CatalogProfile } from '../../features/catalog/page-catalog';
 import { joinStyles, themeStyle } from '../theme';
 // Plantilla «base» (ADR 0004): página de producto de una línea sin plantilla propia. Usa las imágenes del catálogo
@@ -14,7 +17,6 @@ const colors = themeStyle({
   '--profile-glow': p.colors.glow ?? 'transparent'
 });
 const others = siblings.filter(sibling => sibling.slug !== p.slug);
-const hasDetails = Boolean(p.description) || p.notes.length > 0 || p.facts.length > 0 || p.cupProfile.length > 0;
 ---
 <div class="cb-product cb-line-base" data-template="base" style={joinStyles(colors, themeStyle(line.theme))}>
   <section class="cb-product-hero cb-dark">
@@ -32,28 +34,11 @@ const hasDetails = Boolean(p.description) || p.notes.length > 0 || p.facts.lengt
         <div class="cb-product-chips">{p.method && <span>{p.method}</span>}{p.roast && <span>{p.roast}</span>}<span>Hecho en Perú</span></div>
         {p.available
           ? <ProductPurchase catalogSlug={p.slug} productName={p.name} offer={offer} />
-          : <p class="cb-product-queued cb-glass">Este café se revela en su lanzamiento.</p>}
+          : <LaunchPreview />}
       </div>
     </div>
   </section>
-  {hasDetails && (
-    <section class="cb-section cb-product-details">
-      <div class="cb-wrap cb-product-three">
-        <div class="cb-stack">
-          <h2>Sobre este café</h2>
-          {p.description && <p>{p.description}</p>}
-          {p.notes.length > 0 && <div class="cb-product-notes">{p.notes.map(note => <span>{note}</span>)}</div>}
-        </div>
-        {p.facts.length > 0 && <div class="cb-product-card"><h3 class="cb-label">Ficha técnica</h3><dl>{p.facts.map(({ label, value }) => <div><dt>{label}</dt><dd>{value}</dd></div>)}</dl></div>}
-        {p.cupProfile.length > 0 && (
-          <div class="cb-product-card">
-            <h3 class="cb-label">Perfil en taza</h3>
-            {p.cupProfile.map(({ attribute, level }) => <div class="cb-taste-row"><span>{attribute}</span><div class="cb-taste-bars" role="img" aria-label={attribute + ': ' + level + ' de 8'}>{Array.from({ length: 8 }, (_, i) => <i class:list={{ 'is-on': i < level }}></i>)}</div></div>)}
-          </div>
-        )}
-      </div>
-    </section>
-  )}
+  <ProductDetails product={p} />
   {p.recipe.length > 0 && (
     <section class="cb-section cb-dark">
       <div class="cb-wrap cb-stack">
@@ -62,6 +47,7 @@ const hasDetails = Boolean(p.description) || p.notes.length > 0 || p.facts.lengt
       </div>
     </section>
   )}
+  {!p.available && !p.recipe.length && <section class="cb-section cb-dark"><div class="cb-wrap"><h2>Receta sugerida</h2><RevealField field="recipe" label="Receta" revealed={false} /></div></section>}
   {others.length > 0 && (
     <nav class="cb-section base-siblings" aria-label={'Más de ' + line.name}>
       <div class="cb-wrap cb-stack">
