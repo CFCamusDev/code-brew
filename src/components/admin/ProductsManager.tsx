@@ -18,10 +18,11 @@ interface Product {
   grinds: string[];
   imageUrl: string | null;
   active: boolean;
+  status: 'draft' | 'upcoming' | 'active' | 'discontinued' | null;
   variants: Variant[];
 }
 
-const post = (url: string, body: unknown) => adminPost<{ stock?: number }>(url, body);
+const post = (url: string, body: unknown) => adminPost<{ stock?: number; issues?: { code: string; message: string }[] }>(url, body);
 
 async function uploadImage(file: File): Promise<{ url?: string; error?: string }> {
   const body = new FormData();
@@ -96,6 +97,7 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
   });
   const [state, setState] = useState<{ error?: string; ok?: string }>({});
   const [busy, setBusy] = useState(false);
+  const [issues, setIssues] = useState<{ code: string; message: string }[]>([]);
 
   const save = async () => {
     setBusy(true);
@@ -103,6 +105,20 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
     const result = await post(`/api/admin/products/${product.id}`, { ...form, grinds });
     setBusy(false);
     setState(result.error ? { error: result.error } : { ok: 'Guardado.' });
+    setIssues(result.issues ?? []);
+  };
+
+  const publish = async () => {
+    setBusy(true);
+    setIssues([]);
+    const target = form.active ? 'discontinued' : 'active';
+    const result = target === 'discontinued' && product.status === null
+      ? await post(`/api/admin/products/${product.id}`, { ...form, active: false, grinds: form.grinds.split('\n').map(value => value.trim()).filter(Boolean) })
+      : await post(`/api/admin/products/${product.id}/status`, { status: target });
+    setBusy(false);
+    setState(result.error ? { error: result.error } : { ok: target === 'active' ? 'Producto activado.' : 'Producto descontinuado.' });
+    setIssues(result.issues ?? []);
+    if (!result.error) setForm(current => ({ ...current, active: target === 'active' }));
   };
 
   if (!canEdit) {
@@ -138,14 +154,15 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
         <ImagePicker imageUrl={form.imageUrl} onChange={url => setForm({ ...form, imageUrl: url })} />
       </label>
       <div className="actions" style={{ alignItems: 'center' }}>
-        <label className="check">
-          <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} /> Disponible para la venta
-        </label>
+        <span className="badge">{form.active ? 'Activo' : 'Sin venta activa'}</span>
+        <button type="button" className="btn small ghost" onClick={publish} disabled={busy}>{form.active ? 'Descontinuar' : 'Activar'}</button>
         <button type="button" className="btn small" onClick={save} disabled={busy}>
           Guardar perfil
         </button>
         <Feedback state={state} />
       </div>
+      <small className="muted">Guarda los cambios del perfil antes de activar. La activación valida los datos guardados.</small>
+      {issues.length > 0 && <ul className="form-error" role="alert">{issues.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>}
     </div>
   );
 }

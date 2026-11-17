@@ -1,6 +1,6 @@
 import { getDb } from '../../../lib/server/db';
 import { systemClock } from '../../shared/clock';
-import { unitOfWork } from '../../shared/unit-of-work';
+import { unitOfWork, type Transaction } from '../../shared/unit-of-work';
 import { getPublicLine, getPublicLineProducts, getPublicProduct } from './application/catalog-queries';
 import { activateLine, archiveLine, publishProduct, type CatalogDeps } from './application/catalog-use-cases';
 import type { ProductStatus } from './domain/catalog';
@@ -13,6 +13,7 @@ export {
   canTransitionLine,
   canTransitionProduct,
   InvalidTransitionError,
+  ISSUE_MESSAGES,
   LINE_STATUSES,
   PRODUCT_STATUSES,
   PublicationError,
@@ -29,6 +30,11 @@ const inTransaction = <T>(work: (deps: CatalogDeps) => Promise<T>) =>
 
 /** PublicarProducto: anunciar, lanzar, volver a borrador o descontinuar. */
 export const changeProductStatus = (productId: number, target: ProductStatus) => inTransaction(deps => publishProduct(deps, productId, target));
+
+/** Publicación dentro de la transacción del editor: los cambios y su validación se confirman juntos. */
+export const catalogFor = (tx: Transaction) => ({
+  changeProductStatus: (productId: number, target: ProductStatus) => publishProduct({ lines: createDrizzleLineRepository(tx), products: createDrizzleProductRepository(tx), clock: systemClock }, productId, target)
+});
 
 /** ActivarLinea. */
 export const publishLine = (lineId: number) => inTransaction(deps => activateLine(deps, lineId));
