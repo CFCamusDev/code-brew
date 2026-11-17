@@ -6,6 +6,15 @@ import { activateLine, archiveLine, publishProduct, type CatalogDeps } from './a
 import type { ProductStatus } from './domain/catalog';
 import { createDrizzleCatalogReader } from './infrastructure/drizzle-catalog-reader';
 import { createDrizzleLineRepository, createDrizzleProductRepository } from './infrastructure/drizzle-catalog-repositories';
+import { createLineAdminRepository } from './infrastructure/drizzle-line-admin-repository';
+import { createLine, editLine } from './application/manage-lines';
+import type { LineData } from './application/ports/line-admin-repository';
+
+export type { AdminLine } from './application/ports/line-admin-repository';
+const lineAdmin = createLineAdminRepository(getDb);
+export const listAdminLines = () => lineAdmin.list();
+export const addAdminLine = (data: LineData) => createLine(lineAdmin, data);
+export const editAdminLine = (id: number, data: LineData) => editLine(lineAdmin, id, data);
 
 // API pública del módulo catalog (ADR 0003). Raíz de composición: cada caso de uso corre en su propia transacción.
 
