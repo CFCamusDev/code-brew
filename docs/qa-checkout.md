@@ -64,3 +64,53 @@ distintos métodos de pago que ofrece el widget de Culqi.
 - [ ] Probar PagoEfectivo hasta la confirmación real (requiere pagar el código
       generado en un banco/agente, o que el equipo tenga un atajo de sandbox para
       simular el webhook).
+
+---
+
+# Pagos de punta a punta con el sandbox de Culqi (S4.2)
+
+Responsable: Jansel. Fecha: 16-nov-2026. Entorno: build de producción en local con `pnpm local:up --tunnel` (ver `docs/entorno-local.md`), llaves de prueba del panel de CodeBrew y webhook `order.status.changed` registrado en CulqiPanel → Desarrollo → Webhooks.
+
+## Guion manual
+
+Para cada método: crear un pedido con Hotfix, pulsar **Pagar** en `/pedido/[id]` y revisar el pedido, el stock y CulqiPanel.
+
+| # | Método | Pasos | Resultado esperado |
+|---|---|---|---|
+| 1 | Tarjeta aprobada | Visa de prueba de la [página de tarjetas de Culqi](https://docs.culqi.com/es/documentacion/pagos-online/tarjetas-de-prueba) | Pedido «Pagado» al instante; stock −1; venta en CulqiPanel → Ventas (CulqiOnline) |
+| 2 | Tarjeta rechazada | Tarjeta de rechazo de esa misma página | Mensaje del banco; pedido pendiente; pago `failed`; se puede reintentar |
+| 3 | 3DS | Tarjeta de prueba con autenticación | Ventana del banco; al completarla, pedido «Pagado» |
+| 4 | Yape | Código de prueba de Yape | Igual que tarjeta: confirmación en la respuesta, **sin webhook** |
+| 5 | Agentes y bodegas / banca / billetera | Elegir el medio y generar el código | La página muestra el **CIP** (#157). En 1–2 min, CulqiPanel → Webhooks → Historial: `order.status.changed` con **200 OK**. Pedido sigue pendiente hasta que el CIP se pague |
+| 6 | CIP vencido | Esperar el vencimiento (24 h) | Aviso al webhook; el pago queda `failed` y el pedido pendiente |
+| 7 | CIP pagado | — | **No se puede simular en el sandbox**: queda para el pago real de bajo monto (#127) |
+
+## Resultados (16-nov-2026)
+
+| # | Caso | Resultado | Evidencia |
+|---|---|---|---|
+| 1 | Tarjeta aprobada | ✅ | Pedido CB-000009 pagado con `chr_test_…`, stock descontado una vez |
+| 5 | CIP generado | ✅ | CB-000013: CIP 328071977 en la página del pedido; aviso `order.status.changed` → **200 OK** por el túnel; la tienda consultó la orden (pendiente) y no la confirmó |
+| — | Webhook sin clave | ✅ | 401 por el túnel; con la clave, 200 |
+| 7 | CIP pagado | ⛔ | Sin opción de simular en CulqiPanel ni en la documentación pública |
+
+## Automatizado (CI)
+
+`tests/integration/payments-flow.test.ts` corre en el CI con `PAYMENT_GATEWAY=fake` (FakeGateway) contra el servidor real y PostgreSQL. Cubre:
+- **Tarjeta o Yape aprobados:** pedido pagado y stock descontado **una sola vez**, aunque el cobro se repita.
+- **Rechazo:** sin stock descontado, con el pago registrado como fallido, y reintento exitoso después.
+- **3DS:** primero pide autenticación y luego confirma.
+- **Error de la pasarela.**
+- **Órdenes (PagoEfectivo, agentes, billeteras):** la sesión crea la orden y la reutiliza; el webhook consulta la orden y no confirma mientras siga pendiente.
+- **Pedido ya pagado:** no admite otro cobro.
+
+La idempotencia ante el webhook antes o después del cargo está en `tests/unit/payments-use-cases.test.ts`. `PAYMENT_GATEWAY=fake` está prohibido en `APP_ENV=staging|production` y junto con llaves live: lo rechaza `config:check`.
+
+## Hallazgos
+
+1. **La página del pedido no mostraba el CIP.** Si el cliente cerraba la ventana de Culqi, perdía el código. Corregido en #156 / #157.
+2. **Llaves de otra cuenta.** El `.env` tenía llaves de un panel distinto al del webhook: las órdenes se creaban en otra cuenta y el webhook nunca llegaba. Comprobar que la `pk_test_…` del `.env` sea la de **Desarrollo → API Keys** del mismo panel.
+3. **La sesión de CulqiPanel vence sin avisar.** Ventas e Historial aparecen vacíos hasta cerrar sesión y volver a entrar. En Ventas hay que elegir **CulqiOnline** arriba.
+4. **El túnel rápido cambia de dirección** al reiniciarse. Los avisos dan 404 hasta actualizar la URL. Solución: túnel con nombre (`docs/entorno-local.md`).
+5. **`pnpm dev` no sirve para el webhook.** Vite rechaza dominios externos; hay que usar `pnpm local:up`.
+6. **Tarjeta y Yape no usan webhook** (se confirman en la respuesta del cargo). El aviso llega 1–2 minutos después del cambio de la orden.

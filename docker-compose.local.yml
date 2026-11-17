@@ -1,0 +1,37 @@
+# Stack local completo (S8.5): las mismas tres piezas de producción (Nginx + app + PostgreSQL, de docker-compose.yml)
+# más un túnel de Cloudflare opcional para que Culqi pueda llamar al webhook. Se levanta con `pnpm local:up`
+# (scripts/local-stack.mjs), que lee el .env y completa lo propio de local. Ver docs/entorno-local.md.
+name: codebrew-local
+
+services:
+  codebrew-landing:
+    container_name: codebrew-local-web
+
+  codebrew-app:
+    container_name: codebrew-local-app
+
+  codebrew-db:
+    container_name: codebrew-local-db
+
+  # Túnel rápido: dirección aleatoria *.trycloudflare.com que cambia en cada arranque. `pnpm local:up --tunnel`.
+  tunnel:
+    image: cloudflare/cloudflared:2026.11.0
+    container_name: codebrew-local-tunnel
+    profiles: [tunnel]
+    command: tunnel --no-autoupdate --url http://codebrew-landing:80
+    depends_on:
+      codebrew-landing:
+        condition: service_healthy
+
+  # Túnel con nombre: dirección fija (p. ej. webhook-dev.coffeecodebrew.com) creada en Cloudflare Zero Trust.
+  # Necesita CLOUDFLARE_TUNNEL_TOKEN en el .env; `pnpm local:up --tunnel` lo usa en lugar del rápido.
+  tunnel-fixed:
+    image: cloudflare/cloudflared:2026.11.0
+    container_name: codebrew-local-tunnel
+    profiles: [tunnel-fixed]
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      codebrew-landing:
+        condition: service_healthy

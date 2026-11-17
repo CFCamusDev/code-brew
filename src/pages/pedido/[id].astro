@@ -5,7 +5,7 @@ import ShopHeader from '../../components/shop/ShopHeader.astro';
 import { getOrder, isOrderId } from '../../lib/server/shop';
 import { formatDateTime, formatOrderNumber, formatPEN } from '../../lib/shop/format';
 import { getWhatsAppUrl } from '../../data/config';
-import { getPaymentGateway } from '../../server/modules/payments';
+import { findPendingPaymentCode, getPaymentGateway } from '../../server/modules/payments';
 import OrderPaymentPanel from '../../components/shop/OrderPaymentPanel';
 import '../../styles/shop.css';
 
@@ -44,6 +44,9 @@ const TIMELINE_STEPS = [
 ] as const;
 const isException = order.status === 'cancelled' || order.status === 'refunded';
 const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.status);
+// CIP vigente de un pago por orden: el cliente puede volver a esta página y pagarlo sin abrir otra vez Culqi.
+const pendingCode = order.status === 'pending' ? await findPendingPaymentCode(order.id).catch(() => null) : null;
+const pendingPayment = pendingCode && { ...pendingCode, expiresLabel: formatDateTime(pendingCode.expiresAt) };
 ---
 <Layout title={`Pedido ${number} — CodeBrew`} description="Resumen de tu pedido CodeBrew." noindex>
   <ShopHeader />
@@ -92,6 +95,7 @@ const currentIndex = TIMELINE_STEPS.findIndex(step => step.status === order.stat
         orderId={order.id}
         whatsappUrl={whatsapp}
         culqiEnabled={getPaymentGateway().isEnabled()}
+        pendingPayment={pendingPayment}
         items={order.items.map(item => ({
           sku: item.sku,
           grind: item.grind,
