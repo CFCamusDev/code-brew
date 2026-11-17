@@ -22,6 +22,8 @@ Requisitos: **Node 22.23.4 o una versión compatible indicada en `engines`**, **
 
 Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321`. Para verificar la configuración sin mostrar secretos: `pnpm config:check`.
 
+Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir el webhook de Culqi con un túnel: `pnpm local:up --tunnel`. Guía completa en [`docs/entorno-local.md`](docs/entorno-local.md).
+
 ## Estructura
 
 - `src/pages`: páginas y API (`src/pages/api`); `src/components`: componentes de la tienda (`shop/`) y del panel (`admin/`); `src/layouts`, `src/styles`.
