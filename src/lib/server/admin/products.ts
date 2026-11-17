@@ -4,6 +4,7 @@ import { InsufficientStockError, inventoryFor } from '../../../server/modules/in
 import { unitOfWork } from '../../../server/shared';
 import { adminUsers, orders, products, productVariants, stockMovements } from '../db/schema';
 import { AdminActionError } from './orders';
+import { catalogFor } from '../../../server/modules/catalog';
 
 export async function listProducts() {
   const db = getDb();
@@ -19,6 +20,7 @@ export async function listProducts() {
     grinds: product.grinds,
     imageUrl: product.imageUrl,
     active: product.active,
+    status: product.status,
     variants: variantRows
       .filter(variant => variant.productId === product.id)
       .map(variant => ({
@@ -35,8 +37,15 @@ export async function listProducts() {
 export type AdminProduct = Awaited<ReturnType<typeof listProducts>>[number];
 
 export async function updateProduct(id: number, data: { name: string; roast: string; grinds: string[]; imageUrl: string | null; active: boolean }) {
-  const [row] = await getDb().update(products).set(data).where(eq(products.id, id)).returning({ id: products.id });
-  if (!row) throw new AdminActionError('Producto no encontrado.');
+  await unitOfWork.run(async tx => {
+    const [row] = await tx.select({ status: products.status }).from(products).where(eq(products.id, id)).for('update');
+    if (!row) throw new AdminActionError('Producto no encontrado.');
+    const { active, ...details } = data;
+    await tx.update(products).set(details).where(eq(products.id, id));
+    if (active) await catalogFor(tx).changeProductStatus(id, 'active');
+    else if (row.status === 'active') await catalogFor(tx).changeProductStatus(id, 'discontinued');
+    else await tx.update(products).set({ active: false }).where(eq(products.id, id));
+  });
 }
 
 export async function updateVariant(id: number, data: { format: string; priceCents: number; bags: number; active: boolean }) {
@@ -62,7 +71,7 @@ export async function createProduct(data: { name: string; roast: string; grinds:
   }
   const [row] = await db
     .insert(products)
-    .values({ slug, name: data.name, roast: data.roast, grinds: data.grinds, imageUrl: data.imageUrl })
+    .values({ slug, name: data.name, roast: data.roast, grinds: data.grinds, imageUrl: data.imageUrl, active: false, status: 'draft' })
     .returning({ id: products.id });
   return { id: row.id, slug };
 }
