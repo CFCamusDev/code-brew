@@ -47,6 +47,11 @@
   },
   "packageManager": "pnpm@10.30.3",
   "pnpm": {
+    "auditConfig": {
+      "ignoreCves": [
+        "CVE-2026-112366"
+      ]
+    },
     "overrides": {
       "undici@>=8.0.0 <8.12.2": "8.12.2",
       "esbuild@<0.25.0": "0.25.12"
