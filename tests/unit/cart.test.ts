@@ -39,4 +39,12 @@ describe('carrito', () => {
     setTestStorageKey('codebrew:cart', '{no es json');
     expect(cartLines.get()).toEqual([]);
   });
+
+  it('un carrito guardado con los SKU anteriores a Pipeline sigue apuntando a Hotfix', () => {
+    setTestStorageKey('codebrew:cart', JSON.stringify([{ sku: 'monteverde-250', grind: 'Grano entero', quantity: 2 }, { sku: 'monteverde-500', grind: 'Grano entero', quantity: 1 }]));
+    expect(cartLines.get()).toEqual([
+      { sku: 'hotfix-250', grind: 'Grano entero', quantity: 2 },
+      { sku: 'hotfix-500', grind: 'Grano entero', quantity: 1 }
+    ]);
+  });
 });

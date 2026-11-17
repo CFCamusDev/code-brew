@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getPublicLine, getPublicProduct } from '../../src/server/modules/catalog/application/catalog-queries';
 import { activateLine, archiveLine, publishProduct, type CatalogDeps } from '../../src/server/modules/catalog/application/catalog-use-cases';
 import type { CatalogLine } from '../../src/server/modules/catalog/application/ports/catalog-repositories';
 import {
@@ -6,8 +7,10 @@ import {
   canTransitionLine,
   canTransitionProduct,
   InvalidTransitionError,
+  isPubliclyVisible,
   PublicationError,
   publicationIssues,
+  revealProfile,
   type ProductForPublication,
   type ProductStatus
 } from '../../src/server/modules/catalog/domain/catalog';
@@ -181,5 +184,93 @@ describe('ActivarLinea y ArchivarLinea', () => {
   it('una línea inexistente da NotFound', async () => {
     const { deps } = memoryCatalog({ line: null });
     await expect(activateLine(deps, 10)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe('visibilidad pública (dominio)', () => {
+  const profile = {
+    tagline: 'Todo sistema arranca en frío.',
+    method: 'Cold brew',
+    description: 'Secreto hasta el lanzamiento.',
+    notes: ['Cacao'],
+    facts: [{ label: 'Proceso', value: 'Lavado' }],
+    cupProfile: [{ attribute: 'cuerpo', level: 4 }],
+    recipeFor: 'cold brew',
+    recipe: [{ label: 'dosis', value: '80 g' }]
+  };
+
+  it('solo se ve lo anunciado o a la venta de una línea publicada', () => {
+    expect(isPubliclyVisible('active', 'active')).toBe(true);
+    expect(isPubliclyVisible('upcoming', 'active')).toBe(true);
+    expect(isPubliclyVisible('draft', 'active')).toBe(false);
+    expect(isPubliclyVisible('discontinued', 'active')).toBe(false);
+    expect(isPubliclyVisible('active', 'draft')).toBe(false);
+    expect(isPubliclyVisible('active', 'archived')).toBe(false);
+    expect(isPubliclyVisible(null, 'active')).toBe(false);
+  });
+
+  it('un producto próximamente muestra solo los campos revelados; la receta va con su método', () => {
+    expect(revealProfile('upcoming', profile, ['tagline', 'recipe'])).toEqual({ tagline: profile.tagline, recipe: profile.recipe, recipeFor: 'cold brew' });
+    expect(revealProfile('upcoming', profile, [])).toEqual({});
+  });
+
+  it('a la venta muestra todo, salvo los campos vacíos', () => {
+    expect(revealProfile('active', profile, [])).toEqual(profile);
+    expect(revealProfile('active', { ...profile, description: ' ', notes: [] }, [])).not.toHaveProperty('description');
+    expect(revealProfile('active', null, [])).toEqual({});
+  });
+});
+
+describe('consultas públicas', () => {
+  const line = { id: 10, slug: 'pipeline', name: 'Pipeline', description: null, status: 'active' as const, theme: { '--accent': '#1f4a35' }, template: 'pipeline' };
+  const base = { launchAt: null, roast: 'Medio-oscuro', grinds: ['Grano entero'], media: [{ view: 'front', url: '/h.webp', alt: 'Hotfix' }] };
+  const productProfile = (tagline: string, revealedFields: string[]) => ({
+    tagline, method: 'Espresso', description: 'Secreta', notes: [], facts: [], cupProfile: [], recipeFor: null, recipe: [], colors: { color: '#1f4a35' }, revealedFields
+  });
+  const records = [
+    { ...base, id: 1, slug: 'hotfix', name: 'Hotfix', releaseNumber: 1, status: 'active' as const, profile: productProfile('Hay bugs.', []),
+      variants: [{ sku: 'hotfix-500', format: '500 g', priceCents: 6000, stock: 0, active: true }, { sku: 'hotfix-250', format: '250 g', priceCents: 3400, stock: 5, active: true }, { sku: 'hotfix-1k', format: '1 kg', priceCents: 9000, stock: 9, active: false }] },
+    { ...base, id: 2, slug: 'coldstart', name: 'Cold Start', releaseNumber: 2, status: 'upcoming' as const, profile: productProfile('Arranca en frío.', ['tagline']),
+      variants: [{ sku: 'coldstart-250', format: '250 g', priceCents: 3600, stock: 5, active: true }] },
+    { ...base, id: 3, slug: 'borrador', name: 'Borrador', releaseNumber: 3, status: 'draft' as const, profile: null, variants: [] }
+  ];
+  const reader = (lineStatus: 'active' | 'draft' | 'archived' = 'active') => ({
+    async findLine(slug: string) {
+      return slug === 'pipeline' ? { line: { ...line, status: lineStatus }, products: records } : null;
+    },
+    async findProduct(slug: string) {
+      const product = records.find(record => record.slug === slug);
+      return product ? { line: { ...line, status: lineStatus }, product } : null;
+    }
+  });
+
+  it('la línea lista lo visible, con precio desde la presentación disponible más barata', async () => {
+    const result = await getPublicLine(reader(), 'pipeline');
+    expect(result?.products).toEqual([
+      { slug: 'hotfix', name: 'Hotfix', releaseNumber: 1, status: 'active', colors: { color: '#1f4a35' }, tagline: 'Hay bugs.', fromPriceCents: 3400 },
+      { slug: 'coldstart', name: 'Cold Start', releaseNumber: 2, status: 'upcoming', colors: { color: '#1f4a35' }, tagline: 'Arranca en frío.', fromPriceCents: null }
+    ]);
+  });
+
+  it('un producto próximamente no expone precios, presentaciones, imágenes ni campos no revelados', async () => {
+    const result = await getPublicProduct(reader(), 'coldstart');
+    expect(result).toMatchObject({ status: 'upcoming', profile: { tagline: 'Arranca en frío.' }, roast: null, grinds: [], variants: [], media: [] });
+    expect(result?.profile).not.toHaveProperty('description');
+  });
+
+  it('a la venta muestra presentaciones activas con disponibilidad, sin el stock exacto', async () => {
+    const result = await getPublicProduct(reader(), 'hotfix');
+    expect(result?.variants).toEqual([
+      { sku: 'hotfix-500', format: '500 g', priceCents: 6000, available: false },
+      { sku: 'hotfix-250', format: '250 g', priceCents: 3400, available: true }
+    ]);
+    expect(JSON.stringify(result)).not.toContain('"stock"');
+  });
+
+  it('borradores, líneas no publicadas y slugs desconocidos no se ven', async () => {
+    expect(await getPublicProduct(reader(), 'borrador')).toBeNull();
+    expect(await getPublicProduct(reader('draft'), 'hotfix')).toBeNull();
+    expect(await getPublicLine(reader('archived'), 'pipeline')).toBeNull();
+    expect(await getPublicLine(reader(), 'otra')).toBeNull();
   });
 });

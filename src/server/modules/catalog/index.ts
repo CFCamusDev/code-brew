@@ -1,7 +1,10 @@
+import { getDb } from '../../../lib/server/db';
 import { systemClock } from '../../shared/clock';
 import { unitOfWork } from '../../shared/unit-of-work';
+import { getPublicLine, getPublicProduct } from './application/catalog-queries';
 import { activateLine, archiveLine, publishProduct, type CatalogDeps } from './application/catalog-use-cases';
 import type { ProductStatus } from './domain/catalog';
+import { createDrizzleCatalogReader } from './infrastructure/drizzle-catalog-reader';
 import { createDrizzleLineRepository, createDrizzleProductRepository } from './infrastructure/drizzle-catalog-repositories';
 
 // API pública del módulo catalog (ADR 0003). Raíz de composición: cada caso de uso corre en su propia transacción.
@@ -32,3 +35,13 @@ export const publishLine = (lineId: number) => inTransaction(deps => activateLin
 
 /** ArchivarLinea. */
 export const retireLine = (lineId: number) => inTransaction(deps => archiveLine(deps, lineId));
+
+export type { PublicProductView, PublicVariant } from './application/catalog-queries';
+
+const reader = createDrizzleCatalogReader(getDb);
+
+/** Línea publicada con sus productos visibles; null si el público no debe verla. */
+export const findPublicLine = (slug: string) => getPublicLine(reader, slug);
+
+/** Producto anunciado o a la venta de una línea publicada, con solo sus campos revelados; null si no corresponde. */
+export const findPublicProduct = (slug: string) => getPublicProduct(reader, slug);

@@ -26,7 +26,7 @@ Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321
 
 - `src/pages`: páginas y API (`src/pages/api`); `src/components`: componentes de la tienda (`shop/`) y del panel (`admin/`); `src/layouts`, `src/styles`.
 - `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: código compartido con el navegador (carrito, validaciones, formato).
-- `src/data`: contenido y configuración estáticos (`pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
+- `src/data`: contenido y configuración estáticos (`pipeline.json` y `pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
 - `drizzle/`: migraciones SQL; `scripts/`: base de datos, panel, validación del entorno y backlog de GitHub; `tests/unit` y `tests/integration`.
 - En migración (ADR 0002): el backend pasa a `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y el frontend a `src/features`, `src/ui` y `src/contracts`. Las historias del tablero mueven el código por partes.
 
@@ -40,7 +40,9 @@ Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321
 
 - Esquema en `src/lib/server/db/schema.ts` (Drizzle ORM). Montos en céntimos de sol.
 - Tras cambiar el esquema: `pnpm db:generate` crea la migración SQL en `drizzle/`; se versiona en git.
-- `src/data/catalog.json` es la fuente del catálogo inicial: el seed lo inserta en la base de datos sin pisar precios ni stock editados después, y la tienda lo usa como respaldo si la base de datos no responde. El contenido de los perfiles vive en `src/data/pipeline.ts`. Ambos se retirarán como fuente cuando el catálogo pase a la base de datos (ADR 0003).
+- El seed (`pnpm db:seed`, también en cada arranque del contenedor) carga la línea **Pipeline** con sus cinco perfiles: Hotfix a la venta (`hotfix-250`, `hotfix-500`) y Cold Start, Deploy, Merge y Rollback como «próximamente». Toma los precios de `src/data/catalog.json` y el contenido editorial de `src/data/pipeline.json`. Solo inserta lo que falta: no pisa precios, stock ni estados editados desde el panel.
+- El seed también renombra `monteverde` a `hotfix` y retira el catálogo anterior (Espresso, Pack Developer y Microlote): lo borra si nada lo referencia o lo descontinúa si tiene pedidos.
+- `catalog.json` sigue de respaldo para la tienda si la base de datos no responde, hasta S6.9 (ADR 0003).
 - `src/data/shipping.json` define las zonas de envío iniciales (tarifas provisionales hasta confirmarlas).
 - `pnpm db:studio` abre un explorador de la base de datos para inspeccionar datos en desarrollo.
 
@@ -127,7 +129,7 @@ La portada presenta la línea Pipeline. Hotfix permite elegir presentación y mo
 - `src/components/Hero.astro` y `Pipeline.astro`: entrada al catálogo.
 - `src/components/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
 - `src/components/Pouch.astro`: renders optimizados y tamaños responsivos.
-- `src/data/pipeline.ts`: contenido y estado visual de los cinco perfiles.
+- `src/data/pipeline.json` (tipado en `pipeline.ts`): contenido y estado visual de los cinco perfiles.
 - `src/styles/brand.css`: estilos del cliente; `shop.css`: flujo de compra.
 - `src/data/config.ts`: configuración compartida; no sustituye precios y stock en vivo.
 
