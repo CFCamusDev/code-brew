@@ -5,6 +5,7 @@ import { getDb } from '../db';
 import { adminUsers, orderItems, orders, payments, products, productVariants, purchases, stockMovements } from '../db/schema';
 import { orderConditions, STATUS_LABEL, type OrderFilters } from './orders';
 import { CATEGORY_LABEL } from './purchases';
+import { reconcileGatewayPayments, type ReconciliationResult } from '../../../server/modules/payments';
 
 const MAX_ROWS = 20_000;
 
@@ -131,6 +132,43 @@ export async function exportStockMovements(from?: string, to?: string) {
       row.orderNumber ? formatOrderNumber(row.orderNumber) : '',
       row.note,
       row.adminName
+    ])
+  );
+}
+
+const RECONCILIATION_RESULT: Record<ReconciliationResult, string> = {
+  ok: 'Coincide',
+  cobrado_sin_registrar: 'Cobrado en Culqi sin registrar en la tienda',
+  registrado_sin_cobro: 'Registrado como pagado sin cobro en Culqi',
+  monto_distinto: 'Monto distinto',
+  devolucion_distinta: 'Devolución distinta'
+};
+const LOCAL_STATUS: Record<string, string> = { paid: 'Pagado', pending: 'Pendiente', failed: 'Fallido', refunded: 'Reembolsado' };
+const GATEWAY_STATE: Record<string, string> = {
+  paid: 'Cobrado',
+  refunded: 'Devuelto',
+  pending: 'Pendiente',
+  expired: 'Vencido',
+  deleted: 'Eliminado',
+  other: 'Sin cobro'
+};
+
+/** Conciliación de pagos contra Culqi (S4.5): una fila por cargo u orden; las diferencias primero. */
+export async function exportReconciliation(range: { from: Date; to: Date }) {
+  const rows = await reconcileGatewayPayments(range);
+  return toCsv(
+    ['Resultado', 'Referencia', 'Tipo', 'Pedido', 'Fecha', 'Estado en la tienda', 'Monto tienda (S/)', 'Estado en Culqi', 'Monto Culqi (S/)', 'Id del pedido'],
+    rows.map(row => [
+      RECONCILIATION_RESULT[row.result],
+      row.reference,
+      row.kind === 'charge' ? 'Cargo (tarjeta/Yape)' : row.kind === 'order' ? 'Orden (PagoEfectivo/billetera)' : '',
+      row.orderNumber === null ? '' : formatOrderNumber(row.orderNumber),
+      formatDateTime(row.date),
+      row.localStatus ? (LOCAL_STATUS[row.localStatus] ?? row.localStatus) : 'Sin registro',
+      row.localAmountCents === null ? '' : soles(row.localAmountCents),
+      row.gatewayState ? GATEWAY_STATE[row.gatewayState] : 'Sin registro',
+      row.gatewayAmountCents === null ? '' : soles(row.gatewayAmountCents),
+      row.orderId
     ])
   );
 }
