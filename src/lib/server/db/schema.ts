@@ -410,6 +410,37 @@ export const stockMovements = pgTable(
   t => [index('stock_movements_variant_idx').on(t.variantId), index('stock_movements_created_idx').on(t.createdAt)]
 );
 
+/**
+ * Stock apartado por un pedido mientras se paga (ADR 0005). Disponible = stock físico − reservas vigentes, donde
+ * vigente es `released_at` nulo y `expires_at` en el futuro. Al pagar, la reserva se libera y se descuenta el stock
+ * físico; al vencer o cancelarse el pedido, solo se libera. Una fila por pedido y variante (los packs reservan sus
+ * componentes, sumados).
+ */
+export const stockReservations = pgTable(
+  'stock_reservations',
+  {
+    id: serial('id').primaryKey(),
+    variantId: integer('variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'restrict' }),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    quantity: integer('quantity').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    /** Cuándo dejó de apartar stock (pago confirmado, pedido cancelado o vencido); null mientras sigue vigente. */
+    releasedAt: timestamp('released_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+  },
+  t => [
+    uniqueIndex('stock_reservations_order_variant_idx').on(t.orderId, t.variantId),
+    // Solo las reservas sin liberar cuentan para la disponibilidad: el índice parcial se mantiene chico.
+    index('stock_reservations_active_idx').on(t.variantId, t.expiresAt).where(sql`${t.releasedAt} is null`),
+    check('stock_reservations_quantity_check', sql`${t.quantity} > 0`),
+    check('stock_reservations_release_check', sql`${t.releasedAt} is null or ${t.releasedAt} >= ${t.createdAt}`)
+  ]
+);
+
 export const purchaseCategory = pgEnum('purchase_category', [
   'cafe_verde',
   'tueste',
