@@ -6,7 +6,7 @@ La activación requiere una línea asignada, frase, método de preparación, des
 
 La imagen principal es una entrada `front` de `product_media` con URL no vacía. La imagen única del modelo anterior (`products.image_url`) sigue contando durante la migración. Una imagen de reverso por sí sola no cumple el requisito.
 
-`POST /api/admin/products/:id/status` recibe `{"status":"active"}` o `{"status":"discontinued"}`. Si faltan requisitos responde 409 con `error` e `issues`, una lista de `{code,message}`. Los códigos proceden del dominio `publicationIssues`, igual que sus mensajes. Los identificadores inválidos devuelven 400 y los productos inexistentes 404.
+`POST /api/admin/products/:id/status` recibe un estado `draft`, `upcoming`, `active` o `discontinued` y aplica las transiciones del dominio (ampliado en S6.2). Si faltan requisitos responde 409 con `error` e `issues`, una lista de `{code,message}`. Los códigos proceden del dominio `publicationIssues`, igual que sus mensajes. Los identificadores inválidos devuelven 400 y los productos inexistentes 404.
 
 El endpoint de edición existente también pasa por la validación al guardar un producto habilitado para venta. Los cambios del perfil y de estado se confirman en una misma transacción, bloqueando el producto; un rechazo revierte el perfil. Reintentar una activación válida conserva su fecha de lanzamiento. Los productos nuevos se crean como borradores sin venta activa para que la creación no eluda los requisitos.
 

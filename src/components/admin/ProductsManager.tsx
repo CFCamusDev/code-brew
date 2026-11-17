@@ -11,6 +11,7 @@ interface Variant {
   bags: number;
   active: boolean;
 }
+interface LineOption { id: number; name: string; status: string }
 interface Product {
   id: number;
   name: string;
@@ -19,6 +20,11 @@ interface Product {
   imageUrl: string | null;
   active: boolean;
   status: 'draft' | 'upcoming' | 'active' | 'discontinued' | null;
+  slug: string;
+  lineId: number | null;
+  tagline: string;
+  releaseNumber: number | null;
+  launchAt: string | null;
   variants: Variant[];
 }
 
@@ -87,13 +93,30 @@ function ImagePicker({
   );
 }
 
-function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolean }) {
+const stateLabels = { draft: 'Borrador', upcoming: 'Próximamente', active: 'Activo', discontinued: 'Descontinuado' };
+const peruDate = (value: string | null) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)).replace(' ', 'T') : '';
+interface MetadataForm { lineId: string; tagline: string; releaseNumber: string; launchAt: string; status: keyof typeof stateLabels }
+function ProductMetadata({ form, setForm, lines, launched = false, creating = false }: { form: MetadataForm; setForm: (form: MetadataForm) => void; lines: LineOption[]; launched?: boolean; creating?: boolean }) {
+  return <>
+    <label>Línea<select value={form.lineId} onChange={e => setForm({ ...form, lineId: e.target.value })}><option value="">Selecciona una línea</option>{lines.map(line => <option key={line.id} value={line.id}>{line.name}{line.status !== 'active' ? ' (no publicada)' : ''}</option>)}</select></label>
+    <label>Frase del producto<input maxLength={160} value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} /><small>Necesaria para anunciarlo como próximamente.</small></label>
+    <div className="row">
+      <label>Estado<select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as keyof typeof stateLabels })}>{Object.entries(stateLabels).filter(([value]) => !creating || ['draft','upcoming'].includes(value)).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label>Número de entrega<input type="number" min={1} max={2147483647} step={1} value={form.releaseNumber} onChange={e => setForm({ ...form, releaseNumber: e.target.value })} /></label>
+    </div>
+    <label>Fecha de lanzamiento (hora de Perú)<input type="datetime-local" disabled={launched} value={form.launchAt} onChange={e => setForm({ ...form, launchAt: e.target.value })} /><small>{launched ? 'Se conserva la fecha del primer lanzamiento.' : 'La fecha informa del lanzamiento previsto; no publica automáticamente.'}</small></label>
+  </>;
+}
+const metadataBody = (form: MetadataForm) => ({ lineId: form.lineId ? Number(form.lineId) : null, tagline: form.tagline, releaseNumber: form.releaseNumber ? Number(form.releaseNumber) : null, launchAt: form.launchAt ? new Date(form.launchAt + ':00-05:00').toISOString() : null, status: form.status });
+
+function ProductHeader({ product, canEdit, lines }: { product: Product; canEdit: boolean; lines: LineOption[] }) {
   const [form, setForm] = useState({
     name: product.name,
     roast: product.roast,
     grinds: product.grinds.join('\n'),
     imageUrl: product.imageUrl,
-    active: product.active
+    active: product.active,
+    lineId: product.lineId?.toString() ?? '', tagline: product.tagline, releaseNumber: product.releaseNumber?.toString() ?? '', launchAt: peruDate(product.launchAt), status: product.status ?? (product.active ? 'active' : 'draft')
   });
   const [state, setState] = useState<{ error?: string; ok?: string }>({});
   const [busy, setBusy] = useState(false);
@@ -102,10 +125,11 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
   const save = async () => {
     setBusy(true);
     const grinds = form.grinds.split('\n').map(g => g.trim()).filter(Boolean);
-    const result = await post(`/api/admin/products/${product.id}`, { ...form, grinds });
+    const result = await post(`/api/admin/products/${product.id}`, { name: form.name, roast: form.roast, imageUrl: form.imageUrl, grinds, ...metadataBody(form), launchAt: ['active','discontinued'].includes(product.status ?? '') ? product.launchAt : metadataBody(form).launchAt });
     setBusy(false);
     setState(result.error ? { error: result.error } : { ok: 'Guardado.' });
     setIssues(result.issues ?? []);
+    if (!result.error) window.location.reload();
   };
 
   const publish = async () => {
@@ -113,19 +137,19 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
     setIssues([]);
     const target = form.active ? 'discontinued' : 'active';
     const result = target === 'discontinued' && product.status === null
-      ? await post(`/api/admin/products/${product.id}`, { ...form, active: false, grinds: form.grinds.split('\n').map(value => value.trim()).filter(Boolean) })
+      ? await post(`/api/admin/products/${product.id}`, { name: form.name, roast: form.roast, imageUrl: form.imageUrl, active: false, grinds: form.grinds.split('\n').map(value => value.trim()).filter(Boolean) })
       : await post(`/api/admin/products/${product.id}/status`, { status: target });
     setBusy(false);
     setState(result.error ? { error: result.error } : { ok: target === 'active' ? 'Producto activado.' : 'Producto descontinuado.' });
     setIssues(result.issues ?? []);
-    if (!result.error) setForm(current => ({ ...current, active: target === 'active' }));
+    if (!result.error) window.location.reload();
   };
 
   if (!canEdit) {
     return (
       <div>
         <h2>
-          {product.name} {!product.active && <span className="badge">Oculto</span>}
+          {product.name} <span className="badge">{product.status ? stateLabels[product.status] : product.active ? 'Activo' : 'Sin venta activa'}</span>
         </h2>
         <p className="muted">
           {product.roast} · Moliendas: {product.grinds.join(', ')}
@@ -135,6 +159,9 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
   }
   return (
     <div className="admin-form">
+      <h2>{product.name}</h2>
+      <ProductMetadata form={form} setForm={value => setForm({ ...form, ...value })} lines={lines} launched={product.status === 'active' || product.status === 'discontinued'} />
+      <a className="btn ghost small" href={`/admin/productos/preview?slug=${encodeURIComponent(product.slug)}`} target="_blank" rel="noopener noreferrer">Vista previa</a>
       <div className="row">
         <label>
           Nombre
@@ -154,14 +181,14 @@ function ProductHeader({ product, canEdit }: { product: Product; canEdit: boolea
         <ImagePicker imageUrl={form.imageUrl} onChange={url => setForm({ ...form, imageUrl: url })} />
       </label>
       <div className="actions" style={{ alignItems: 'center' }}>
-        <span className="badge">{form.active ? 'Activo' : 'Sin venta activa'}</span>
+        <span className="badge">{product.status ? stateLabels[product.status] : form.active ? 'Activo' : 'Sin venta activa'}</span>
         <button type="button" className="btn small ghost" onClick={publish} disabled={busy}>{form.active ? 'Descontinuar' : 'Activar'}</button>
         <button type="button" className="btn small" onClick={save} disabled={busy}>
           Guardar perfil
         </button>
         <Feedback state={state} />
       </div>
-      <small className="muted">Guarda los cambios del perfil antes de activar. La activación valida los datos guardados.</small>
+      <small className="muted">Guarda los cambios del perfil antes de activar o abrir la vista previa. La activación valida los datos guardados.</small>
       {issues.length > 0 && <ul className="form-error" role="alert">{issues.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>}
     </div>
   );
@@ -229,23 +256,23 @@ function NewVariantForm({ productId, onCreated }: { productId: number; onCreated
   );
 }
 
-function NewProductForm({ onCreated }: { onCreated: () => void }) {
+function NewProductForm({ onCreated, lines }: { onCreated: () => void; lines: LineOption[] }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', roast: '', grinds: '', imageUrl: null as string | null });
+  const [form, setForm] = useState({ name: '', roast: '', grinds: '', imageUrl: null as string | null, lineId: '', tagline: '', releaseNumber: '', launchAt: '', status: 'draft' as keyof typeof stateLabels });
   const [state, setState] = useState<{ error?: string; ok?: string }>({});
   const [busy, setBusy] = useState(false);
 
   const create = async () => {
     const grinds = form.grinds.split('\n').map(g => g.trim()).filter(Boolean);
-    if (!form.name.trim() || !form.roast.trim() || grinds.length === 0) {
-      return setState({ error: 'Completa nombre, tueste y al menos una molienda.' });
+    if (!form.lineId || !form.name.trim() || !form.roast.trim() || grinds.length === 0) {
+      return setState({ error: 'Completa línea, nombre, tueste y al menos una molienda.' });
     }
     setBusy(true);
-    const result = await post('/api/admin/products', { name: form.name, roast: form.roast, grinds, imageUrl: form.imageUrl });
+    const result = await post('/api/admin/products', { name: form.name, roast: form.roast, grinds, imageUrl: form.imageUrl, ...metadataBody(form) });
     setBusy(false);
     if (result.error) return setState({ error: result.error });
     setState({ ok: 'Producto creado.' });
-    setForm({ name: '', roast: '', grinds: '', imageUrl: null });
+    setForm({ name: '', roast: '', grinds: '', imageUrl: null, lineId: '', tagline: '', releaseNumber: '', launchAt: '', status: 'draft' as keyof typeof stateLabels });
     setOpen(false);
     onCreated();
   };
@@ -261,6 +288,7 @@ function NewProductForm({ onCreated }: { onCreated: () => void }) {
     <section className="admin-card">
       <h2>Nuevo producto</h2>
       <div className="admin-form">
+        <ProductMetadata form={form} setForm={value => setForm({ ...form, ...value })} lines={lines} creating />
         <div className="row">
           <label>
             Nombre
@@ -439,14 +467,14 @@ function VariantRow({ variant, canEdit }: { variant: Variant; canEdit: boolean }
   );
 }
 
-export default function ProductsManager({ products, canEdit }: { products: Product[]; canEdit: boolean }) {
+export default function ProductsManager({ products, canEdit, lines }: { products: Product[]; canEdit: boolean; lines: LineOption[] }) {
   const reload = () => window.location.reload();
   return (
     <div className="admin-stack">
-      {canEdit && <NewProductForm onCreated={reload} />}
+      {canEdit && <NewProductForm onCreated={reload} lines={lines} />}
       {products.map(product => (
         <section key={product.id} className="admin-card">
-          <ProductHeader product={product} canEdit={canEdit} />
+          <ProductHeader product={product} canEdit={canEdit} lines={lines} />
           <div className="table-wrap" style={{ marginTop: 16 }}>
             <table className="admin-table">
               <thead>

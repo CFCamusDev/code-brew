@@ -1,12 +1,13 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import ProductsManager from '../../components/admin/ProductsManager';
+import { listAdminLines } from '../../server/modules/catalog';
 import { listProducts, recentStockMovements } from '../../lib/server/admin/products';
 import { formatDateTime, formatOrderNumber } from '../../lib/shop/format';
 
 export const prerender = false;
 
-const [products, movements] = await Promise.all([listProducts(), recentStockMovements()]);
+const [products, movements, lines] = await Promise.all([listProducts(), recentStockMovements(), listAdminLines()]);
 const canEdit = Astro.locals.admin!.role === 'admin';
 const monthStart = `${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date()).slice(0, 7)}-01`;
 const REASON = { sale: 'Venta', refund: 'Devolución', adjustment: 'Ajuste', purchase: 'Ingreso' } as const;
@@ -22,7 +23,7 @@ const lowStock = products.flatMap(p => p.variants.filter(v => v.active && p.acti
 
   {lowStock.length > 0 && <p class="alert">Stock bajo o agotado: {lowStock.join(' · ')}</p>}
 
-  <ProductsManager client:load products={products} canEdit={canEdit} />
+  <ProductsManager client:load products={products} lines={lines.map(({ id, name, status }) => ({ id, name, status }))} canEdit={canEdit} />
 
   <section class="admin-card" style="margin-top:20px">
     <div class="card-head">
