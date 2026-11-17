@@ -13,6 +13,7 @@ export default function LinesManager({ initialLines, canEdit }: { initialLines: 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const canChangeSlug = editing == null || lines.find(line => line.id === editing)?.status === 'draft';
   async function request(path: string, method: string, body?: unknown) {
     const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
     const result = await response.json();
@@ -47,7 +48,7 @@ export default function LinesManager({ initialLines, canEdit }: { initialLines: 
       <h2>{editing === null ? 'Nueva línea' : 'Editar línea'}</h2>
       <fieldset disabled={busy} style={{ border: 0, padding: 0, display: 'grid', gap: 16 }}>
         <label>Nombre<input required maxLength={100} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
-        <label>Slug<input required maxLength={100} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} /><small>Identificador único: letras minúsculas, números y guiones.</small></label>
+        <label>Slug<input required readOnly={!canChangeSlug} maxLength={100} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} /><small>{canChangeSlug ? 'Identificador único: letras minúsculas, números y guiones.' : 'El slug solo se puede cambiar mientras la línea está en borrador.'}</small></label>
         <label>Descripción<textarea maxLength={2000} value={form.description ?? ''} onChange={e => setForm({ ...form, description: e.target.value })} /></label>
         <label>Plantilla<select value={form.template} onChange={e => setForm({ ...form, template: e.target.value as LineInput['template'] })}>{TEMPLATE_NAMES.map(name => <option key={name} value={name}>{name === 'base' ? 'Base' : 'Pipeline'}</option>)}</select></label>
         <label>Tema visual<textarea rows={5} value={theme} onChange={e => setTheme(e.target.value)} /><small>Variables CSS en JSON. Ejemplo: {'{"--cb-terracotta-bright":"#e58a5f"}'}. Usa {'{}'} para los colores predeterminados.</small></label>

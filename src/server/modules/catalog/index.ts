@@ -15,8 +15,6 @@ const lineAdmin = createLineAdminRepository(getDb);
 export const listAdminLines = () => lineAdmin.list();
 export const addAdminLine = (data: LineData) => createLine(lineAdmin, data);
 export const editAdminLine = (id: number, data: LineData) => editLine(lineAdmin, id, data);
-/** Solo líneas publicadas; orden estable incluso cuando comparten sort_order. */
-export const listPublicLineSlugs = async () => (await lineAdmin.list()).filter(line => line.status === 'active').map(line => line.slug);
 
 // API pública del módulo catalog (ADR 0003). Raíz de composición: cada caso de uso corre en su propia transacción.
 
