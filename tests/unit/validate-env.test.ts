@@ -104,6 +104,8 @@ describe('configuración del despliegue', () => {
     expect(validateEnvironment({ ...base, PAYMENT_GATEWAY: 'fake' })).toEqual([]);
     expect(validateEnvironment({ ...payments, PAYMENT_GATEWAY: 'fake', APP_ENV: 'local' })).toEqual([]);
     expect(validateEnvironment({ ...base, PAYMENT_GATEWAY: 'stripe' })).toEqual(['PAYMENT_GATEWAY debe ser culqi o fake.']);
+    expect(validateEnvironment({ ...base, CATALOG_SOURCE: 'static' })).toEqual([]);
+    expect(validateEnvironment({ ...base, CATALOG_SOURCE: 'json' })).toEqual(['CATALOG_SOURCE debe ser db o static.']);
     for (const APP_ENV of ['staging', 'production']) {
       expect(validateEnvironment({ ...payments, APP_ENV, PAYMENT_GATEWAY: 'fake' }).some(error => error.includes('PAYMENT_GATEWAY=fake no se permite'))).toBe(true);
     }

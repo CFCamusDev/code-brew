@@ -1,17 +1,10 @@
 ---
-import catalog from '../../data/catalog.json';
-import { getLiveCatalog } from '../../lib/server/shop';
 import { getWhatsAppBaseUrl, getWhatsAppUrl } from '../../data/config';
-interface Props { catalogSlug: string; productName: string; }
-const { catalogSlug, productName } = Astro.props;
-const live = await getLiveCatalog();
-const fallback = catalog.products.find(p=>p.slug===catalogSlug);
-const known = fallback?.variants ?? [];
-// Existing catalog identities remain unchanged. New Pipeline releases use their own catalog slug/SKUs.
-const base = known.length ? known : [...(live?.variants.keys() ?? [])].filter(sku=>sku.startsWith(catalogSlug+'-') && /-(250|500)$/.test(sku)).map(sku=>({sku,format:sku.endsWith('-500')?'500 g':'250 g',price:live!.variants.get(sku)!.price}));
-const variants = base.map(v=>({...v,price:live?.variants.get(v.sku)?.price ?? v.price,available:live ? live.variants.get(v.sku)?.available ?? false : true}));
+import type { CatalogOffer } from '../catalog/page-catalog';
+interface Props { catalogSlug: string; productName: string; offer: CatalogOffer; }
+const { catalogSlug, productName, offer } = Astro.props;
+const { variants, grinds } = offer;
 const first = variants.find(v=>v.available) ?? variants[0];
-const grinds = live?.grinds.get(catalogSlug) ?? fallback?.grinds ?? [];
 ---
 {first && grinds.length ? <article id={'blend-'+catalogSlug} class="blend-panel cb-purchase" data-profile={catalogSlug} data-product={productName}>
  <div class="product-options"><label>Presentación<select class="variant-select" aria-label={'Presentación de '+productName}>{variants.map(v=><option value={v.format} data-price={v.price} data-sku={v.sku} data-available={String(v.available)} selected={v===first}>{v.format}</option>)}</select></label><label>Molienda<select class="grind-select" aria-label={'Molienda de '+productName}>{grinds.map(g=><option>{g}</option>)}</select></label></div>

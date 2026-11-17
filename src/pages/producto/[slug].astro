@@ -3,9 +3,10 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../ui/Header.astro';
 import Footer from '../../ui/Footer.astro';
 import ProductProfile from '../../features/product/ProductProfile.astro';
-import { PIPELINE } from '../../data/pipeline';
+import { getProductPage } from '../../features/catalog/page-catalog';
 export const prerender = false;
-const product = PIPELINE.find(p=>p.slug===Astro.params.slug);
-if (!product) return new Response('Página no encontrada', {status:404});
+const page = await getProductPage(Astro.params.slug ?? '');
+if (!page) return new Response('Página no encontrada', {status:404});
+const { product } = page;
 ---
-<Layout pageTransitions title={product.name+' · Pipeline — CodeBrew'} description={product.tagline}><Header /><main id="main-content"><ProductProfile product={product} /></main><Footer /></Layout>
+<Layout pageTransitions title={product.name+' · Pipeline — CodeBrew'} description={product.tagline ?? `${product.name}, café de especialidad de la línea Pipeline.`}><Header /><main id="main-content"><ProductProfile product={product} offer={page.offer} siblings={page.siblings} /></main><Footer /></Layout>

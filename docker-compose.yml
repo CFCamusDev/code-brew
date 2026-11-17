@@ -26,6 +26,7 @@ services:
     environment:
       - NODE_ENV=production
       - APP_ENV=${APP_ENV:-}
+      - CATALOG_SOURCE=${CATALOG_SOURCE:-db}
       - DATABASE_URL=postgres://codebrew:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD}@codebrew-db:5432/codebrew
       - CULQI_PUBLIC_KEY=${CULQI_PUBLIC_KEY:-}
       - CULQI_SECRET_KEY=${CULQI_SECRET_KEY:-}

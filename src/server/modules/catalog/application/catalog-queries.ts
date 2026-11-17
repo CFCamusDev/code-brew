@@ -54,14 +54,23 @@ export async function getPublicProduct(reader: CatalogReader, slug: string): Pro
   return found ? toPublicProduct(found.line, found.product) : null;
 }
 
-/** Caso de uso VerLinea: la línea publicada con sus productos visibles, en orden de lanzamiento. */
-export async function getPublicLine(reader: CatalogReader, slug: string) {
+/** La línea publicada con la vista completa de sus productos visibles, en orden de lanzamiento (páginas del sitio). */
+export async function getPublicLineProducts(reader: CatalogReader, slug: string) {
   const found = await reader.findLine(slug);
   if (!found || found.line.status !== 'active') return null;
   const { line } = found;
   const products = found.products
     .map(product => toPublicProduct(line, product))
-    .filter((product): product is PublicProductView => product !== null)
+    .filter((product): product is PublicProductView => product !== null);
+  return { line, products };
+}
+
+/** Caso de uso VerLinea: la línea publicada con sus productos visibles, en orden de lanzamiento. */
+export async function getPublicLine(reader: CatalogReader, slug: string) {
+  const found = await getPublicLineProducts(reader, slug);
+  if (!found) return null;
+  const { line } = found;
+  const products = found.products
     .map(product => {
       const prices = product.variants.filter(variant => variant.available).map(variant => variant.priceCents);
       return {

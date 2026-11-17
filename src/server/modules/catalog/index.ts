@@ -1,7 +1,7 @@
 import { getDb } from '../../../lib/server/db';
 import { systemClock } from '../../shared/clock';
 import { unitOfWork } from '../../shared/unit-of-work';
-import { getPublicLine, getPublicProduct } from './application/catalog-queries';
+import { getPublicLine, getPublicLineProducts, getPublicProduct } from './application/catalog-queries';
 import { activateLine, archiveLine, publishProduct, type CatalogDeps } from './application/catalog-use-cases';
 import type { ProductStatus } from './domain/catalog';
 import { createDrizzleCatalogReader } from './infrastructure/drizzle-catalog-reader';
@@ -42,6 +42,12 @@ const reader = createDrizzleCatalogReader(getDb);
 
 /** Línea publicada con sus productos visibles; null si el público no debe verla. */
 export const findPublicLine = (slug: string) => getPublicLine(reader, slug);
+
+/** Línea publicada con la vista completa de sus productos visibles (portada y página de producto); null si no se publica. */
+export const findPublicLineProducts = async (slug: string) => {
+  const found = await getPublicLineProducts(reader, slug);
+  return found && { line: { slug: found.line.slug, name: found.line.name }, products: found.products };
+};
 
 /** Producto anunciado o a la venta de una línea publicada, con solo sus campos revelados; null si no corresponde. */
 export const findPublicProduct = (slug: string) => getPublicProduct(reader, slug);
