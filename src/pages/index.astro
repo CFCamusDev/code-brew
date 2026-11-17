@@ -1,15 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import Hero from '../components/Hero.astro';
-import TrustBar from '../components/TrustBar.astro';
-import Manifesto from '../components/Manifesto.astro';
-import Pipeline from '../components/Pipeline.astro';
-import Origin from '../components/Origin.astro';
-import TeamSection from '../components/TeamSection.astro';
-import RitualVideo from '../components/RitualVideo.astro';
-import ScrollAnimations from '../components/ScrollAnimations.astro';
+import Header from '../ui/Header.astro';
+import Footer from '../ui/Footer.astro';
+import Hero from '../features/landing/Hero.astro';
+import TrustBar from '../features/landing/TrustBar.astro';
+import Manifesto from '../features/landing/Manifesto.astro';
+import Pipeline from '../features/catalog/Pipeline.astro';
+import Origin from '../features/landing/Origin.astro';
+import TeamSection from '../features/landing/TeamSection.astro';
+import RitualVideo from '../features/landing/RitualVideo.astro';
+import ScrollAnimations from '../ui/ScrollAnimations.astro';
 import { getWhatsAppUrl } from '../data/config';
 export const prerender = false;
 const questions = [

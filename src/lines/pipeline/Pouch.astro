@@ -10,10 +10,10 @@ interface Props {
   eager?: boolean;
 }
 const { transitionName, product = 'hotfix', view = 'front', scale = 1, locked = false, eager = false } = Astro.props;
-const images = import.meta.glob<{ default: ImageMetadata }>('../assets/pipeline/optimized/*.webp', { eager: true });
+const images = import.meta.glob<{ default: ImageMetadata }>('../../assets/pipeline/optimized/*.webp', { eager: true });
 // Hotfix does not have a flat render: use its real front, never a synthetic bag.
-const render = (width: number) => images[`../assets/pipeline/optimized/${product}-${view}-${width}.webp`]?.default
-  ?? images[`../assets/pipeline/optimized/${product}-front-${width}.webp`]?.default;
+const render = (width: number) => images[`../../assets/pipeline/optimized/${product}-${view}-${width}.webp`]?.default
+  ?? images[`../../assets/pipeline/optimized/${product}-front-${width}.webp`]?.default;
 const source = render(720);
 if (!source) throw new Error(`Render de Pipeline desconocido: ${product}`);
 const imageSrcset = [240, 480, 720].map(width => render(width)).filter(Boolean).map(asset => `${asset.src} ${asset.width}w`).join(', ');

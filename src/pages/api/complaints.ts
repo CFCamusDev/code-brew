@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { complaintSchema } from '../../lib/shop/complaints';
+import { complaintSchema } from '../../contracts/complaints';
 import { createComplaint } from '../../server/modules/complaints';
 import { formatComplaintNumber } from '../../lib/shop/format';
 
