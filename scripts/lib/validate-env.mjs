@@ -20,6 +20,9 @@ export function validateEnvironment(environment) {
     errors.push('APP_ENV debe ser local, staging o production.');
   }
 
+  const catalogSource = environment.CATALOG_SOURCE?.trim();
+  if (catalogSource && !['db', 'static'].includes(catalogSource)) errors.push('CATALOG_SOURCE debe ser db o static.');
+
   const publicKey = environment.CULQI_PUBLIC_KEY?.trim();
   const secretKey = environment.CULQI_SECRET_KEY?.trim();
   const webhookSecret = environment.CULQI_WEBHOOK_SECRET?.trim();

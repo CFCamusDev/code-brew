@@ -77,5 +77,8 @@ Para no editar la URL en Culqi cada vez, se puede usar una dirección fija, por 
 | Entrada pública | Túnel de Cloudflare | Cloudflare | Cloudflare (`coffeecodebrew.com`) |
 | Base de datos | Volumen local desechable | Volumen de la stack | Volumen de la stack, con respaldo (#126) |
 | Correo | Sin `RESEND_API_KEY` solo se registra en logs | Resend | Resend |
+| Catálogo de las páginas (`CATALOG_SOURCE`) | `db` | `db` | `db` (`static` para volver atrás) |
+
+`CATALOG_SOURCE` decide de dónde leen la portada y la página de producto: `db` (por defecto) usa el catálogo del panel, con solo lo publicado y lo revelado; `static` vuelve a `pipeline.json` y `catalog.json`. Se lee al arrancar el contenedor, así que basta cambiarla y reiniciar. Si con `db` la base no responde, las páginas usan el estático y lo dejan en los logs (`[catalogo] no se pudo leer el catálogo de la base`).
 
 Lo único que cambia entre entornos son variables: llaves, `APP_ENV`, `SITE_URL` y la contraseña de PostgreSQL. Si algo funciona en local con `pnpm local:up`, la misma imagen funciona en staging y producción.
