@@ -50,7 +50,10 @@ export interface CatalogVariant {
   sku: string;
   format: string;
   priceCents: number;
+  /** Stock físico (lo que hay en bodega). */
   stock: number;
+  /** Unidades prometidas a otros pedidos pendientes (reservas vigentes). */
+  reserved: number;
   bags: number;
   variantActive: boolean;
   productName: string;

@@ -40,6 +40,8 @@ export default async function setup() {
           on conflict (sku) do update set product_id = excluded.product_id`;
       }
     }
+    // Los pedidos de corridas anteriores reservan stock 30 minutos: se limpian para que cada corrida parta igual.
+    await sql`delete from stock_reservations`;
     await sql`update product_variants set stock = 50, active = true`;
     await sql`update product_variants set stock = 1 where sku = 'microlote-temporada'`;
     await sql`update product_variants set price_cents = 3400 where sku in ('hotfix-250', 'espresso-250')`;

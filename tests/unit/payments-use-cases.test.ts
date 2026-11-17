@@ -12,7 +12,7 @@ const payment = (overrides: Partial<ConfirmedPayment> = {}): ConfirmedPayment =>
 
 /** Tienda en memoria que reproduce la semántica de la real: un pago por referencia (ON CONFLICT) y pedido con estado. */
 function memoryConfirmStore(status = 'pending', shortage = false) {
-  const state = { status, paidAt: null as Date | null, stockShortage: null as boolean | null, sales: 0 };
+  const state = { status, paidAt: null as Date | null, stockShortage: null as boolean | null, sales: 0, released: false };
   const payments = new Map<string, string>();
   const store: ConfirmPaymentStore = {
     lockOrder: async id => (id === 'o-1' ? { status: state.status } : null),
@@ -24,7 +24,8 @@ function memoryConfirmStore(status = 'pending', shortage = false) {
       state.status = 'paid';
       state.paidAt = data.paidAt;
       state.stockShortage = data.stockShortage;
-    }
+    },
+    releaseReservations: async () => { state.released = true; }
   };
   return { store, state, payments };
 }
@@ -43,6 +44,18 @@ describe('ConfirmarPago', () => {
     const { store, state } = memoryConfirmStore('pending', true);
     await confirmPayment({ store, clock }, 'o-1', payment());
     expect(state.stockShortage).toBe(true);
+  });
+
+  it('libera las reservas al confirmar, para evitar el doble conteo del stock (ADR 0005, S3.4)', async () => {
+    const { store, state } = memoryConfirmStore();
+    await confirmPayment({ store, clock }, 'o-1', payment());
+    expect(state.released).toBe(true);
+  });
+
+  it('no libera reservas si el pedido ya no estaba pendiente', async () => {
+    const { store, state } = memoryConfirmStore('paid');
+    await confirmPayment({ store, clock }, 'o-1', payment({ reference: 'chr_new' }));
+    expect(state.released).toBe(false);
   });
 
   it('doble confirmación del mismo pago no tiene efecto', async () => {
