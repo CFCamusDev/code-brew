@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 // El motor de prueba debe activarse antes de crear el store del carrito.
 useTestStorageEngine();
-const { addToCart, cartCount, cartLines, clearCart, removeFromCart, setQuantity } = await import('../../src/lib/shop/cart');
+const { addToCart, cartCount, cartLines, clearCart, removeFromCart, setQuantity } = await import('../../src/features/cart/cart');
 const { MAX_QUANTITY } = await import('../../src/contracts/limits');
 
 describe('carrito', () => {

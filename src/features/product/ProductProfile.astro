@@ -1,7 +1,7 @@
 ---
-import Pouch from './Pouch.astro';
+import Pouch from '../../lines/pipeline/Pouch.astro';
 import ProductPurchase from './ProductPurchase.astro';
-import { PIPELINE, type PipelineProduct } from '../data/pipeline';
+import { PIPELINE, type PipelineProduct } from '../../data/pipeline';
 interface Props { product: PipelineProduct; }
 const { product: p } = Astro.props;
 const available = p.status === 'available';

@@ -28,7 +28,7 @@
   };
   window.addEventListener('scroll', updateProgress, {passive:true});
   updateProgress();
-  import('../scripts/worlds').then(({mountWorlds}) => mountWorlds()).catch((error) => {
+  import('./scripts/worlds').then(({mountWorlds}) => mountWorlds()).catch((error) => {
     console.error('[CodeBrew] No se pudo iniciar la escena 3D', error);
     // The transparent product remains visible if the 3D module cannot load.
   });

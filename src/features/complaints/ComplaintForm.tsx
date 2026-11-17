@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm, type FieldError } from 'react-hook-form';
-import { complaintSchema, type Complaint, type ComplaintForm as ComplaintFormInput } from '../../lib/shop/complaints';
+import { complaintSchema, type Complaint, type ComplaintForm as ComplaintFormInput } from '../../contracts/complaints';
 import '../../styles/shop.css';
 
 export default function ComplaintForm() {

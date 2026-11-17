@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, type FieldError } from 'react-hook-form';
-import { cartLines, clearCart, removeFromCart } from '../../lib/shop/cart';
+import { cartLines, clearCart, removeFromCart } from '../cart/cart';
 import type { CartIssuesErrorResponse, Quote } from '../../contracts/cart';
 import { customerSchema, REGIONS, type CreateOrderResponse, type Customer, type CustomerForm } from '../../contracts/checkout';
 import { formatPEN } from '../../lib/shop/format';

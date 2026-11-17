@@ -26,11 +26,15 @@ Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir e
 
 ## Estructura
 
-- `src/pages`: páginas y API (`src/pages/api`); `src/components`: componentes de la tienda (`shop/`) y del panel (`admin/`); `src/layouts`, `src/styles`.
-- `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: código compartido con el navegador (carrito, validaciones, formato).
+- `src/pages`: páginas y API (`src/pages/api`). Las páginas solo cargan datos y componen; `src/layouts`, `src/styles`.
+- `src/features/<funcionalidad>`: la tienda por funcionalidad: `landing`, `catalog`, `product`, `cart`, `checkout`, `order`, `complaints` y `experience-3d` (reservada).
+- `src/ui`: piezas base compartidas (`Header`, `Footer`, `ShopHeader`, `LogoMark`, `FloatingWhatsApp`, `ScrollAnimations`).
+- `src/lines/pipeline`: piezas propias de la línea Pipeline (`Pouch`), según ADR 0004.
+- `src/contracts`: esquemas zod compartidos por la API y las islas; `src/components/admin`: panel de administración.
+- `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: utilidades compartidas con el navegador (formato, envío gratis).
 - `src/data`: contenido y configuración estáticos (`pipeline.json` y `pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
 - `drizzle/`: migraciones SQL; `scripts/`: base de datos, panel, validación del entorno y backlog de GitHub; `tests/unit` y `tests/integration`.
-- En migración (ADR 0002): el backend pasa a `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y el frontend a `src/features`, `src/ui` y `src/contracts`. Las historias del tablero mueven el código por partes.
+- Backend por módulos (ADR 0002): `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y `src/server/shared`.
 
 ## Comandos
 - `pnpm build` genera `dist/client` (estático) y `dist/server` (servidor Node).
@@ -50,7 +54,7 @@ Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir e
 
 ## Tienda
 
-- Carrito: `src/lib/shop/cart.ts` (nanostores, guardado en `localStorage`) y la isla `CartWidget` del header. Solo guarda sku, molienda y cantidad.
+- Carrito: `src/features/cart/cart.ts` (nanostores, guardado en `localStorage`) y la isla `CartWidget` del header. Solo guarda sku, molienda y cantidad.
 - `/checkout`: isla `CheckoutApp` con validación zod compartida con la API (`src/lib/shop/checkout.ts`).
 - `POST /api/cart/quote` recalcula precios, stock y envío con la base de datos; `POST /api/orders` crea el pedido pendiente de pago. El servidor nunca usa precios enviados por el navegador.
 - `/pedido/[id]`: resumen del pedido; el UUID funciona como enlace privado para compras como invitado.
@@ -128,15 +132,15 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 La portada presenta la línea Pipeline. Hotfix permite elegir presentación y molienda desde `/producto/hotfix`; Cold Start, Deploy, Merge y Rollback tienen sus páginas de próximos lanzamientos. El carrito, checkout, pedidos, reclamos y políticas conservan sus contratos existentes.
 
 - `src/pages/index.astro`: composición de la portada.
-- `src/components/Hero.astro` y `Pipeline.astro`: entrada al catálogo.
-- `src/components/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
-- `src/components/Pouch.astro`: renders optimizados y tamaños responsivos.
+- `src/features/landing/Hero.astro` y `src/features/catalog/Pipeline.astro`: entrada al catálogo.
+- `src/features/product/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
+- `src/lines/pipeline/Pouch.astro`: renders optimizados y tamaños responsivos.
 - `src/data/pipeline.json` (tipado en `pipeline.ts`): contenido y estado visual de los cinco perfiles.
 - `src/styles/brand.css`: estilos del cliente; `shop.css`: flujo de compra.
 - `src/data/config.ts`: configuración compartida; no sustituye precios y stock en vivo.
 
 Las imágenes originales de `src/assets/pipeline/` alimentan `node scripts/prepare-client-images.mjs`. Las variantes de `optimized/` se cargan mediante un glob y nombres construidos en `Pouch.astro`; no son archivos huérfanos.
 
-La experiencia 3D está reservada para retomarla: se conservan `CoffeeExperience3D.astro`, `WorldStage.astro`, `Experience.astro`, los módulos de `src/scripts/`, sus texturas y el respaldo `src/assets/demo/monteverde.png`. No se montan en la portada actual. Las dependencias Three.js y GSAP siguen siendo necesarias para ese código reservado.
+La experiencia 3D está reservada para retomarla: se conservan en `src/features/experience-3d/` `CoffeeExperience3D.astro`, `WorldStage.astro`, `Experience.astro` y sus módulos de `scripts/`, sus texturas y el respaldo `src/assets/demo/monteverde.png`. No se montan en la portada actual. Las dependencias Three.js y GSAP siguen siendo necesarias para ese código reservado.
 
 Se retiraron los componentes anteriores sin importaciones, la antigua sección Tienda, sus estilos exclusivos y cinco imágenes sin uso. Las imágenes que todavía importa la configuración compartida se conservan. La limpieza no modifica el admin, backend, BD ni catálogo comercial.

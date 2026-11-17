@@ -1,7 +1,7 @@
 import hotfixThumbnail from '../../assets/pipeline/optimized/hotfix-front-240.webp';
 import { useStore } from '@nanostores/react';
 import { useEffect, useRef, useState } from 'react';
-import { cartCount, cartLines, cartOpen, describeSku, removeFromCart, setQuantity } from '../../lib/shop/cart';
+import { cartCount, cartLines, cartOpen, describeSku, removeFromCart, setQuantity } from './cart';
 import { MAX_QUANTITY } from '../../contracts/limits';
 import { formatPEN } from '../../lib/shop/format';
 import type { Quote } from '../../contracts/cart';

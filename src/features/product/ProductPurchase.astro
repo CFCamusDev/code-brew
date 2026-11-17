@@ -1,7 +1,7 @@
 ---
-import catalog from '../data/catalog.json';
-import { getLiveCatalog } from '../lib/server/shop';
-import { getWhatsAppBaseUrl, getWhatsAppUrl } from '../data/config';
+import catalog from '../../data/catalog.json';
+import { getLiveCatalog } from '../../lib/server/shop';
+import { getWhatsAppBaseUrl, getWhatsAppUrl } from '../../data/config';
 interface Props { catalogSlug: string; productName: string; }
 const { catalogSlug, productName } = Astro.props;
 const live = await getLiveCatalog();
@@ -40,8 +40,8 @@ const grinds = live?.grinds.get(catalogSlug) ?? fallback?.grinds ?? [];
     </form>
   </dialog>
 <script>
- import { track } from '../lib/analytics';
- import { addToCart, cartOpen } from '../lib/shop/cart';
+ import { track } from '../../lib/analytics';
+ import { addToCart, cartOpen } from '../cart/cart';
   document.querySelectorAll<HTMLElement>('.blend-panel[data-product]').forEach(card=>{
     const variant=card.querySelector<HTMLSelectElement>('.variant-select')!;
     const grind=card.querySelector<HTMLSelectElement>('.grind-select')!;

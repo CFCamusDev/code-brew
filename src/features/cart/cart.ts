@@ -1,4 +1,4 @@
-import { track } from '../analytics';
+import { track } from '../../lib/analytics';
 import { persistentAtom } from '@nanostores/persistent';
 import { atom, computed } from 'nanostores';
 import catalog from '../../data/catalog.json';

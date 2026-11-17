@@ -1,8 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import ProductProfile from '../../components/ProductProfile.astro';
+import Header from '../../ui/Header.astro';
+import Footer from '../../ui/Footer.astro';
+import ProductProfile from '../../features/product/ProductProfile.astro';
 import { PIPELINE } from '../../data/pipeline';
 export const prerender = false;
 const product = PIPELINE.find(p=>p.slug===Astro.params.slug);
