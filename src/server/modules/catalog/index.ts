@@ -55,6 +55,19 @@ export type { PublicProductView, PublicVariant } from './application/catalog-que
 
 const reader = createDrizzleCatalogReader(getDb);
 
+/** Solo para rutas autenticadas del panel. Simula una publicación sin modificar la base. */
+export const findAdminProductPreview = async (slug: string) => {
+  const found = await reader.findProduct(slug);
+  if (!found) return null;
+  const product = await getPublicProduct({ ...reader, findProduct: async () => ({
+    line: { ...found.line, status: 'active' },
+    product: { ...found.product, status: found.product.status === 'active' ? 'active' : 'upcoming' }
+  }) }, slug);
+  if (!product) return null;
+  const { name, description, theme, template } = found.line;
+  return { line: { slug: found.line.slug, name, description, theme, template }, product };
+};
+
 /** Línea publicada con sus productos visibles; null si el público no debe verla. */
 export const findPublicLine = (slug: string) => getPublicLine(reader, slug);
 

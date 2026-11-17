@@ -1,0 +1,14 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ProductPage from '../../../lines/ProductPage.astro';
+import { findAdminProductPreview } from '../../../server/modules/catalog';
+import { fromCatalog, offerFromCatalog } from '../../../features/catalog/page-catalog';
+export const prerender = false;
+const preview = await findAdminProductPreview(Astro.url.searchParams.get('slug') ?? '');
+if (!preview) return new Response('Producto no encontrado o sin línea asignada.', { status: 404 });
+const product = fromCatalog(preview.product);
+---
+<Layout noindex title={`Vista previa · ${product.name}`}>
+  <aside style="padding:16px;background:#f4f1e9;color:#203c32;position:relative;z-index:10">Vista previa privada de los datos guardados. <a href="/admin/productos">Volver a productos</a></aside>
+  <main id="main-content"><ProductPage line={preview.line} product={product} offer={offerFromCatalog(preview.product)} siblings={[product]} /></main>
+</Layout>

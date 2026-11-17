@@ -3,9 +3,11 @@ import type { CatalogLine, CatalogOffer, CatalogProfile } from '../features/cata
 import Base from './base/ProductPage.astro';
 import Pipeline from './pipeline/ProductPage.astro';
 import { resolveTemplate, type TemplateName } from './registry';
+import { hasPouchRender } from './pipeline/renders';
 // Página de producto con la plantilla de su línea (o la base).
 interface Props { line: CatalogLine; product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
 const PAGES = { base: Base, pipeline: Pipeline } satisfies Record<TemplateName, unknown>;
-const Page = PAGES[resolveTemplate(Astro.props.line.template)];
+const template = resolveTemplate(Astro.props.line.template);
+const Page = template === 'pipeline' && !hasPouchRender(Astro.props.product.slug) ? Base : PAGES[template];
 ---
 <Page {...Astro.props} />
