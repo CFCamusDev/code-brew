@@ -87,6 +87,9 @@ jobs:
             sleep 1
           done
           echo "El servidor no respondió"; cat server.log; exit 1
+      - name: Presupuesto de JS por página
+        # JS inicial en gzip contra docs/performance/baseline.md; falla si se pasa o si three/gsap entran de entrada.
+        run: pnpm perf:budget
       - name: Pruebas de integración
         run: pnpm test:integration
       - name: Log del servidor

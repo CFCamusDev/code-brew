@@ -43,9 +43,9 @@
 </style>
 
 <script>
-  import * as THREE from 'three';
+  import type * as Three from 'three';
 
-  function initScrolly3D() {
+  function initScrolly3D(THREE: typeof Three) {
     const container = document.getElementById('scrolly3DContainer');
     const canvas = document.getElementById('scrollyCanvas3D') as HTMLCanvasElement;
     const ambientLightDiv = document.getElementById('scrollyAmbientLight');
@@ -272,7 +272,7 @@
     scene.add(ring2);
 
     // 7. Modelado del Grano de Café (Coffee Bean Geometry)
-    function makeBeanGeometry(): THREE.BufferGeometry {
+    function makeBeanGeometry(): Three.BufferGeometry {
       const geom = new THREE.SphereGeometry(0.5, 32, 32);
       const bPos = geom.attributes.position;
       for (let i = 0; i < bPos.count; i++) {
@@ -300,7 +300,7 @@
 
     // Granos Satelitales elegantes en órbita cerrada alrededor de la bolsa
     interface SatBean {
-      mesh: THREE.Mesh;
+      mesh: Three.Mesh;
       orbitRadius: number;
       orbitSpeed: number;
       orbitAngle: number;
@@ -329,7 +329,7 @@
     }
 
     // 8. Textura Circular Suave para Partículas (Evita artefactos cuadrados)
-    function createCircleTexture(): THREE.CanvasTexture {
+    function createCircleTexture(): Three.CanvasTexture {
       const pCanvas = document.createElement('canvas');
       pCanvas.width = 32;
       pCanvas.height = 32;
@@ -554,9 +554,17 @@
     });
   }
 
+  // three se pide solo cuando el escenario existe: nunca entra en el JS inicial de la página (presupuesto de S5.7).
+  function start() {
+    if (!document.getElementById('scrolly3DContainer')) return;
+    import('three')
+      .then(initScrolly3D)
+      .catch(error => console.error('[CodeBrew] No se pudo iniciar la escena 3D', error));
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrolly3D);
+    document.addEventListener('DOMContentLoaded', start);
   } else {
-    initScrolly3D();
+    start();
   }
 </script>

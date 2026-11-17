@@ -23,7 +23,8 @@
     "test": "vitest run",
     "config:check": "node scripts/validate-env.mjs",
     "test:docker": "node scripts/test-docker.mjs",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "perf:budget": "node scripts/perf/js-budget.mjs"
   },
   "dependencies": {
     "@astrojs/node": "11.1.9",
