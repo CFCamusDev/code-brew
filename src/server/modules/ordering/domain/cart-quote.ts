@@ -11,12 +11,17 @@ export interface ShippingRules {
   calculate(input: { zoneSlug?: string; region?: string; subtotalCents: number; bags: number }): ShippingResult;
 }
 
-const stockMessage = (row: CatalogVariant) =>
-  row.stock === 0
+/** Disponible = stock físico − reservas vigentes (ADR 0005). Nunca negativo. */
+export const availableStock = (row: Pick<CatalogVariant, 'stock' | 'reserved'>) => Math.max(0, row.stock - row.reserved);
+
+const stockMessage = (row: CatalogVariant) => {
+  const available = availableStock(row);
+  return available === 0
     ? `${row.productName} ${row.format} está agotado por ahora.`
-    : row.stock === 1
+    : available === 1
       ? `Solo queda 1 unidad de ${row.productName} ${row.format}.`
-      : `Solo quedan ${row.stock} unidades de ${row.productName} ${row.format}.`;
+      : `Solo quedan ${available} unidades de ${row.productName} ${row.format}.`;
+};
 
 /**
  * Calcula precios, envío y total con los datos vigentes del catálogo. Regla pura: nunca usa precios del navegador.
@@ -47,7 +52,7 @@ export function quoteCart(
       issues.push({ sku: item.sku, message: `La molienda "${item.grind}" no está disponible para ${row.productName}.` });
       continue;
     }
-    if (requestedBySku.get(item.sku)! > row.stock) {
+    if (requestedBySku.get(item.sku)! > availableStock(row)) {
       if (!reportedStock.has(item.sku)) {
         reportedStock.add(item.sku);
         issues.push({ sku: item.sku, message: stockMessage(row) });

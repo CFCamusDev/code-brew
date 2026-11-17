@@ -27,6 +27,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Auditoría de dependencias
+        # Excepción en package.json (pnpm.auditConfig.ignoreCves): CVE-2026-112366 / GHSA-fc5q-39xc-vjpf.
+        # picomatch ReDoS via dependency-cruiser y astro/unstorage, sin parche (Patched: <0.0.0).
         run: pnpm audit --audit-level=high
       - name: Revisión de tipos
         run: pnpm typecheck

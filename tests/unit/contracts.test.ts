@@ -16,6 +16,7 @@ const hotfix = {
   format: '250 g',
   priceCents: 4500,
   stock: 1,
+  reserved: 0,
   bags: 1,
   variantActive: true,
   productName: 'Hotfix',

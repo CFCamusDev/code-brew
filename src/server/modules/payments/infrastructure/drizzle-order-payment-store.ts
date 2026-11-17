@@ -1,8 +1,8 @@
-import { and, asc, desc, eq, gt, gte, isNotNull, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 import { inventoryFor } from '../../inventory';
 import type { Transaction } from '../../../shared/unit-of-work';
 import type { getDb } from '../../../../lib/server/db';
-import { orderEvents, orderItems, orders, payments } from '../../../../lib/server/db/schema';
+import { orderEvents, orderItems, orders, payments, stockReservations } from '../../../../lib/server/db/schema';
 import type { PendingOrderPaymentReader } from '../application/pending-payment-code';
 import type { LocalPaymentReader } from '../application/reconcile-payments';
 import type { ConfirmPaymentStore, RefundReader, RefundStore } from '../application/ports/order-payment-store';
@@ -40,6 +40,13 @@ export function createConfirmPaymentStore(tx: Transaction): ConfirmPaymentStore 
     registerSale: (orderId, lines) => inventoryFor(tx).registerSale(orderId, lines),
     async markOrderPaid(orderId, { paidAt, stockShortage }) {
       await tx.update(orders).set({ status: 'paid', paidAt, stockShortage }).where(eq(orders.id, orderId));
+    },
+    async releaseReservations(orderId, now) {
+      // greatest(): la constraint exige released_at >= created_at y el reloj de la app puede ir un poco detrás de la base.
+      await tx
+        .update(stockReservations)
+        .set({ releasedAt: sql`greatest(${now.toISOString()}::timestamptz, ${stockReservations.createdAt})` })
+        .where(and(eq(stockReservations.orderId, orderId), isNull(stockReservations.releasedAt)));
     }
   };
 }

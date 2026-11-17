@@ -1,3 +1,4 @@
+import { systemClock, type Clock } from '../../shared/clock';
 import { createOrder } from './application/create-order';
 import type { OrderingDeps } from './application/ports/ports';
 import { quoteCartUseCase } from './application/quote-cart';
@@ -7,6 +8,7 @@ import type { CartLine, OrderCustomer } from './domain/types';
 import {
   createDrizzleCatalogReader,
   createDrizzleOrderRepository,
+  createDrizzleStockReservations,
   createShippingProvider,
   type Executor
 } from './infrastructure/drizzle-ordering';
@@ -21,11 +23,13 @@ export type { OrderingDeps } from './application/ports/ports';
  * Casos de uso de pedidos sobre una conexión o transacción. Para crear o modificar pedidos, el llamador abre la
  * transacción con UnitOfWork: `unitOfWork.run(tx => orderingFor(tx).createOrder(...))`.
  */
-export function orderingFor(executor: Executor) {
+export function orderingFor(executor: Executor, clock: Clock = systemClock) {
   const deps: OrderingDeps = {
     catalog: createDrizzleCatalogReader(executor),
     shipping: createShippingProvider(executor),
-    orders: createDrizzleOrderRepository(executor)
+    orders: createDrizzleOrderRepository(executor),
+    reservations: createDrizzleStockReservations(executor),
+    clock
   };
   return {
     quoteCart: (items: CartLine[], destination?: { zoneSlug?: string; region?: string }) => quoteCartUseCase(deps, items, destination),
