@@ -9,8 +9,9 @@ Medición del 13 de noviembre de 2026 sobre la versión **1.7.0**, antes de cual
 | LCP | < 2,5 s | Lighthouse móvil, producción |
 | INP | < 200 ms | Datos de campo (CrUX/GA4) cuando haya tráfico; en laboratorio se usa TBT como aproximación |
 | CLS | < 0,1 | Lighthouse móvil y escritorio, producción |
-| JS inicial de la portada | ≤ 80 KB gzip | Análisis del bundle (abajo); lo hará cumplir el CI en #118 |
-| JS inicial del checkout | ≤ 120 KB gzip | Ídem |
+| JS inicial de la portada | ≤ 80 KB gzip | `pnpm perf:budget` en CI (job de integración, #118) |
+| JS inicial del producto | ≤ 80 KB gzip | Ídem |
+| JS inicial del checkout | ≤ 120 KB gzip | Ídem; three y gsap no pueden entrar en el JS inicial de ninguna de las tres |
 
 ## Resultados
 
