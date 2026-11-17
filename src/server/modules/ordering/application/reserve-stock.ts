@@ -1,9 +1,10 @@
+import { CARD_RESERVATION_MS } from '../domain/reservation-expiry';
 import type { QuoteLine } from '../domain/types';
 import { withVariantIds } from './with-variant-ids';
 import type { OrderingDeps } from './ports/ports';
 
 /** Tiempo que se promete el stock a un pedido recién creado: lo que dura el pago con tarjeta o Yape (ADR 0005). */
-export const DEFAULT_RESERVATION_MS = 30 * 60 * 1000;
+export const DEFAULT_RESERVATION_MS = CARD_RESERVATION_MS;
 
 /**
  * Caso de uso ReservarStock: promete al pedido las unidades de sus líneas sin tocar el stock físico (eso ocurre al

@@ -1,4 +1,5 @@
 import { and, asc, count, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { orderingFor } from '../../../server/modules/ordering';
 import { REFUNDABLE_STATUSES, refundPaidOrder, type RefundReason } from '../../../server/modules/payments';
 import { DomainError } from '../../../server/shared';
 import { getDb } from '../db';
@@ -167,6 +168,8 @@ export async function changeStatus(
         ...(to === 'cancelled' ? { cancelledAt: now } : {})
       })
       .where(eq(orders.id, orderId));
+    // Un pedido cancelado deja de apartar stock de inmediato (ADR 0005).
+    if (to === 'cancelled') await orderingFor(tx).releaseReservations([orderId]);
     await tx.insert(orderEvents).values({
       orderId,
       type: 'status',
@@ -269,6 +272,7 @@ export async function cancelAbandonedOrders(adminUserId: number | null = null) {
       .returning({ id: orders.id });
 
     if (cancelled.length) {
+      await orderingFor(tx).releaseReservations(cancelled.map(order => order.id));
       await tx.insert(orderEvents).values(
         cancelled.map(order => ({
           orderId: order.id,
