@@ -86,20 +86,21 @@ const entries = (pairs: (string | number)[][]): Entry[] => pairs.map(([label, va
 
 /** pipeline.json → perfil. */
 export function fromStatic(product: PipelineProduct): CatalogProfile {
+  const available = product.status === 'available';
   return {
     slug: product.slug,
     name: product.name,
     num: product.num,
-    available: product.status === 'available',
+    available,
     kind: 'product',
     colors: { color: product.color, tint: product.tint, glow: product.glow },
     tagline: product.tagline,
     method: product.method,
-    roast: product.roast,
-    description: product.description ?? undefined,
-    notes: product.notes,
-    facts: entries(product.facts),
-    cupProfile: product.profile.map(([attribute, level]) => ({ attribute: String(attribute), level: Number(level) })),
+    roast: available ? product.roast : undefined,
+    description: available ? product.description ?? undefined : undefined,
+    notes: available ? product.notes : [],
+    facts: available ? entries(product.facts) : [],
+    cupProfile: available ? product.profile.map(([attribute, level]) => ({ attribute: String(attribute), level: Number(level) })) : [],
     recipeFor: product.recipeFor,
     recipe: entries(product.recipe),
     media: []

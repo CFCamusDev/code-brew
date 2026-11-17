@@ -1,6 +1,9 @@
 ---
 import Pouch from './Pouch.astro';
 import ProductPurchase from '../../features/product/ProductPurchase.astro';
+import ProductDetails from '../../features/product/ProductDetails.astro';
+import RevealField from '../../features/product/RevealField.astro';
+import LaunchPreview from '../../features/product/LaunchPreview.astro';
 import type { CatalogLine, CatalogOffer, CatalogProfile } from '../../features/catalog/page-catalog';
 import { joinStyles, themeStyle } from '../theme';
 // Plantilla «pipeline» (ADR 0004): página de producto con la galería de bolsas y el selector de perfiles de la línea.
@@ -9,8 +12,6 @@ const { line, product: p, offer, siblings } = Astro.props;
 const available = p.available;
 const fact = (label: string) => p.facts.find(entry => entry.label === label)?.value;
 const trace = [fact('Origen'), fact('Proceso')].filter(Boolean).join(' · ');
-const placeholderFacts = ['Origen', 'Proceso', 'Tueste', 'Altitud', 'Variedad'].map(label => ({ label, value: '' }));
-const placeholderCup = ['cuerpo', 'dulzor', 'acidez'].map(attribute => ({ attribute, level: 0 }));
 const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : ['front','front2','flat','back','back3d'] as const;
 ---
 <div class="cb-product" style={joinStyles('--profile-color:'+p.colors.color+';--profile-tint:'+p.colors.tint+';--profile-glow:'+p.colors.glow, themeStyle(line.theme))}>
@@ -18,16 +19,12 @@ const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : 
   <div class="cb-profile-home"><nav id="product-profiles" class="cb-product-profiles" aria-label="Perfiles del Pipeline">{siblings.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.colors.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.available?'Disponible':'Próximamente'}</small></a>)}</nav></div>
   <div class="cb-product-grid"><div class="cb-gallery"><div class="cb-gallery-stage">{views.map((view,i)=><div data-pouch-view={view} hidden={i!==0} class="cb-gallery-view cb-float"><Pouch transitionName={i===0 ? `pipeline-${p.slug}` : undefined} product={p.slug} view={view} scale={1.9} eager={i===0} /></div>)}<span class="cb-orbit" aria-hidden="true"></span>{p.method && <span class="cb-glass cb-gallery-method">{p.method}</span>}{p.roast && <span class="cb-glass cb-gallery-roast">{p.roast}</span>}</div><div class="cb-gallery-thumbs" role="group" aria-label="Vistas de la bolsa">{views.map((view,i)=><button type="button" data-view={view} aria-label={'Ver '+({front:'frente',front2:'frente en perspectiva',flat:'vista plana',back:'reverso',back3d:'reverso en perspectiva'}[view])} aria-pressed={i===0?'true':'false'}><Pouch product={p.slug} view={view} scale={.24} /></button>)}</div></div>
   <div class="cb-product-copy cb-stack"><p class="cb-label">Pipeline {p.num} · {available?'STABLE · DISPONIBLE':'QUEUED · PRÓXIMAMENTE'}</p><h1>{p.name}</h1><p class="cb-product-tagline">{p.tagline}</p><div class="cb-product-chips">{p.method && <span>{p.method}</span>}{p.roast && <span>{p.roast}</span>}<span>Hecho en Perú</span></div>
-  {available ? <ProductPurchase catalogSlug={p.slug} productName={p.name} offer={offer} /> : <div class="cb-product-queued cb-glass"><div class="cb-queued-price"><span class="cb-label">Precio</span><span class="cb-redacted" aria-hidden="true">Por revelar</span></div><p>Este perfil ya tiene nombre y receta. Su origen, proceso y notas de cata se revelan en el lanzamiento.</p><form aria-label={'Aviso de lanzamiento de '+p.name}><label for="mail2">Tu correo</label><input id="mail2" name="email" type="email" placeholder="tu@correo.com" disabled /><button type="button" class="cb-btn cb-accent" disabled>Avísame</button><p>Los avisos todavía no están habilitados.</p></form></div>}
+  {available ? <ProductPurchase catalogSlug={p.slug} productName={p.name} offer={offer} /> : <LaunchPreview />}
   </div></div>
  </div></section>
- <section class="cb-section cb-product-details"><div class="cb-wrap">
-  {!available && <p class="cb-reveal-notice">Información por revelar. Los detalles de {p.name} se publicarán en su lanzamiento.</p>}
-  <div class="cb-product-three"><div class="cb-stack"><p class="cb-label">// {p.slug}.js</p><h2>Sobre este perfil</h2>{available ? <><p>{p.description}</p><div class="cb-product-notes">{p.notes.map(note=><span>{note}</span>)}</div></> : <><div class="cb-redacted cb-redacted-lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div><p>Se revela en su lanzamiento.</p></>}</div>
-  <div class="cb-product-card"><h3 class="cb-label">Ficha técnica</h3><dl>{(available?p.facts:placeholderFacts).map(({label,value})=><div><dt>{label}</dt><dd class:list={{'cb-redacted':!available}} aria-hidden={!available?'true':undefined}>{available?value:<span class="cb-redacted-line"></span>}</dd></div>)}</dl></div>
-  <div class="cb-product-card"><h3 class="cb-label">Perfil en taza</h3>{(available?p.cupProfile:placeholderCup).map(({attribute:label,level:value})=><div class="cb-taste-row"><span>{label}</span><div class:list={['cb-taste-bars',{'cb-redacted':!available}]} role={available?'img':undefined} aria-label={available?label+': '+value+' de 8':undefined} aria-hidden={!available?'true':undefined}>{Array.from({length:8},(_,i)=><i class:list={{'is-on':available&&i<Number(value)}}></i>)}</div></div>)}<p>{available?'Escala de 8 pasos impresa en la bolsa.':'Se revela en su lanzamiento.'}</p></div></div>
- </div></section>
- {p.recipe.length > 0 && <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Receta sugerida</p><h2>Prepáralo<br />como un <em>commit.</em></h2><p>Una guía para preparar {p.recipeFor} y encontrar tu próxima pausa.</p><div class="cb-trace"><span class="cb-label">git log --origen</span><p>{available&&trace?trace:'Origen y trazabilidad: se revelan en el lanzamiento.'}</p></div></div><div class="cb-recipe-window"><div class="cb-window-head"><i></i><i></i><i></i><span>{p.slug}.js</span></div><pre><span>// receta sugerida · {p.recipeFor}</span><br /><b>const</b> {p.slug} = brew({'{'}<br />{p.recipe.map(({label:key,value})=><Fragment>{'  '+key+': '}<em>"{value}"</em>,<br /></Fragment>)}{'}'});</pre></div></div></section>}
+ <ProductDetails product={p} />
+ {p.recipe.length > 0 && <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Receta sugerida</p><h2>Prepáralo<br />como un <em>commit.</em></h2><p>{p.recipeFor ? `Una guía para preparar ${p.recipeFor} y encontrar tu próxima pausa.` : 'Una guía para encontrar tu próxima pausa.'}</p><div class="cb-trace"><span class="cb-label">git log --origen</span><p>{trace || 'Origen y trazabilidad: se revelan en el lanzamiento.'}</p></div></div><div class="cb-recipe-window"><div class="cb-window-head"><i></i><i></i><i></i><span>{p.slug}.js</span></div><pre><span>// receta sugerida · {p.recipeFor}</span><br /><b>const</b> {p.slug} = brew({'{'}<br />{p.recipe.map(({label:key,value})=><Fragment>{'  '+key+': '}<em>"{value}"</em>,<br /></Fragment>)}{'}'});</pre></div></div></section>}
+ {!available && !p.recipe.length && <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap"><h2>Receta sugerida</h2><RevealField field="recipe" label="Receta" revealed={false} /></div></section>}
 </div>
 <script>
  const header = document.querySelector<HTMLElement>('.cb-nav');

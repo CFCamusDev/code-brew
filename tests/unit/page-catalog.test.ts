@@ -78,4 +78,11 @@ describe('catálogo de las páginas', () => {
       grinds: ['Grano entero', 'Molido para espresso']
     });
   });
+
+  it('el fallback estático de un próximo tampoco entrega contenido reservado a las plantillas', () => {
+    const product = fromStatic(PIPELINE.find(product => product.slug === 'coldstart')!);
+    expect([product.roast, product.description]).toEqual([undefined, undefined]);
+    expect([product.notes, product.facts, product.cupProfile]).toEqual([[], [], []]);
+    expect(product.recipe.length).toBeGreaterThan(0);
+  });
 });

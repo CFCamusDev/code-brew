@@ -59,12 +59,12 @@ export type PublicationIssue =
   | 'missing_active_variant'
   | 'missing_price';
 
-const ISSUE_MESSAGES: Record<PublicationIssue, string> = {
+export const ISSUE_MESSAGES: Record<PublicationIssue, string> = {
   missing_line: 'Asigna el producto a una línea.',
   missing_tagline: 'Escribe la frase del producto.',
   missing_method: 'Indica el método de preparación.',
   missing_description: 'Escribe la descripción.',
-  missing_image: 'Sube al menos una imagen.',
+  missing_image: 'Sube una imagen principal (vista frente).',
   missing_active_variant: 'Activa al menos una presentación.',
   missing_price: 'Toda presentación activa necesita un precio mayor que cero.'
 };
@@ -114,8 +114,7 @@ export class InvalidTransitionError extends ConflictError {
  */
 export function assertProductTransition(product: ProductForPublication, target: ProductStatus): ProductStatus {
   const from = product.status ?? 'draft';
-  if (from === target) return from;
-  if (!canTransitionProduct(from, target)) throw new InvalidTransitionError('producto', from, target);
+  if (from !== target && !canTransitionProduct(from, target)) throw new InvalidTransitionError('producto', from, target);
   const issues = publicationIssues(product, target);
   if (issues.length) throw new PublicationError(issues);
   return from;

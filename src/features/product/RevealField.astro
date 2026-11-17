@@ -1,0 +1,14 @@
+---
+interface Props {
+  field: string;
+  label: string;
+  revealed: boolean;
+}
+const { field, label, revealed } = Astro.props;
+---
+<div class="cb-reveal-field" data-reveal-field={field} data-revealed={String(revealed)}>
+  {revealed ? <slot /> : <>
+    <div class="cb-redacted cb-redacted-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+    <p class="cb-reveal-pending">{label}: Se revela en su lanzamiento.</p>
+  </>}
+</div>
