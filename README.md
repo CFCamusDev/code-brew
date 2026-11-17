@@ -29,7 +29,7 @@ Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir e
 - `src/pages`: páginas y API (`src/pages/api`). Las páginas solo cargan datos y componen; `src/layouts`, `src/styles`.
 - `src/features/<funcionalidad>`: la tienda por funcionalidad: `landing`, `catalog`, `product`, `cart`, `checkout`, `order`, `complaints` y `experience-3d` (reservada).
 - `src/ui`: piezas base compartidas (`Header`, `Footer`, `ShopHeader`, `LogoMark`, `FloatingWhatsApp`, `ScrollAnimations`).
-- `src/lines/pipeline`: piezas propias de la línea Pipeline (`Pouch`), según ADR 0004.
+- `src/lines`: plantillas de línea (ADR 0004). `registry.ts` las registra y `LineSection.astro`/`ProductPage.astro` eligen la de cada línea; `base/` es la de cualquier línea sin plantilla propia y `pipeline/` la de Pipeline (`LineSection`, `ProductPage`, `Pouch`). `theme.ts` aplica el tema de la línea. Cómo agregar una: [docs/lineas.md](docs/lineas.md).
 - `src/contracts`: esquemas zod compartidos por la API y las islas; `src/components/admin`: panel de administración.
 - `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: utilidades compartidas con el navegador (formato, envío gratis).
 - `src/data`: contenido y configuración estáticos (`pipeline.json` y `pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
@@ -132,8 +132,8 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 La portada presenta la línea Pipeline. Hotfix permite elegir presentación y molienda desde `/producto/hotfix`; Cold Start, Deploy, Merge y Rollback tienen sus páginas de próximos lanzamientos. El carrito, checkout, pedidos, reclamos y políticas conservan sus contratos existentes.
 
 - `src/pages/index.astro`: composición de la portada.
-- `src/features/landing/Hero.astro` y `src/features/catalog/Pipeline.astro`: entrada al catálogo.
-- `src/features/product/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
+- `src/features/landing/Hero.astro` y la sección de la línea según su plantilla (`src/lines/pipeline/LineSection.astro`): entrada al catálogo.
+- `src/lines/pipeline/ProductPage.astro` (galería y selector de perfiles) y `src/features/product/ProductPurchase.astro` (compra).
 - `src/lines/pipeline/Pouch.astro`: renders optimizados y tamaños responsivos.
 - `src/data/pipeline.json` (tipado en `pipeline.ts`): contenido y estado visual de los cinco perfiles.
 - `src/styles/brand.css`: estilos del cliente; `shop.css`: flujo de compra.

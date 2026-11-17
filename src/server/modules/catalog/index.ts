@@ -46,7 +46,9 @@ export const findPublicLine = (slug: string) => getPublicLine(reader, slug);
 /** Línea publicada con la vista completa de sus productos visibles (portada y página de producto); null si no se publica. */
 export const findPublicLineProducts = async (slug: string) => {
   const found = await getPublicLineProducts(reader, slug);
-  return found && { line: { slug: found.line.slug, name: found.line.name }, products: found.products };
+  if (!found) return null;
+  const { slug: lineSlug, name, description, theme, template } = found.line;
+  return { line: { slug: lineSlug, name, description, theme, template }, products: found.products };
 };
 
 /** Producto anunciado o a la venta de una línea publicada, con solo sus campos revelados; null si no corresponde. */
