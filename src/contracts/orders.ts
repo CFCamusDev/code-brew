@@ -15,3 +15,17 @@ export const updateOrderItemsResponseSchema = z.object({
   totalCents: z.number().int()
 });
 export type UpdateOrderItemsResponse = z.infer<typeof updateOrderItemsResponseSchema>;
+
+/** Código CIP pendiente de un pago por orden (agentes, banca, billetera). */
+export const pendingPaymentSchema = z.object({
+  code: z.string(),
+  amountCents: z.number().int(),
+  expiresAt: z.string(),
+  /** Vencimiento ya formateado en hora de Lima por el servidor, para que la página no difiera al hidratar. */
+  expiresLabel: z.string()
+});
+export type PendingPayment = z.infer<typeof pendingPaymentSchema>;
+
+/** Respuesta de GET /api/orders/[id]/status. Con `?code=1` incluye el CIP vigente si el pedido sigue pendiente. */
+export const orderStatusResponseSchema = z.object({ status: z.string(), payment: pendingPaymentSchema.nullable().optional() });
+export type OrderStatusResponse = z.infer<typeof orderStatusResponseSchema>;
