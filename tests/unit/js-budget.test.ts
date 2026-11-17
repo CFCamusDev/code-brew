@@ -28,6 +28,8 @@ describe('presupuesto de JS (S5.7)', () => {
     expect(detect('window.__THREE__?console.warn("x"):window.__THREE__="170"')).toEqual(['three']);
     expect(detect('e._gsap||(e._gsap=new t(e))')).toEqual(['gsap']);
     expect(detect('import{a}from"./react.js"')).toEqual([]);
+    // La ruta de un import() dinámico nombra el chunk sin cargarlo: no cuenta.
+    expect(detect('Promise.all([import("./gsap.CtDIrg4F.js"),import("./ScrollTrigger.kZaVfF_-.js")])')).toEqual([]);
   });
 
   it('mantiene los presupuestos de la línea base', () => {

@@ -17,10 +17,11 @@ export const BUDGETS = [
 ];
 
 /** Librerías que no deben llegar al JS inicial, reconocidas por marcas que sobreviven a la minificación
- * (nombres de propiedad y cadenas; los nombres de clase como WebGLRenderer se acortan). */
+ * (nombres de propiedad y cadenas; los nombres de clase como WebGLRenderer se acortan). No se buscan
+ * nombres de módulo como ScrollTrigger: aparecen en las rutas de los import() dinámicos sin que el código se cargue. */
 export const FORBIDDEN = [
   { name: 'three', pattern: /__THREE__/ },
-  { name: 'gsap', pattern: /GreenSock|_gsap\b|ScrollTrigger/ }
+  { name: 'gsap', pattern: /GreenSock|_gsap\b/ }
 ];
 
 /** URLs de JS que el HTML carga de entrada. */
