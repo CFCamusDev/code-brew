@@ -1,5 +1,15 @@
 # Tema y plantilla de una línea
 
+## Administración
+
+En `/admin/lineas` un administrador puede crear borradores y editar nombre, slug único, descripción, tema, plantilla y orden. El tema acepta un objeto JSON de variables CSS seguras; las plantillas disponibles son las registradas. Los operadores tienen acceso de consulta.
+
+La API `/api/admin/lines` permite consultar (GET) y crear (POST); `/api/admin/lines/:id` permite editar los campos (PUT) y cambiar el estado (PATCH con `{"action":"activate"}` o `{"action":"archive"}`). Todas las escrituras requieren rol admin. El estado no puede enviarse dentro de una creación o edición.
+
+Para activar se requiere al menos un producto anunciado o a la venta, siguiendo las reglas del módulo catalog. Archivar retira la línea del catálogo público sin borrar ni cambiar el estado de sus productos; después se puede reactivar. `/tienda` lee las líneas activas desde la base de datos, ordenadas por `sort_order` y, en caso de empate, por ID. Esa página no usa el fallback estático para evitar mostrar líneas archivadas.
+
+Verificación: `tests/unit/admin-lines.test.ts` valida la entrada y `tests/integration/admin-lines.test.ts` comprueba permisos, persistencia, duplicados, orden y el ciclo de publicación por HTTP y PostgreSQL.
+
 Cada línea de productos tiene identidad propia ([ADR 0004](adr/0004-identidad-visual-por-linea.md)). La guardan dos columnas de `product_lines`:
 
 | Columna | Qué es | Quién la cambia |
