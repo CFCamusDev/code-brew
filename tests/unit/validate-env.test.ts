@@ -100,6 +100,17 @@ describe('configuración del despliegue', () => {
     });
   });
 
+  it('la pasarela falsa solo se permite fuera de staging y producción, y nunca con llaves live', () => {
+    expect(validateEnvironment({ ...base, PAYMENT_GATEWAY: 'fake' })).toEqual([]);
+    expect(validateEnvironment({ ...payments, PAYMENT_GATEWAY: 'fake', APP_ENV: 'local' })).toEqual([]);
+    expect(validateEnvironment({ ...base, PAYMENT_GATEWAY: 'stripe' })).toEqual(['PAYMENT_GATEWAY debe ser culqi o fake.']);
+    for (const APP_ENV of ['staging', 'production']) {
+      expect(validateEnvironment({ ...payments, APP_ENV, PAYMENT_GATEWAY: 'fake' }).some(error => error.includes('PAYMENT_GATEWAY=fake no se permite'))).toBe(true);
+    }
+    const live = { ...payments, CULQI_PUBLIC_KEY: 'pk_live_example123', CULQI_SECRET_KEY: 'sk_live_example123' };
+    expect(validateEnvironment({ ...live, PAYMENT_GATEWAY: 'fake' })).toContain('PAYMENT_GATEWAY=fake no se puede usar junto con llaves live de Culqi.');
+  });
+
   it('exige remitente y URL pública al habilitar correo', () => {
     expect(validateEnvironment({ ...base, RESEND_API_KEY: 'test-only' })).toHaveLength(2);
     expect(validateEnvironment({ ...base, RESEND_API_KEY: 'test-only', EMAIL_FROM: 'test@example.com', SITE_URL: 'https://coffeecodebrew.com' })).toEqual([]);

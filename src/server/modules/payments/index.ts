@@ -1,4 +1,4 @@
-import { CULQI_PUBLIC_KEY, CULQI_SECRET_KEY } from 'astro:env/server';
+import { CULQI_PUBLIC_KEY, CULQI_SECRET_KEY, PAYMENT_GATEWAY } from 'astro:env/server';
 import type { PaymentGateway } from './application/ports/payment-gateway';
 import { systemClock } from '../../shared/clock';
 import { unitOfWork } from '../../shared/unit-of-work';
@@ -8,6 +8,7 @@ import { confirmPayment, type ConfirmPaymentOutcome } from './application/confir
 import { refundOrder, type RefundOptions } from './application/refund-order';
 import type { ConfirmedPayment } from './domain/payment-rules';
 import { CulqiGateway } from './infrastructure/culqi-gateway';
+import { FakeGateway } from './infrastructure/fake-gateway';
 import { createConfirmPaymentStore, createRefundReader, createRefundStore } from './infrastructure/drizzle-order-payment-store';
 
 // API pública del módulo payments. Raíz de composición: aquí se elige el adaptador de la pasarela.
@@ -34,9 +35,12 @@ export { FakeGateway } from './infrastructure/fake-gateway';
 
 let gateway: PaymentGateway | undefined;
 
-/** Pasarela de la aplicación (Culqi). Se crea al primer uso. */
+/**
+ * Pasarela de la aplicación, creada al primer uso: Culqi, o FakeGateway con PAYMENT_GATEWAY=fake para que las pruebas
+ * de integración cobren de punta a punta sin red (la validación de arranque la prohíbe en staging y producción).
+ */
 export function getPaymentGateway(): PaymentGateway {
-  gateway ??= new CulqiGateway({ publicKey: CULQI_PUBLIC_KEY, secretKey: CULQI_SECRET_KEY });
+  gateway ??= PAYMENT_GATEWAY === 'fake' ? new FakeGateway() : new CulqiGateway({ publicKey: CULQI_PUBLIC_KEY, secretKey: CULQI_SECRET_KEY });
   return gateway;
 }
 
