@@ -2,7 +2,7 @@ import { and, asc, eq, inArray, isNull, gt, sql } from 'drizzle-orm';
 import { calculateShipping, shippingFor } from '../../shipping';
 import type { Transaction } from '../../../shared/unit-of-work';
 import type { getDb } from '../../../../lib/server/db';
-import { orderItems, orders, products, productVariants, shippingZones, stockReservations } from '../../../../lib/server/db/schema';
+import { orderItems, orders, productLines, products, productVariants, shippingZones, stockReservations } from '../../../../lib/server/db/schema';
 import type { CatalogReader, OrderRepository, ShippingProvider, StockReservations } from '../application/ports/ports';
 
 type Db = ReturnType<typeof getDb>;
@@ -34,10 +34,15 @@ export function createDrizzleCatalogReader(db: Executor): CatalogReader {
           variantActive: productVariants.active,
           productName: products.name,
           grinds: products.grinds,
-          productActive: products.active
+          // Se vende si el producto está activo y, una vez migrado al modelo de líneas (ADR 0003), si está a la venta y su
+          // línea publicada: un producto próximamente o de una línea archivada no se compra aunque quede active encendido.
+          productActive: sql<boolean>`${products.active}
+            and (${products.status} is null or ${products.status} = 'active')
+            and (${products.lineId} is null or ${productLines.status} = 'active')`
         })
         .from(productVariants)
         .innerJoin(products, eq(products.id, productVariants.productId))
+        .leftJoin(productLines, eq(productLines.id, products.lineId))
         .where(inArray(productVariants.sku, [...new Set(skus)]));
     }
   };
