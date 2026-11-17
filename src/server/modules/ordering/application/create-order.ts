@@ -1,19 +1,17 @@
-import { CartIssuesError, type CartLine, type OrderCustomer, type QuoteLine } from '../domain/types';
+import { CartIssuesError, type CartLine, type OrderCustomer } from '../domain/types';
 import { quoteCartUseCase } from './quote-cart';
-import type { OrderingDeps, OrderLineRecord } from './ports/ports';
-
-/** Une las líneas cotizadas con el id de variante que necesita la persistencia. */
-export async function withVariantIds(deps: OrderingDeps, lines: QuoteLine[]): Promise<OrderLineRecord[]> {
-  const variants = await deps.catalog.findVariants(lines.map(line => line.sku));
-  const ids = new Map(variants.map(variant => [variant.sku, variant.variantId]));
-  return lines.map(line => ({ ...line, variantId: ids.get(line.sku)! }));
-}
+import { DEFAULT_RESERVATION_MS, reserveStock } from './reserve-stock';
+import { withVariantIds } from './with-variant-ids';
+import type { OrderingDeps } from './ports/ports';
 
 /**
- * Caso de uso CrearPedido: recotiza en el servidor y guarda un pedido pendiente de pago.
- * Debe correr dentro de una transacción (UnitOfWork) para que cotización y escritura sean consistentes.
+ * Caso de uso CrearPedido: recotiza en el servidor, reserva el stock y guarda un pedido pendiente de pago.
+ * Debe correr dentro de una transacción (UnitOfWork): primero bloquea las variantes en orden de id y recién entonces
+ * mira la disponibilidad, así dos pedidos simultáneos del último ítem no pueden ganarlo los dos. Si falta stock, el
+ * pedido no se crea y se informa por producto.
  */
 export async function createOrder(deps: OrderingDeps, items: CartLine[], customer: OrderCustomer) {
+  await deps.reservations.lockVariants(items.map(item => item.sku));
   const quote = await quoteCartUseCase(deps, items, { zoneSlug: customer.zone, region: customer.region });
   if (quote.issues.length) throw new CartIssuesError(quote.issues);
   if (quote.shippingCents === null || quote.totalCents === null) {
@@ -30,5 +28,6 @@ export async function createOrder(deps: OrderingDeps, items: CartLine[], custome
     totalCents: quote.totalCents
   });
   await deps.orders.replaceItems(order.id, await withVariantIds(deps, quote.lines));
+  await reserveStock(deps, order.id, quote.lines, new Date(deps.clock.now().getTime() + DEFAULT_RESERVATION_MS));
   return order;
 }
