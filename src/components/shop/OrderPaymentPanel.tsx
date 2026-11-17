@@ -319,7 +319,7 @@ export default function OrderPaymentPanel({ orderId, whatsappUrl, culqiEnabled, 
             <ul className="cart-lines">
               {summary.items.map(item => (
                 <li key={`${item.sku}|${item.grind}`} className="cart-line">
-                  {item.sku.startsWith("monteverde-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
+                  {item.sku.startsWith("hotfix-") && <img className="cb-cart-thumb" src={hotfixThumbnail.src} width={64} height={86} alt="Bolsa Hotfix" />}
                   <div>
                     <p className="cart-line-name">
                       {item.productName} <span className="cart-line-qty">× {item.quantity}</span>

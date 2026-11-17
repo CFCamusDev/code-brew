@@ -134,7 +134,7 @@ describe('diagnóstico de errores', () => {
 
 describe('productos y stock', () => {
   it('el operador no cambia precios, el administrador sí y se ve en la página de compra de Hotfix', async () => {
-    const id = await variantId('monteverde-250');
+    const id = await variantId('hotfix-250');
     const update = { action: 'update', format: '250 g', priceCents: 3700, bags: 1, active: true };
     expect((await api(`/api/admin/products/variants/${id}`, { body: update, cookie: operatorCookie })).status).toBe(403);
     expect((await api(`/api/admin/products/variants/${id}`, { body: update, cookie: adminCookie })).status).toBe(200);

@@ -8,13 +8,16 @@ import { MAX_LINES, MAX_QUANTITY } from '../../contracts/limits';
 // Estado del carrito compartido entre islas React y scripts de la landing.
 // Solo guarda sku, molienda y cantidad: los precios vigentes siempre los calcula el servidor al cotizar.
 
+/** SKU anteriores a la línea Pipeline (S2.5): un carrito guardado con ellos sigue apuntando al mismo café. */
+const RENAMED_SKUS: Record<string, string> = { 'monteverde-250': 'hotfix-250', 'monteverde-500': 'hotfix-500' };
+
 export const cartLines = persistentAtom<CartLine[]>('codebrew:cart', [], {
   encode: JSON.stringify,
   // Descarta lo que no tenga forma válida (datos viejos o editados a mano en el navegador).
   decode(value) {
     try {
       const parsed: unknown = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed.filter(isCartLine) : [];
+      return Array.isArray(parsed) ? parsed.filter(isCartLine).map(line => ({ ...line, sku: RENAMED_SKUS[line.sku] ?? line.sku })) : [];
     } catch {
       return [];
     }
