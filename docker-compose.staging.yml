@@ -1,0 +1,43 @@
+# Compose path: docker-compose.yml; Additional paths: docker-compose.staging.yml.
+# Variables de ESTA stack: copiar .env.staging.example, sin reutilizar secretos de producción.
+name: codebrew-staging
+
+services:
+  codebrew-landing:
+    container_name: codebrew-staging-web
+    ports: !override
+      - "${STAGING_BIND_ADDRESS:-127.0.0.1}:${STAGING_PORT:-8026}:80"
+
+  codebrew-app:
+    container_name: codebrew-staging-app
+    build:
+      args:
+        PUBLIC_ANALYTICS_ENV: disabled
+    environment:
+      - APP_ENV=staging
+      - PAYMENT_GATEWAY=culqi
+      - SITE_URL=${STAGING_SITE_URL:?Define STAGING_SITE_URL}
+      - CULQI_PUBLIC_KEY=${CULQI_PUBLIC_KEY:?Define la llave publica test de staging}
+      - CULQI_SECRET_KEY=${CULQI_SECRET_KEY:?Define la llave secreta test de staging}
+      - CULQI_WEBHOOK_SECRET=${CULQI_WEBHOOK_SECRET:?Define el secreto de webhook de staging}
+      - CRON_SECRET=${STAGING_CRON_SECRET:?Define STAGING_CRON_SECRET}
+      - DEPLOYMENT_ID=${STAGING_DEPLOYMENT_ID:-manual}
+      - RESEND_API_KEY=${STAGING_RESEND_API_KEY:-}
+      - EMAIL_FROM=${STAGING_EMAIL_FROM:-}
+      - ADMIN_EMAIL=${STAGING_ADMIN_EMAIL:-}
+      - SENTRY_DSN=${STAGING_SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=staging
+      - CLOUDINARY_CLOUD_NAME=${STAGING_CLOUDINARY_CLOUD_NAME:-}
+      - CLOUDINARY_API_KEY=${STAGING_CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${STAGING_CLOUDINARY_API_SECRET:-}
+
+  codebrew-db:
+    container_name: codebrew-staging-db
+
+volumes:
+  codebrew-db-data:
+    name: codebrew-staging-db-data
+
+networks:
+  default:
+    name: codebrew-staging
