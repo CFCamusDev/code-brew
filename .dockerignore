@@ -2,10 +2,13 @@ node_modules
 dist
 .astro
 .git
-.github
+.github/*
+!.github/workflows/
+!.github/workflows/*.yml
 .env
 .env.*
 !.env.example
+!.env.staging.example
 npm-debug.log
 
 # Referencias y resultados locales: no forman parte de la imagen

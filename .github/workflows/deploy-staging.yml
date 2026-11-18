@@ -1,0 +1,35 @@
+name: Deploy staging
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    name: Redesplegar staging en Portainer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://staging.coffeecodebrew.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.4'
+      - name: Desplegar y esperar la nueva instancia saludable
+        env:
+          STAGING_PORTAINER_URL: ${{ vars.STAGING_PORTAINER_URL }}
+          STAGING_PORTAINER_API_KEY: ${{ secrets.STAGING_PORTAINER_API_KEY }}
+          STAGING_STACK_ID: ${{ vars.STAGING_STACK_ID }}
+          STAGING_ENDPOINT_ID: ${{ vars.STAGING_ENDPOINT_ID }}
+          STAGING_SITE_URL: https://staging.coffeecodebrew.com
+          STAGING_DEPLOYMENT_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: node scripts/deploy-staging.mjs

@@ -32,5 +32,5 @@ export const GET: APIRoute = async () => {
     now: () => Date.now()
   });
   if (report.status === 'error') logger.error('health: la app no está lista', undefined, { database: report.database, migrations: report.migrations });
-  return Response.json({ ...report, version }, { status: report.status === 'ok' ? 200 : 503, headers: { 'Cache-Control': 'no-store' } });
+  return Response.json({ ...report, version, environment: process.env.APP_ENV || 'unspecified', deploymentId: process.env.DEPLOYMENT_ID || null }, { status: report.status === 'ok' ? 200 : 503, headers: { 'Cache-Control': 'no-store' } });
 };
