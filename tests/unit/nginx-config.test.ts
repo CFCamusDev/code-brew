@@ -19,7 +19,7 @@ describe('nginx.conf: límite de peticiones', () => {
   });
 
   it('limita las rutas sensibles y no el sondeo de estado ni las páginas', () => {
-    for (const route of ['POST /api/admin/login', 'POST /api/orders"', 'POST /api/orders/lookup', 'POST /api/payments/charge', 'POST /api/complaints', 'GET /api/contact/whatsapp']) {
+    for (const route of ['POST /api/admin/login', 'POST /api/orders"', 'POST /api/orders/lookup', 'POST /api/payments/charge', 'POST /api/complaints', 'GET /api/contact/whatsapp', 'POST /api/waitlist']) {
       expect(conf, route).toContain(route);
     }
     expect(conf).not.toMatch(/GET \/api\/orders/);

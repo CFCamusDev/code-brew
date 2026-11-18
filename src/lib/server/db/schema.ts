@@ -522,3 +522,18 @@ export const complaintCounters = pgTable('complaint_counters', {
   year: integer('year').primaryKey(),
   lastNumber: integer('last_number').notNull().default(0)
 });
+
+/** Interés consentido en un lanzamiento; los correos se guardan normalizados. */
+export const waitlistSubscriptions = pgTable('waitlist_subscriptions', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  consent: boolean('consent').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  notifiedAt: timestamp('notified_at', { withTimezone: true })
+}, table => [
+  uniqueIndex('waitlist_email_product_idx').on(table.email, table.productId),
+  index('waitlist_product_pending_idx').on(table.productId, table.notifiedAt),
+  check('waitlist_consent_check', sql`${table.consent} = true`),
+  check('waitlist_email_normalized_check', sql`${table.email} = lower(btrim(${table.email}))`)
+]);
