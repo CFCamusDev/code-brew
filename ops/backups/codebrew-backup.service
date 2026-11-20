@@ -1,0 +1,12 @@
+[Unit]
+Description=Respaldo PostgreSQL CodeBrew cifrado fuera del VPS
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/code-brew
+ExecStart=/usr/bin/docker compose --env-file /etc/codebrew-backups/backup.env -f ops/backups/compose.yml run --rm --no-deps backup backup
+ExecStartPost=/usr/bin/docker compose --env-file /etc/codebrew-backups/backup.env -f ops/backups/compose.yml run --rm --no-deps backup verify
+TimeoutStartSec=7200

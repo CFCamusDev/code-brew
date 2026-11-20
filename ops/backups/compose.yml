@@ -1,0 +1,33 @@
+name: codebrew-backups
+services:
+  backup:
+    build: .
+    image: codebrew-backups:pg17
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /work:uid=70,gid=70,mode=0700,size=2g
+      - /tmp:uid=70,gid=70,mode=0700,size=64m
+    environment:
+      PGHOST: ${PGHOST:?Define PGHOST}
+      PGPORT: ${PGPORT:-5432}
+      PGUSER: ${PGUSER:-codebrew}
+      PGDATABASE: ${PGDATABASE:-codebrew}
+      PGPASSFILE: /run/secrets/pgpass
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?Define RESTIC_REPOSITORY}
+      RESTIC_PASSWORD_FILE: /run/secrets/restic_password
+      RESTIC_CACHE_DIR: /work/cache
+      AWS_SHARED_CREDENTIALS_FILE: /run/secrets/s3_credentials
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      BACKUP_HOST: ${BACKUP_HOST:-codebrew-production}
+      RESTORE_DATABASE: ${RESTORE_DATABASE:-}
+      SNAPSHOT_ID: ${SNAPSHOT_ID:-}
+    volumes:
+      - ${BACKUP_SECRETS_DIR:?Define BACKUP_SECRETS_DIR}:/run/secrets:ro
+    networks: [database]
+    command: [backup]
+networks:
+  database:
+    external: true
+    name: ${BACKUP_NETWORK:?Define BACKUP_NETWORK}
