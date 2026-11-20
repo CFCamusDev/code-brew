@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,10 @@ try {
   writeFileSync(join(scratch, 'wrong-password'), randomBytes(32).toString('hex'));
   // libpq exige 0600; copiar dentro del contenedor para que se respete también en Windows.
   writeFileSync(join(scratch, 'pgpass'), `*:5432:*:codebrew:${password}\n`);
+  // Solo fixtures aleatorios: el UID 70 debe poder leer el bind mount en Linux.
+  // El pgpass usado por libpq se copia después a tmpfs y se restringe a 0600.
+  chmodSync(scratch, 0o755);
+  for (const name of ['password', 'wrong-password', 'pgpass']) chmodSync(join(scratch, name), 0o644);
   writeFileSync(join(scratch, 'empty.env'), '');
   const modelResult = spawnSync('docker', ['compose', '--env-file', join(scratch, 'empty.env'), '-f', 'ops/backups/compose.yml', 'config', '--format', 'json'], { cwd: root, env: { ...process.env, PGHOST: source, BACKUP_NETWORK: network, BACKUP_SECRETS_DIR: scratch, RESTIC_REPOSITORY: 's3:https://storage.example.test/bucket' }, encoding: 'utf8' });
   assert.equal(modelResult.status, 0);
