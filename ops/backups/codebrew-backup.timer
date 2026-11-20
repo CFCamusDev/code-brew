@@ -1,0 +1,10 @@
+[Unit]
+Description=Respaldo diario PostgreSQL CodeBrew
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+Unit=codebrew-backup.service
+
+[Install]
+WantedBy=timers.target
