@@ -14,7 +14,7 @@ Recursos aportados por el usuario desde Google Drive el 23 de octubre de 2026.
 Los archivos optimizados están en public/assets/brand/. El diseño Hotfix se aplica a la bolsa de la portada; no modifica el catálogo de productos.
 
 Nota (2026-10-23): las texturas hotfix-front/back/side.webp (fondo verde oscuro) se reemplazaron por
-texturas generadas por canvas en `src/scripts/worlds.ts` (mismo mecanismo que Monteverde/Espresso),
+texturas generadas por canvas en `src/features/experience-3d/scripts/worlds.ts` (mismo mecanismo que Monteverde/Espresso),
 con cuerpo crema y etiqueta verde redondeada, para que coincida con el resto de la línea de producto.
 
 Actualización: las cuatro caras Hotfix ahora usan los PNG originales 1-Hotfix-Stable-frente, 2-Hotfix-Stable-reverso, 3-Hotfix-Stable-lateral-izquierdo y 4-Hotfix-Stable-lateral-derecho aportados por el usuario. Se optimizaron a WebP (2048 px de alto, calidad 95) en public/assets/brand/hotfix-stable-*.webp. No se recrearon textos ni logos. Sustituyen las texturas de canvas de Hotfix; las otras variedades conservan su presentación.

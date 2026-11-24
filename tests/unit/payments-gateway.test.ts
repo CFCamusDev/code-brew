@@ -208,6 +208,16 @@ describe('CulqiGateway (adaptador)', () => {
     expect(await gatewayWith(respond(404, { object: 'error', type: 'not_found' })).fetchOrder('ord_3')).toMatchObject({ ok: false, status: 404 });
   });
 
+  it('lee el CIP y el vencimiento de la orden; sin CIP queda null', async () => {
+    const withCode = respond(200, { object: 'order', id: 'ord_1', amount: 5400, state: 'pending', expiration_date: 1794956000, payment_code: 657646437 });
+    expect(await gatewayWith(withCode).fetchOrder('ord_1')).toMatchObject({
+      ok: true,
+      order: { paymentCode: '657646437', expiresAt: new Date(1794956000 * 1000) }
+    });
+    const created = respond(200, { object: 'order', id: 'ord_2', amount: 5400, state: 'created', expiration_date: 1794956000 });
+    expect(await gatewayWith(created).fetchOrder('ord_2')).toMatchObject({ ok: true, order: { paymentCode: null } });
+  });
+
   it('reembolso exitoso y fallido con el mensaje del comercio', async () => {
     const ok = respond(201, { object: 'refund', id: 'ref_1' });
     expect(await gatewayWith(ok).refund({ chargeId: 'chr_1', amountCents: 4900, reason: 'duplicado' })).toEqual({ ok: true, refundId: 'ref_1' });

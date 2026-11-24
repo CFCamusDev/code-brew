@@ -20,9 +20,22 @@ export function validateEnvironment(environment) {
     errors.push('APP_ENV debe ser local, staging o production.');
   }
 
+  const catalogSource = environment.CATALOG_SOURCE?.trim();
+  if (catalogSource && !['db', 'static'].includes(catalogSource)) errors.push('CATALOG_SOURCE debe ser db o static.');
+
   const publicKey = environment.CULQI_PUBLIC_KEY?.trim();
   const secretKey = environment.CULQI_SECRET_KEY?.trim();
   const webhookSecret = environment.CULQI_WEBHOOK_SECRET?.trim();
+
+  // La pasarela falsa cobra sin dinero real: solo para pruebas de integración y demos locales.
+  const gateway = environment.PAYMENT_GATEWAY?.trim();
+  if (gateway && !['culqi', 'fake'].includes(gateway)) errors.push('PAYMENT_GATEWAY debe ser culqi o fake.');
+  if (gateway === 'fake' && (appEnv === 'staging' || appEnv === 'production')) {
+    errors.push(`PAYMENT_GATEWAY=fake no se permite en APP_ENV=${appEnv}: los pedidos se marcarían pagados sin cobrar.`);
+  }
+  if (gateway === 'fake' && [publicKey, secretKey].some(key => /^(pk|sk)_live_/.test(key ?? ''))) {
+    errors.push('PAYMENT_GATEWAY=fake no se puede usar junto con llaves live de Culqi.');
+  }
   if (appEnv === 'staging' || appEnv === 'production') {
     const missing = [['CULQI_PUBLIC_KEY', publicKey], ['CULQI_SECRET_KEY', secretKey], ['CULQI_WEBHOOK_SECRET', webhookSecret]]
       .filter(([, value]) => !value)

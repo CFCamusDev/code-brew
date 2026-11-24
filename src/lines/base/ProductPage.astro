@@ -1,0 +1,73 @@
+---
+import ProductPurchase from '../../features/product/ProductPurchase.astro';
+import ProductDetails from '../../features/product/ProductDetails.astro';
+import RevealField from '../../features/product/RevealField.astro';
+import LaunchPreview from '../../features/product/LaunchPreview.astro';
+import type { CatalogLine, CatalogOffer, CatalogProfile } from '../../features/catalog/page-catalog';
+import { joinStyles, themeStyle } from '../theme';
+// Plantilla «base» (ADR 0004): página de producto de una línea sin plantilla propia. Usa las imágenes del catálogo
+// (product_media) en lugar de renders propios y muestra solo las secciones que tienen contenido.
+interface Props { line: CatalogLine; product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
+const { line, product: p, offer, siblings } = Astro.props;
+const [cover, ...gallery] = p.media;
+// Valores por defecto: brand.css arma el fondo del héroe con var(--profile-glow); sin él, la declaración entera se anula.
+const colors = themeStyle({
+  '--profile-color': p.colors.color ?? 'var(--cb-forest-900)',
+  '--profile-tint': p.colors.tint ?? 'var(--cb-terracotta-bright)',
+  '--profile-glow': p.colors.glow ?? 'transparent'
+});
+const others = siblings.filter(sibling => sibling.slug !== p.slug);
+---
+<div class="cb-product cb-line-base" data-template="base" style={joinStyles(colors, themeStyle(line.theme))}>
+  <section class="cb-product-hero cb-dark">
+    <div class="cb-wrap base-hero">
+      <div class="base-media">
+        {cover
+          ? <img class="base-cover" src={cover.url} alt={cover.alt} width="720" height="720" loading="eager" fetchpriority="high" decoding="async" />
+          : <span class="base-cover base-cover-empty" aria-hidden="true"></span>}
+        {gallery.length > 0 && <div class="base-thumbs">{gallery.map(item => <img src={item.url} alt={item.alt} width="120" height="120" loading="lazy" decoding="async" />)}</div>}
+      </div>
+      <div class="cb-product-copy cb-stack">
+        <p class="cb-label">{line.name}{p.num && ' ' + p.num} · {p.available ? 'DISPONIBLE' : 'PRÓXIMAMENTE'}</p>
+        <h1>{p.name}</h1>
+        {p.tagline && <p class="cb-product-tagline">{p.tagline}</p>}
+        <div class="cb-product-chips">{p.method && <span>{p.method}</span>}{p.roast && <span>{p.roast}</span>}<span>Hecho en Perú</span></div>
+        {p.available
+          ? <ProductPurchase catalogSlug={p.slug} productName={p.name} offer={offer} />
+          : <LaunchPreview />}
+      </div>
+    </div>
+  </section>
+  <ProductDetails product={p} />
+  {p.recipe.length > 0 && (
+    <section class="cb-section cb-dark">
+      <div class="cb-wrap cb-stack">
+        <p class="cb-label">Receta sugerida{p.recipeFor && ' · ' + p.recipeFor}</p>
+        <dl class="base-recipe">{p.recipe.map(({ label, value }) => <div><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      </div>
+    </section>
+  )}
+  {!p.available && !p.recipe.length && <section class="cb-section cb-dark"><div class="cb-wrap"><h2>Receta sugerida</h2><RevealField field="recipe" label="Receta" revealed={false} /></div></section>}
+  {others.length > 0 && (
+    <nav class="cb-section base-siblings" aria-label={'Más de ' + line.name}>
+      <div class="cb-wrap cb-stack">
+        <h2 class="cb-label">Más de {line.name}</h2>
+        <ul>{others.map(other => <li><a href={'/producto/' + other.slug}>{other.name}</a>{!other.available && <small> · Próximamente</small>}</li>)}</ul>
+      </div>
+    </nav>
+  )}
+</div>
+<style>
+  .base-hero { display: grid; gap: 48px; align-items: center; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding-block: 48px; }
+  .base-media { display: grid; gap: 12px; }
+  .base-cover { width: 100%; aspect-ratio: 1; height: auto; border-radius: 32px; object-fit: cover; }
+  .base-cover-empty { display: block; background: radial-gradient(60% 60% at 50% 40%, var(--profile-tint, var(--cb-terracotta-bright)), var(--profile-color, var(--cb-forest-900))); }
+  .base-thumbs { display: flex; gap: 12px; flex-wrap: wrap; }
+  .base-thumbs img { width: 88px; height: 88px; border-radius: 16px; object-fit: cover; }
+  .base-recipe { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); margin: 0; }
+  .base-recipe dt { font: 400 12px/1.6 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+  .base-recipe dd { margin: 4px 0 0; font: 500 24px/1.2 var(--font-display); }
+  .base-siblings ul { display: flex; flex-wrap: wrap; gap: 12px 24px; list-style: none; margin: 0; padding: 0; }
+  .base-siblings a { color: inherit; font-size: 18px; }
+  @media (max-width: 860px) { .base-hero { grid-template-columns: 1fr; gap: 32px; } }
+</style>

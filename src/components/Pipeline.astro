@@ -1,9 +1,0 @@
----
-import Pouch from './Pouch.astro';
-import { PIPELINE } from '../data/pipeline';
-const profiles = PIPELINE;
----
-<section id="pipeline" class="cb-pipeline cb-dark cb-section"><div class="cb-wrap">
- <div class="cb-section-heading"><div><p class="cb-label">La línea Pipeline</p><h2>Cinco perfiles.<br />Un solo <em>pipeline.</em></h2></div><p>Cada lanzamiento es un perfil de café con su propio origen, tueste y carácter. Hotfix ya está disponible. Explora su perfil y compra desde su página; los próximos lanzamientos se revelarán uno a uno.</p></div>
- <div class="cb-pipeline-grid">{profiles.map(({slug,name,method,status}, i) => <a class="cb-pipeline-item" id={slug==='hotfix'?undefined:'blend-pipeline-'+profiles[i].num} data-profile={slug==='hotfix'?'monteverde':'pipeline-'+profiles[i].num} data-select={slug==='hotfix'?'monteverde':'pipeline-'+profiles[i].num} href={'/producto/'+slug} style={'--profile-tint:var(--pl-'+slug+'-tint)'}><span class:list={['cb-pipeline-node', {'is-live': status === 'available'}]} aria-hidden="true"></span><Pouch transitionName={`pipeline-${slug}`} product={slug} scale={.78} locked={status !== 'available'} /><span class="cb-label">0{i+1} · {status === 'available' ? "STABLE" : "QUEUED"}</span><h3 data-profile-number={profiles[i].num}>{name}</h3><span class="cb-profile-method">{method}</span><span class="cb-profile-state">{status === 'available' ? 'Comprar Hotfix ↗' : 'Explorar perfil ↗'}</span></a>)}</div>
-<div class="cb-notify cb-glass"><div><h3>Entérate primero del 02</h3><p>Un aviso cuando se revele el siguiente perfil.</p></div><form aria-label="Avisos del Pipeline"><label for="mail">Tu correo</label><input id="mail" name="email" type="email" placeholder="tu@correo.com" disabled /><button type="button" class="cb-btn cb-accent" disabled>Avísame ↗</button><p>Los avisos todavía no están habilitados.</p></form></div></div></section>

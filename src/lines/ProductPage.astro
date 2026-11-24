@@ -1,0 +1,11 @@
+---
+import type { CatalogLine, CatalogOffer, CatalogProfile } from '../features/catalog/page-catalog';
+import Base from './base/ProductPage.astro';
+import Pipeline from './pipeline/ProductPage.astro';
+import { resolveTemplate, type TemplateName } from './registry';
+// Página de producto con la plantilla de su línea (o la base).
+interface Props { line: CatalogLine; product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
+const PAGES = { base: Base, pipeline: Pipeline } satisfies Record<TemplateName, unknown>;
+const Page = PAGES[resolveTemplate(Astro.props.line.template)];
+---
+<Page {...Astro.props} />

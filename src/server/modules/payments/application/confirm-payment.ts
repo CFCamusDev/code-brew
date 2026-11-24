@@ -28,7 +28,10 @@ export async function confirmPayment(
 
   if (order.status !== 'pending') return previous === 'paid' ? 'already_processed' : 'additional_payment';
 
+  const now = deps.clock.now();
   const { shortage } = await store.registerSale(orderId, await store.orderLines(orderId));
-  await store.markOrderPaid(orderId, { paidAt: deps.clock.now(), stockShortage: shortage });
+  await store.markOrderPaid(orderId, { paidAt: now, stockShortage: shortage });
+  // La reserva aparta el mismo stock que se acaba de descontar: se libera para evitar el doble conteo (ADR 0005, S3.4).
+  await store.releaseReservations(orderId, now);
   return 'confirmed';
 }

@@ -1,0 +1,133 @@
+---
+import Pouch from './Pouch.astro';
+import ProductPurchase from '../../features/product/ProductPurchase.astro';
+import ProductDetails from '../../features/product/ProductDetails.astro';
+import RevealField from '../../features/product/RevealField.astro';
+import LaunchPreview from '../../features/product/LaunchPreview.astro';
+import type { CatalogLine, CatalogOffer, CatalogProfile } from '../../features/catalog/page-catalog';
+import { joinStyles, themeStyle } from '../theme';
+// Plantilla «pipeline» (ADR 0004): página de producto con la galería de bolsas y el selector de perfiles de la línea.
+interface Props { line: CatalogLine; product: CatalogProfile; offer: CatalogOffer; siblings: CatalogProfile[]; }
+const { line, product: p, offer, siblings } = Astro.props;
+const available = p.available;
+const fact = (label: string) => p.facts.find(entry => entry.label === label)?.value;
+const trace = [fact('Origen'), fact('Proceso')].filter(Boolean).join(' · ');
+const views = p.slug==='hotfix' ? ['front','front2','back','back3d'] as const : ['front','front2','flat','back','back3d'] as const;
+---
+<div class="cb-product" style={joinStyles('--profile-color:'+p.colors.color+';--profile-tint:'+p.colors.tint+';--profile-glow:'+p.colors.glow, themeStyle(line.theme))}>
+ <section id="top" class="cb-product-hero cb-dark"><div class="cb-wrap">
+  <div class="cb-profile-home"><nav id="product-profiles" class="cb-product-profiles" aria-label="Perfiles del Pipeline">{siblings.map(profile=><a href={'/producto/'+profile.slug} class:list={['cb-profile-pill',{'is-active':profile.slug===p.slug}]} aria-current={profile.slug===p.slug?'page':undefined}><i style={'background:'+profile.colors.tint}></i><span class="cb-label">{profile.num}</span>{profile.name}<small>{profile.available?'Disponible':'Próximamente'}</small></a>)}</nav></div>
+  <div class="cb-product-grid"><div class="cb-gallery"><div class="cb-gallery-stage">{views.map((view,i)=><div data-pouch-view={view} hidden={i!==0} class="cb-gallery-view cb-float"><Pouch transitionName={i===0 ? `pipeline-${p.slug}` : undefined} product={p.slug} view={view} scale={1.9} eager={i===0} /></div>)}<span class="cb-orbit" aria-hidden="true"></span>{p.method && <span class="cb-glass cb-gallery-method">{p.method}</span>}{p.roast && <span class="cb-glass cb-gallery-roast">{p.roast}</span>}</div><div class="cb-gallery-thumbs" role="group" aria-label="Vistas de la bolsa">{views.map((view,i)=><button type="button" data-view={view} aria-label={'Ver '+({front:'frente',front2:'frente en perspectiva',flat:'vista plana',back:'reverso',back3d:'reverso en perspectiva'}[view])} aria-pressed={i===0?'true':'false'}><Pouch product={p.slug} view={view} scale={.24} /></button>)}</div></div>
+  <div class="cb-product-copy cb-stack"><p class="cb-label">Pipeline {p.num} · {available?'STABLE · DISPONIBLE':'QUEUED · PRÓXIMAMENTE'}</p><h1>{p.name}</h1><p class="cb-product-tagline">{p.tagline}</p><div class="cb-product-chips">{p.method && <span>{p.method}</span>}{p.roast && <span>{p.roast}</span>}<span>Hecho en Perú</span></div>
+  {available ? <ProductPurchase catalogSlug={p.slug} productName={p.name} offer={offer} /> : <LaunchPreview />}
+  </div></div>
+ </div></section>
+ <ProductDetails product={p} />
+ {p.recipe.length > 0 && <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Receta sugerida</p><h2>Prepáralo<br />como un <em>commit.</em></h2><p>{p.recipeFor ? `Una guía para preparar ${p.recipeFor} y encontrar tu próxima pausa.` : 'Una guía para encontrar tu próxima pausa.'}</p><div class="cb-trace"><span class="cb-label">git log --origen</span><p>{trace || 'Origen y trazabilidad: se revelan en el lanzamiento.'}</p></div></div><div class="cb-recipe-window"><div class="cb-window-head"><i></i><i></i><i></i><span>{p.slug}.js</span></div><pre><span>// receta sugerida · {p.recipeFor}</span><br /><b>const</b> {p.slug} = brew({'{'}<br />{p.recipe.map(({label:key,value})=><Fragment>{'  '+key+': '}<em>"{value}"</em>,<br /></Fragment>)}{'}'});</pre></div></div></section>}
+ {!available && !p.recipe.length && <section class="cb-section cb-dark cb-product-recipe"><div class="cb-wrap"><h2>Receta sugerida</h2><RevealField field="recipe" label="Receta" revealed={false} /></div></section>}
+</div>
+<script>
+ const header = document.querySelector<HTMLElement>('.cb-nav');
+ const home = document.querySelector<HTMLElement>('.cb-profile-home');
+ const selector = home?.querySelector<HTMLElement>('.cb-product-profiles');
+ const dock = header?.querySelector<HTMLElement>('.cb-profile-dock');
+ if (header && home && selector && dock) {
+  const trigger = dock.querySelector<HTMLButtonElement>('.cb-profile-trigger');
+  const current = dock.querySelector<HTMLElement>('.cb-current-profile');
+  if (current) { const dot = document.createElement('i'); dot.style.background = getComputedStyle(selector.querySelector('[aria-current="page"] i')!).backgroundColor; current.append(dot, document.createTextNode(document.querySelector('.cb-product-copy h1')?.textContent || 'Pipeline')); }
+  const closeProfiles = () => { header.classList.remove('cb-profiles-open'); trigger?.setAttribute('aria-expanded','false'); };
+  trigger?.addEventListener('click', () => { const open = trigger.getAttribute('aria-expanded') !== 'true'; header.classList.toggle('cb-profiles-open',open); trigger.setAttribute('aria-expanded',String(open)); });
+  document.addEventListener('click', event => { if (!dock.contains(event.target as Node)) closeProfiles(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && trigger?.getAttribute('aria-expanded') === 'true') { closeProfiles(); trigger.focus(); } });
+  // Keep the source in flow: its geometry is the stable scroll timeline.
+  const dockSelector = selector.cloneNode(true) as HTMLElement;
+  selector.id = 'product-profiles-source';
+  dockSelector.id = 'product-profiles';
+  dock.append(dockSelector);
+  dock.hidden = false;
+  header.classList.add('cb-nav-scroll-profile');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let frame = 0;
+  let lastInteractive = false;
+  const update = () => {
+   frame = 0;
+   const mobile = innerWidth <= 560;
+   const baseHeight = mobile ? 56 : 64;
+   const bounds = selector.getBoundingClientRect();
+   // At 50% occlusion begin the morph; at 100% it is fully integrated.
+   // Use the original lower edge of the header to avoid feedback as it grows.
+   const edge = header.getBoundingClientRect().top + baseHeight;
+   const covered = Math.max(0,Math.min(1,(edge - bounds.top) / bounds.height));
+   const rawProgress = Math.max(0,Math.min(1,(covered - .5) * 2));
+   const progress = reduced.matches ? Number(rawProgress >= 1) : rawProgress;
+   header.style.setProperty('--cb-dock-progress',String(progress));
+   header.dataset.dockProgress = progress.toFixed(3);
+   selector.style.opacity = String(1 - progress);
+   const interactive = progress >= .5;
+   dock.inert = !interactive;
+   dock.setAttribute('aria-hidden',String(!interactive));
+   selector.inert = interactive;
+   selector.setAttribute('aria-hidden',String(interactive));
+   const main = header.querySelector<HTMLElement>('#main-nav');
+   const menu = header.querySelector<HTMLButtonElement>('.menu-toggle');
+   main?.toggleAttribute('inert',interactive);
+   menu?.toggleAttribute('inert',interactive);
+   if (interactive !== lastInteractive) {
+    closeProfiles();
+    if (interactive) {
+     main?.classList.remove('is-open');
+     menu?.setAttribute('aria-expanded','false');
+     menu?.setAttribute('aria-label','Abrir menú');
+     const active = dockSelector.querySelector<HTMLElement>('[aria-current="page"]');
+     if (active && !mobile) dockSelector.scrollLeft = Math.max(0,active.offsetLeft - dockSelector.offsetLeft - (dockSelector.clientWidth - active.clientWidth) / 2);
+    }
+    lastInteractive = interactive;
+   }
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  addEventListener('scroll',schedule,{passive:true});
+  addEventListener('resize',() => { closeProfiles(); schedule(); });
+  addEventListener('pageshow',schedule);
+  reduced.addEventListener('change',schedule);
+  update();
+ }
+
+ document.querySelectorAll<HTMLElement>('.cb-gallery').forEach(gallery=>{
+  const views = [...gallery.querySelectorAll<HTMLElement>('[data-pouch-view]')];
+  const buttons = [...gallery.querySelectorAll<HTMLButtonElement>('[data-view]')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let request = 0;
+  let running: Animation | undefined;
+  buttons.forEach(button=>button.addEventListener('click',async()=>{
+   const next = views.find(view=>view.dataset.pouchView===button.dataset.view);
+   if (!next) return;
+   const ticket = ++request;
+   running?.cancel();
+   buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+   // Decode before fading out so a slower image never leaves the gallery blank.
+   const image = next.querySelector<HTMLImageElement>('img');
+   if (image) image.loading = 'eager';
+   await image?.decode().catch(()=>{});
+   if (ticket !== request) return;
+   const previous = views.find(view=>!view.hidden);
+   if (previous === next) return;
+   if (!reduced.matches && previous) {
+    running = previous.querySelector<HTMLElement>('.cb-pouch')!.animate(
+     [{opacity:1,transform:'translateX(0) scale(1)'},{opacity:0,transform:'translateX(-6px) scale(.99)'}],
+     {duration:120,easing:'ease-in',fill:'forwards'}
+    );
+    await running.finished.catch(()=>{});
+    if (ticket !== request) return;
+   }
+   views.forEach(view=>view.hidden=view!==next);
+   running?.cancel();
+   if (!reduced.matches) {
+    running = next.querySelector<HTMLElement>('.cb-pouch')!.animate(
+     [{opacity:0,transform:'translateX(6px) scale(.99)'},{opacity:1,transform:'translateX(0) scale(1)'}],
+     {duration:260,easing:'cubic-bezier(.2,.8,.2,1)'}
+    );
+   }
+  }));
+  reduced.addEventListener('change',()=>{ if (reduced.matches) running?.finish(); });
+ });
+</script>

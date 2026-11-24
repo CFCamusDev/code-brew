@@ -42,7 +42,7 @@ export function createDrizzleProductRepository(tx: Transaction): ProductReposito
           .select({ tagline: productProfiles.tagline, method: productProfiles.method, description: productProfiles.description })
           .from(productProfiles)
           .where(eq(productProfiles.productId, productId)),
-        tx.select({ total: count() }).from(productMedia).where(eq(productMedia.productId, productId)),
+        tx.select({ total: count() }).from(productMedia).where(and(eq(productMedia.productId, productId), eq(productMedia.view, 'front'), sql`length(trim(${productMedia.url})) > 0`)),
         tx.select({ active: productVariants.active, priceCents: productVariants.priceCents }).from(productVariants).where(eq(productVariants.productId, productId))
       ]);
       return {
@@ -51,7 +51,7 @@ export function createDrizzleProductRepository(tx: Transaction): ProductReposito
         lineId: product.lineId,
         profile: profile ?? null,
         // La imagen única del catálogo anterior (Cloudinary) cuenta mientras se migra a product_media.
-        imageCount: media.total + (product.imageUrl ? 1 : 0),
+        imageCount: media.total + (product.imageUrl?.trim() ? 1 : 0),
         variants
       };
     },

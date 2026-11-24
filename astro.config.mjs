@@ -19,7 +19,13 @@ export default defineConfig({
       CULQI_SECRET_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Clave que va en la URL del webhook registrada en CulqiPanel (?key=...).
       CULQI_WEBHOOK_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Pasarela de pagos: 'fake' usa FakeGateway (pruebas de integración y demos locales). Prohibida en staging y producción.
+      PAYMENT_GATEWAY: envField.enum({ context: 'server', access: 'secret', values: ['culqi', 'fake'], optional: true }),
       CULQI_WEBHOOK_SECRET_PREVIOUS: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Fuente del catálogo de la portada y del producto (S5.3): 'db' (catálogo del panel) o 'static' (pipeline.json y
+      // catalog.json, el modo anterior). Si la base no responde, 'db' usa el estático y lo registra en los logs.
+      // access 'secret' para leerla al arrancar: las públicas quedan fijas en la build y no servirían de interruptor.
+      CATALOG_SOURCE: envField.enum({ context: 'server', access: 'secret', values: ['db', 'static'], default: 'db' }),
       // Correo (Resend): sin API key los correos solo se registran en los logs.
       RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
       EMAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),

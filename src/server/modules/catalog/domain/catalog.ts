@@ -38,6 +38,11 @@ export function canTransitionLine(from: LineStatus, to: LineStatus): boolean {
   return LINE_TRANSITIONS[from].includes(to);
 }
 
+/** Los identificadores públicos solo se pueden renombrar antes de publicar la línea. */
+export function assertLineSlugChange(status: LineStatus, current: string, next: string): void {
+  if (status !== 'draft' && current !== next) throw new ConflictError('El slug solo se puede cambiar mientras la línea está en borrador.', 'line_slug_locked');
+}
+
 /** Lo que el dominio necesita saber de un producto para decidir si se puede publicar. */
 export interface ProductForPublication {
   id: number;
@@ -59,12 +64,12 @@ export type PublicationIssue =
   | 'missing_active_variant'
   | 'missing_price';
 
-const ISSUE_MESSAGES: Record<PublicationIssue, string> = {
+export const ISSUE_MESSAGES: Record<PublicationIssue, string> = {
   missing_line: 'Asigna el producto a una línea.',
   missing_tagline: 'Escribe la frase del producto.',
   missing_method: 'Indica el método de preparación.',
   missing_description: 'Escribe la descripción.',
-  missing_image: 'Sube al menos una imagen.',
+  missing_image: 'Sube una imagen principal (vista frente).',
   missing_active_variant: 'Activa al menos una presentación.',
   missing_price: 'Toda presentación activa necesita un precio mayor que cero.'
 };
@@ -114,8 +119,7 @@ export class InvalidTransitionError extends ConflictError {
  */
 export function assertProductTransition(product: ProductForPublication, target: ProductStatus): ProductStatus {
   const from = product.status ?? 'draft';
-  if (from === target) return from;
-  if (!canTransitionProduct(from, target)) throw new InvalidTransitionError('producto', from, target);
+  if (from !== target && !canTransitionProduct(from, target)) throw new InvalidTransitionError('producto', from, target);
   const issues = publicationIssues(product, target);
   if (issues.length) throw new PublicationError(issues);
   return from;
@@ -124,4 +128,65 @@ export function assertProductTransition(product: ProductForPublication, target: 
 /** Una línea solo se publica si tiene algo que mostrar: al menos un producto anunciado o a la venta. */
 export function lineActivationIssues(line: { publishableProducts: number }): string[] {
   return line.publishableProducts > 0 ? [] : ['La línea necesita al menos un producto próximamente o a la venta.'];
+}
+
+// ---------- Visibilidad pública ----------
+
+/** Contenido editorial completo de un producto (product_profiles). */
+export interface ProfileContent {
+  tagline: string | null;
+  method: string | null;
+  description: string | null;
+  notes: string[];
+  facts: { label: string; value: string }[];
+  cupProfile: { attribute: string; level: number }[];
+  recipeFor: string | null;
+  recipe: { label: string; value: string }[];
+}
+
+export type RevealableField = 'tagline' | 'method' | 'description' | 'notes' | 'facts' | 'cupProfile' | 'recipe';
+
+/** Contenido publicado: cada campo está presente solo si se puede mostrar y no está vacío. */
+export type PublicProfile = { [K in keyof ProfileContent]?: NonNullable<ProfileContent[K]> };
+
+/** Solo se muestran al público los productos anunciados o a la venta, y solo si su línea está publicada. */
+export function isPubliclyVisible(productStatus: ProductStatus | null, lineStatus: LineStatus | null): productStatus is 'upcoming' | 'active' {
+  return lineStatus === 'active' && (productStatus === 'upcoming' || productStatus === 'active');
+}
+
+/**
+ * Lo que el público puede ver del contenido: todo si el producto está a la venta; si está «próximamente», solo los
+ * campos revelados. Los campos vacíos no se publican. `recipeFor` acompaña a la receta.
+ */
+export function revealProfile(status: 'upcoming' | 'active', profile: ProfileContent | null, revealed: readonly string[]): PublicProfile {
+  if (!profile) return {};
+  const shows = (field: RevealableField) => status === 'active' || revealed.includes(field);
+  const result: PublicProfile = {};
+  if (shows('tagline') && profile.tagline?.trim()) result.tagline = profile.tagline;
+  if (shows('method') && profile.method?.trim()) result.method = profile.method;
+  if (shows('description') && profile.description?.trim()) result.description = profile.description;
+  if (shows('notes') && profile.notes.length) result.notes = profile.notes;
+  if (shows('facts') && profile.facts.length) result.facts = profile.facts;
+  if (shows('cupProfile') && profile.cupProfile.length) result.cupProfile = profile.cupProfile;
+  if (shows('recipe') && profile.recipe.length) {
+    result.recipe = profile.recipe;
+    if (profile.recipeFor?.trim()) result.recipeFor = profile.recipeFor;
+  }
+  return result;
+}
+
+/** Componente de un pack: otra presentación, en cierta cantidad (bundle_items). */
+export interface BundleComponentStock {
+  quantity: number;
+  stock: number;
+  active: boolean;
+}
+
+/**
+ * Si una presentación se puede comprar ahora (ADR 0003). Un pack no tiene stock propio: está disponible solo si cada
+ * componente está activo y tiene stock para la cantidad que lleva. Una presentación normal, si le queda stock.
+ */
+export function isVariantAvailable(variant: { stock: number; components: readonly BundleComponentStock[] }): boolean {
+  if (variant.components.length) return variant.components.every(component => component.active && component.stock >= component.quantity);
+  return variant.stock > 0;
 }

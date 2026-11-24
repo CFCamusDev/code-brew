@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 // El motor de prueba debe activarse antes de crear el store del carrito.
 useTestStorageEngine();
-const { addToCart, cartCount, cartLines, clearCart, removeFromCart, setQuantity } = await import('../../src/lib/shop/cart');
+const { addToCart, cartCount, cartLines, clearCart, removeFromCart, setQuantity } = await import('../../src/features/cart/cart');
 const { MAX_QUANTITY } = await import('../../src/contracts/limits');
 
 describe('carrito', () => {
@@ -38,5 +38,13 @@ describe('carrito', () => {
     expect(cartLines.get()).toEqual([{ sku: 'ok', grind: 'g', quantity: 1 }]);
     setTestStorageKey('codebrew:cart', '{no es json');
     expect(cartLines.get()).toEqual([]);
+  });
+
+  it('un carrito guardado con los SKU anteriores a Pipeline sigue apuntando a Hotfix', () => {
+    setTestStorageKey('codebrew:cart', JSON.stringify([{ sku: 'monteverde-250', grind: 'Grano entero', quantity: 2 }, { sku: 'monteverde-500', grind: 'Grano entero', quantity: 1 }]));
+    expect(cartLines.get()).toEqual([
+      { sku: 'hotfix-250', grind: 'Grano entero', quantity: 2 },
+      { sku: 'hotfix-500', grind: 'Grano entero', quantity: 1 }
+    ]);
   });
 });

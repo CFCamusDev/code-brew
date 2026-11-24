@@ -1,0 +1,37 @@
+---
+
+import CartWidget from '../features/cart/CartWidget';
+import LogoMark from './LogoMark.astro';
+---
+
+<div class="cb-header-host"><header class="site-header cb-nav cb-glass-dark">
+  <a class="wordmark" href="/" aria-label="CodeBrew, inicio">
+<span class="cb-header-wordmark">codebrew</span><span class="cb-header-symbol"><LogoMark light size={32} /></span>
+</a>
+  <nav id="main-nav" aria-label="Navegación principal">
+    <a href="/tienda">Tienda</a>
+    <a href="/#pipeline">Pipeline</a>
+<a href="/#origen">Origen</a>
+
+<a href="/#empresas">Equipos</a>
+  </nav>
+  <div class="cb-profile-dock" hidden><button type="button" class="cb-profile-trigger" aria-expanded="false" aria-controls="product-profiles" aria-label="Cambiar perfil del Pipeline"><span class="cb-current-profile"></span><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg></button></div>
+  <div class="header-actions">
+  
+  <CartWidget client:idle />
+  </div>
+  <button class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Abrir menú">
+<span>
+</span>
+<span>
+</span>
+</button>
+</header></div>
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const nav = document.querySelector<HTMLElement>('#main-nav');
+  function closeMenu() { toggle?.setAttribute('aria-expanded', 'false'); toggle?.setAttribute('aria-label', 'Abrir menú'); nav?.classList.remove('is-open'); }
+  toggle?.addEventListener('click', () => { const open = toggle.getAttribute('aria-expanded') !== 'true'; toggle.setAttribute('aria-expanded', String(open)); toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú'); nav?.classList.toggle('is-open', open); });
+  nav?.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') { closeMenu(); toggle.focus(); } });
+</script>

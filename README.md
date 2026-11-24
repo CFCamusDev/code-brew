@@ -22,13 +22,19 @@ Requisitos: **Node 22.23.4 o una versión compatible indicada en `engines`**, **
 
 Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321`. Para verificar la configuración sin mostrar secretos: `pnpm config:check`.
 
+Para probar como en producción (Nginx + app + PostgreSQL en Docker) y recibir el webhook de Culqi con un túnel: `pnpm local:up --tunnel`. Guía completa en [`docs/entorno-local.md`](docs/entorno-local.md).
+
 ## Estructura
 
-- `src/pages`: páginas y API (`src/pages/api`); `src/components`: componentes de la tienda (`shop/`) y del panel (`admin/`); `src/layouts`, `src/styles`.
-- `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: código compartido con el navegador (carrito, validaciones, formato).
-- `src/data`: contenido y configuración estáticos (`pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
+- `src/pages`: páginas y API (`src/pages/api`). Las páginas solo cargan datos y componen; `src/layouts`, `src/styles`.
+- `src/features/<funcionalidad>`: la tienda por funcionalidad: `landing`, `catalog`, `store`, `product`, `cart`, `checkout`, `order`, `complaints` y `experience-3d` (reservada).
+- `src/ui`: piezas base compartidas (`Header`, `Footer`, `ShopHeader`, `LogoMark`, `FloatingWhatsApp`, `ScrollAnimations`).
+- `src/lines`: plantillas de línea (ADR 0004). `registry.ts` las registra y `LineSection.astro`/`ProductPage.astro` eligen la de cada línea; `base/` es la de cualquier línea sin plantilla propia y `pipeline/` la de Pipeline (`LineSection`, `ProductPage`, `Pouch`). `theme.ts` aplica el tema de la línea. Cómo agregar una: [docs/lineas.md](docs/lineas.md).
+- `src/contracts`: esquemas zod compartidos por la API y las islas; `src/components/admin`: panel de administración.
+- `src/lib/server`: lógica de servidor (base de datos, pedidos, pagos, correo, panel); `src/lib/shop`: utilidades compartidas con el navegador (formato, envío gratis).
+- `src/data`: contenido y configuración estáticos (`pipeline.json` y `pipeline.ts`, `catalog.json`, `shipping.json`, `config.ts`).
 - `drizzle/`: migraciones SQL; `scripts/`: base de datos, panel, validación del entorno y backlog de GitHub; `tests/unit` y `tests/integration`.
-- En migración (ADR 0002): el backend pasa a `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y el frontend a `src/features`, `src/ui` y `src/contracts`. Las historias del tablero mueven el código por partes.
+- Backend por módulos (ADR 0002): `src/server/modules/<módulo>/{domain,application,infrastructure,http}` y `src/server/shared`.
 
 ## Comandos
 - `pnpm build` genera `dist/client` (estático) y `dist/server` (servidor Node).
@@ -40,13 +46,15 @@ Si el puerto 80 está ocupado: `pnpm exec astro dev --host 127.0.0.1 --port 4321
 
 - Esquema en `src/lib/server/db/schema.ts` (Drizzle ORM). Montos en céntimos de sol.
 - Tras cambiar el esquema: `pnpm db:generate` crea la migración SQL en `drizzle/`; se versiona en git.
-- `src/data/catalog.json` es la fuente del catálogo inicial: el seed lo inserta en la base de datos sin pisar precios ni stock editados después, y la tienda lo usa como respaldo si la base de datos no responde. El contenido de los perfiles vive en `src/data/pipeline.ts`. Ambos se retirarán como fuente cuando el catálogo pase a la base de datos (ADR 0003).
+- El seed (`pnpm db:seed`, también en cada arranque del contenedor) carga la línea **Pipeline** con sus cinco perfiles: Hotfix a la venta (`hotfix-250`, `hotfix-500`) y Cold Start, Deploy, Merge y Rollback como «próximamente». Toma los precios de `src/data/catalog.json` y el contenido editorial de `src/data/pipeline.json`. Solo inserta lo que falta: no pisa precios, stock ni estados editados desde el panel.
+- El seed también renombra `monteverde` a `hotfix` y retira el catálogo anterior (Espresso, Pack Developer y Microlote): lo borra si nada lo referencia o lo descontinúa si tiene pedidos.
+- `catalog.json` sigue de respaldo para la tienda si la base de datos no responde, hasta S6.9 (ADR 0003).
 - `src/data/shipping.json` define las zonas de envío iniciales (tarifas provisionales hasta confirmarlas).
 - `pnpm db:studio` abre un explorador de la base de datos para inspeccionar datos en desarrollo.
 
 ## Tienda
 
-- Carrito: `src/lib/shop/cart.ts` (nanostores, guardado en `localStorage`) y la isla `CartWidget` del header. Solo guarda sku, molienda y cantidad.
+- Carrito: `src/features/cart/cart.ts` (nanostores, guardado en `localStorage`) y la isla `CartWidget` del header. Solo guarda sku, molienda y cantidad.
 - `/checkout`: isla `CheckoutApp` con validación zod compartida con la API (`src/lib/shop/checkout.ts`).
 - `POST /api/cart/quote` recalcula precios, stock y envío con la base de datos; `POST /api/orders` crea el pedido pendiente de pago. El servidor nunca usa precios enviados por el navegador.
 - `/pedido/[id]`: resumen del pedido; el UUID funciona como enlace privado para compras como invitado.
@@ -124,15 +132,16 @@ gh api -X PUT repos/CFCamusDev/code-brew/branches/main/protection --input .githu
 La portada presenta la línea Pipeline. Hotfix permite elegir presentación y molienda desde `/producto/hotfix`; Cold Start, Deploy, Merge y Rollback tienen sus páginas de próximos lanzamientos. El carrito, checkout, pedidos, reclamos y políticas conservan sus contratos existentes.
 
 - `src/pages/index.astro`: composición de la portada.
-- `src/components/Hero.astro` y `Pipeline.astro`: entrada al catálogo.
-- `src/components/ProductProfile.astro` y `ProductPurchase.astro`: galería, selector de perfiles y compra.
-- `src/components/Pouch.astro`: renders optimizados y tamaños responsivos.
-- `src/data/pipeline.ts`: contenido y estado visual de los cinco perfiles.
+- `src/pages/tienda.astro` y `src/features/store/`: la tienda, con todas las líneas publicadas, sus productos y packs, y filtros por enlace (`?linea=`, `?estado=`, `?tipo=`).
+- `src/features/landing/Hero.astro` y la sección de la línea según su plantilla (`src/lines/pipeline/LineSection.astro`): entrada al catálogo.
+- `src/lines/pipeline/ProductPage.astro` (galería y selector de perfiles) y `src/features/product/ProductPurchase.astro` (compra).
+- `src/lines/pipeline/Pouch.astro`: renders optimizados y tamaños responsivos.
+- `src/data/pipeline.json` (tipado en `pipeline.ts`): contenido y estado visual de los cinco perfiles.
 - `src/styles/brand.css`: estilos del cliente; `shop.css`: flujo de compra.
 - `src/data/config.ts`: configuración compartida; no sustituye precios y stock en vivo.
 
 Las imágenes originales de `src/assets/pipeline/` alimentan `node scripts/prepare-client-images.mjs`. Las variantes de `optimized/` se cargan mediante un glob y nombres construidos en `Pouch.astro`; no son archivos huérfanos.
 
-La experiencia 3D está reservada para retomarla: se conservan `CoffeeExperience3D.astro`, `WorldStage.astro`, `Experience.astro`, los módulos de `src/scripts/`, sus texturas y el respaldo `src/assets/demo/monteverde.png`. No se montan en la portada actual. Las dependencias Three.js y GSAP siguen siendo necesarias para ese código reservado.
+La experiencia 3D está reservada para retomarla: se conservan en `src/features/experience-3d/` `CoffeeExperience3D.astro`, `WorldStage.astro`, `Experience.astro` y sus módulos de `scripts/`, sus texturas y el respaldo `src/assets/demo/monteverde.png`. No se montan en la portada actual. Las dependencias Three.js y GSAP siguen siendo necesarias para ese código reservado.
 
 Se retiraron los componentes anteriores sin importaciones, la antigua sección Tienda, sus estilos exclusivos y cinco imágenes sin uso. Las imágenes que todavía importa la configuración compartida se conservan. La limpieza no modifica el admin, backend, BD ni catálogo comercial.

@@ -27,6 +27,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Auditoría de dependencias
+        # Excepción en package.json (pnpm.auditConfig.ignoreCves): CVE-2026-112366 / GHSA-fc5q-39xc-vjpf.
+        # picomatch ReDoS via dependency-cruiser y astro/unstorage, sin parche (Patched: <0.0.0).
         run: pnpm audit --audit-level=high
       - name: Revisión de tipos
         run: pnpm typecheck
@@ -60,6 +62,8 @@ jobs:
       # Sin llaves de Culqi ni Resend: las pruebas no cobran ni envían correos reales.
       CULQI_WEBHOOK_SECRET: ci-secreto-webhook
       CULQI_WEBHOOK_SECRET_PREVIOUS: ci-secreto-webhook-anterior
+      # Pasarela de prueba (FakeGateway): los cobros se prueban de punta a punta sin red ni dinero real.
+      PAYMENT_GATEWAY: fake
       CRON_SECRET: ci-secreto-cron
       INTEGRATION_BASE_URL: http://127.0.0.1:4321
     steps:
@@ -83,6 +87,9 @@ jobs:
             sleep 1
           done
           echo "El servidor no respondió"; cat server.log; exit 1
+      - name: Presupuesto de JS por página
+        # JS inicial en gzip contra docs/performance/baseline.md; falla si se pasa o si three/gsap entran de entrada.
+        run: pnpm perf:budget
       - name: Pruebas de integración
         run: pnpm test:integration
       - name: Log del servidor

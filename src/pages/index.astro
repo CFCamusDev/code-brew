@@ -1,17 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import Hero from '../components/Hero.astro';
-import TrustBar from '../components/TrustBar.astro';
-import Manifesto from '../components/Manifesto.astro';
-import Pipeline from '../components/Pipeline.astro';
-import Origin from '../components/Origin.astro';
-import TeamSection from '../components/TeamSection.astro';
-import RitualVideo from '../components/RitualVideo.astro';
-import ScrollAnimations from '../components/ScrollAnimations.astro';
+import Header from '../ui/Header.astro';
+import Footer from '../ui/Footer.astro';
+import Hero from '../features/landing/Hero.astro';
+import TrustBar from '../features/landing/TrustBar.astro';
+import Manifesto from '../features/landing/Manifesto.astro';
+import Origin from '../features/landing/Origin.astro';
+import TeamSection from '../features/landing/TeamSection.astro';
+import RitualVideo from '../features/landing/RitualVideo.astro';
+import ScrollAnimations from '../ui/ScrollAnimations.astro';
 import { getWhatsAppUrl } from '../data/config';
+import { getLineCatalog } from '../features/catalog/page-catalog';
+import LineSection from '../lines/LineSection.astro';
 export const prerender = false;
+const pipeline = await getLineCatalog();
 const questions = [
   ['¿Cuál elijo si es mi primer café CodeBrew?', 'Empieza por Hotfix, nuestro perfil de la línea Pipeline: espresso de tueste medio-oscuro, con cuerpo alto, dulzor a chancaca y un final limpio de cacao. Los próximos perfiles se revelarán muy pronto.'],
   ['¿Lo pido en grano o molido?', 'Si tienes molino, elige grano entero y muele antes de preparar. Si no, selecciona la molienda para tu cafetera al pedir Hotfix. También puedes consultarnos por WhatsApp.'],
@@ -20,7 +22,7 @@ const questions = [
 ];
 ---
 <Layout pageTransitions title="CodeBrew — Buen café. Mejor código." description="Café de especialidad peruano para quienes convierten una idea en algo real. De Amazonas a tu escritorio.">
- <Header /><main id="main-content"><Hero /><TrustBar /><Manifesto /><Pipeline /><Origin />
+ <Header /><main id="main-content"><Hero /><TrustBar /><Manifesto />{pipeline && <LineSection line={pipeline.line} products={pipeline.products} />}<Origin />
  <section id="ritual" class="cb-section cb-ritual"><div class="cb-wrap"><div class="cb-section-heading"><div><p class="cb-label">Una pausa bien hecha</p><h2>Tu mejor rutina empieza <em>aquí.</em></h2></div></div><div class="cb-ritual-grid">{[['Elige tu punto de partida.','Hotfix, nuestro espresso de tueste medio-oscuro. Los próximos perfiles se revelarán muy pronto.'],['Hazlo a tu manera.','En grano si tienes molino. Molido para tu método si quieres ir directo. Te ayudamos a elegir.'],['Una pausa. Y seguimos.','Aléjate de la pantalla, prepara tu taza y disfruta. El siguiente commit puede esperar.']].map(([title,text],i)=><article data-reveal><span>0{i+1}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div><details class="cb-ritual-video"><summary>Una pausa para ver el ritual V60 ↗</summary><RitualVideo /></details></div></section>
  <TeamSection />
  <section class="cb-section cb-faq"><div class="cb-wrap cb-split"><div class="cb-stack"><p class="cb-label">Antes del primer sorbo</p><h2>Sin dudas.<br /><em>Con café.</em></h2><p>Y si queda alguna, <a href={await getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">conversemos ↗</a>.</p></div><div class="cb-faq-list">{questions.map(([q,a],i)=><details open={i===0}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>

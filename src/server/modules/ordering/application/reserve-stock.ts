@@ -11,9 +11,19 @@ export const DEFAULT_RESERVATION_MS = CARD_RESERVATION_MS;
  * confirmar el pago). Las líneas del mismo producto en distintas moliendas se suman en una sola reserva por variante.
  * Debe correr en la misma transacción que crea o modifica el pedido, con las variantes ya bloqueadas.
  */
-export async function reserveStock(deps: OrderingDeps, orderId: string, lines: QuoteLine[], expiresAt: Date): Promise<void> {
+export async function reserveStock(
+  deps: OrderingDeps,
+  orderId: string,
+  lines: QuoteLine[],
+  expiresAt: Date,
+  /** Mapa sku → variantId pre-construido; si se pasa se omite la consulta al catálogo (optimización para createOrder). */
+  variantIdBySku?: Map<string, number>
+): Promise<void> {
   const byVariant = new Map<number, number>();
-  for (const line of await withVariantIds(deps, lines)) {
+  const resolved = variantIdBySku
+    ? lines.map(line => ({ ...line, variantId: variantIdBySku.get(line.sku)! }))
+    : await withVariantIds(deps, lines);
+  for (const line of resolved) {
     byVariant.set(line.variantId, (byVariant.get(line.variantId) ?? 0) + line.quantity);
   }
   await deps.reservations.replace(

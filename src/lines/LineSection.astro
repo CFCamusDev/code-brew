@@ -1,0 +1,11 @@
+---
+import type { CatalogLine, CatalogProfile } from '../features/catalog/page-catalog';
+import Base from './base/LineSection.astro';
+import Pipeline from './pipeline/LineSection.astro';
+import { resolveTemplate, type TemplateName } from './registry';
+// Sección de una línea en la portada, con la plantilla de la línea (o la base).
+interface Props { line: CatalogLine; products: CatalogProfile[]; }
+const SECTIONS = { base: Base, pipeline: Pipeline } satisfies Record<TemplateName, unknown>;
+const Section = SECTIONS[resolveTemplate(Astro.props.line.template)];
+---
+<Section {...Astro.props} />

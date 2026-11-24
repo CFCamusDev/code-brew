@@ -1,56 +1,14 @@
 ---
-import Footer from '../../components/Footer.astro';
+import Footer from '../../ui/Footer.astro';
 import Layout from '../../layouts/Layout.astro';
-import ShopHeader from '../../components/shop/ShopHeader.astro';
+import ShopHeader from '../../ui/ShopHeader.astro';
+import OrderLookup from '../../features/order/OrderLookup.astro';
 import '../../styles/shop.css';
 
 export const prerender = false;
 ---
 <Layout title="¿Dónde está mi pedido? — CodeBrew" description="Encuentra el estado de tu pedido CodeBrew con tu número y tu correo." noindex>
   <ShopHeader />
-  <main id="main-content" class="shop-main order-page cb-order-lookup">
-    <p class="eyebrow">SEGUIMIENTO</p>
-    <h1>¿Dónde está mi pedido?</h1>
-    <p class="muted">Ingresa el número de tu pedido (lo recibiste por correo, p. ej. <strong>CB-000123</strong>) y el correo con el que compraste.</p>
-
-    <form class="order-card lookup-form" id="lookup-form" novalidate>
-      <div class="field">
-        <label for="lookup-number">Número de pedido</label>
-        <input id="lookup-number" name="number" type="text" placeholder="CB-000123" autocomplete="off" required />
-      </div>
-      <div class="field">
-        <label for="lookup-email">Correo</label>
-        <input id="lookup-email" name="email" type="email" autocomplete="email" required />
-      </div>
-      <p class="form-error" id="lookup-error" role="alert"></p>
-      <div class="order-actions">
-        <button class="button primary" type="submit">Buscar mi pedido</button>
-      </div>
-    </form>
-  </main>
+  <OrderLookup />
 <Footer />
 </Layout>
-<script>
-  const form = document.getElementById('lookup-form') as HTMLFormElement;
-  const error = document.getElementById('lookup-error')!;
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const button = form.querySelector('button')!;
-    button.disabled = true;
-    error.textContent = '';
-    const data = Object.fromEntries(new FormData(form));
-    try {
-      const response = await fetch('/api/orders/lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const body = await response.json().catch(() => ({}));
-      if (response.ok) return window.location.assign(`/pedido/${body.id}`);
-      error.textContent = body.error ?? 'No se pudo buscar tu pedido.';
-    } catch {
-      error.textContent = 'Sin conexión. Inténtalo de nuevo.';
-    }
-    button.disabled = false;
-  });
-</script>

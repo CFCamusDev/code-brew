@@ -142,4 +142,27 @@ describe('reserva de stock al crear el pedido', () => {
     expect((await reservations(id))[0].released_at).not.toBeNull();
     expect((await order(1)).status).toBe(201);
   });
+
+  // S3.4 (parcial): pagar libera la reserva y no causa doble conteo del stock disponible.
+  it.runIf(process.env.PAYMENT_GATEWAY === 'fake')('pagar con la pasarela de prueba libera la reserva: el stock disponible no baja dos veces', async () => {
+    await setStock(2);
+    const created = await order(1);
+    expect(created.status).toBe(201);
+    const { id: variantId } = await stockOf();
+
+    // Antes de pagar: 1 unidad reservada → disponible = 2 − 1 = 1
+    const quote1 = await api('/api/cart/quote', { body: { items: [line(1)] } });
+    expect(quote1.json.issues).toEqual([]);
+
+    // Pago con la pasarela de prueba.
+    const paid = await api('/api/payments/charge', { body: { orderId: created.json.id, tokenId: 'tkn_fake_ok', email: customer.email } });
+    expect(paid.json.status).toBe('paid');
+
+    // Después de pagar: stock físico bajó (1 unidad) Y la reserva se liberó → disponible = 1 − 0 = 1 (no 0).
+    const quote2 = await api('/api/cart/quote', { body: { items: [line(1)] } });
+    expect(quote2.json.issues).toEqual([]);
+    const rows = await reservations(variantId);
+    expect(rows.some(r => r.released_at !== null)).toBe(true);
+  });
+
 });

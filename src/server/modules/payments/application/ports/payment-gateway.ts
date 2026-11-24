@@ -1,3 +1,4 @@
+import type { GatewayTransaction } from '../../domain/reconciliation';
 import type { RefundReason } from '../../domain/refund-reason';
 
 // Puerto de la pasarela de pago (ADR 0002). El dominio y los casos de uso hablan con esta interfaz;
@@ -48,6 +49,9 @@ export interface PaymentOrder {
   id: string;
   amountCents: number;
   state: PaymentOrderState;
+  /** Código con el que el cliente paga (CIP de PagoEfectivo); null hasta que elige el medio en el checkout. */
+  paymentCode: string | null;
+  expiresAt: Date | null;
   raw: unknown;
 }
 
@@ -73,4 +77,6 @@ export interface PaymentGateway {
   createOrder(request: PaymentOrderRequest): Promise<CreateOrderOutcome>;
   fetchOrder(orderId: string): Promise<FetchOrderOutcome>;
   refund(request: RefundRequest): Promise<RefundOutcome>;
+  /** Cargos y órdenes creados en el rango, para conciliar contra la tienda. Lanza si la pasarela no responde. */
+  listTransactions(range: { from: Date; to: Date }): Promise<GatewayTransaction[]>;
 }

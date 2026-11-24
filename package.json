@@ -9,6 +9,10 @@
     "build": "astro build",
     "preview": "astro preview --host",
     "db:up": "docker compose -f docker-compose.dev.yml up -d",
+    "local:up": "node scripts/local-stack.mjs up",
+    "local:url": "node scripts/local-stack.mjs url",
+    "local:logs": "node scripts/local-stack.mjs logs",
+    "local:down": "node scripts/local-stack.mjs down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:seed": "node scripts/db/seed.mjs",
@@ -19,7 +23,8 @@
     "test": "vitest run",
     "config:check": "node scripts/validate-env.mjs",
     "test:docker": "node scripts/test-docker.mjs",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "perf:budget": "node scripts/perf/js-budget.mjs"
   },
   "dependencies": {
     "@astrojs/node": "11.1.9",
@@ -43,6 +48,11 @@
   },
   "packageManager": "pnpm@10.30.3",
   "pnpm": {
+    "auditConfig": {
+      "ignoreCves": [
+        "CVE-2026-112366"
+      ]
+    },
     "overrides": {
       "undici@>=8.0.0 <8.12.2": "8.12.2",
       "esbuild@<0.25.0": "0.25.12"

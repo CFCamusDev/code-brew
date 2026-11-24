@@ -36,7 +36,7 @@ describe('sitio', () => {
     const { status, text } = await api('/producto/hotfix');
     expect(status).toBe(200);
     expect(text).toContain('S/ 34.00');
-    expect(text).toContain('data-sku="monteverde-250"');
+    expect(text).toContain('data-sku="hotfix-250"');
     expect(text).toContain('data-price="34"');
   });
 
@@ -135,7 +135,7 @@ describe('pedidos', () => {
 });
 
 describe('pagos', () => {
-  it.skipIf(process.env.CULQI_SECRET_KEY)('sin llaves de Culqi el pago en línea queda desactivado', async () => {
+  it.skipIf(process.env.CULQI_SECRET_KEY || process.env.PAYMENT_GATEWAY === 'fake')('sin llaves de Culqi el pago en línea queda desactivado', async () => {
     const created = await api('/api/orders', { body: { items: [espresso], customer, acceptedPolicies: true } });
     const session = await api('/api/payments/session', { body: { orderId: created.json.id } });
     expect(session.status).toBe(503);
