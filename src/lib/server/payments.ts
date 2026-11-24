@@ -6,10 +6,13 @@ import { payments } from './db/schema';
 import { sendOrderPaidEmails } from './email';
 import { orderingFor } from '../../server/modules/ordering';
 import { confirmOrderPayment, getPaymentGateway, type ConfirmedPayment } from '../../server/modules/payments';
+import { unitOfWork } from '../../server/shared';
 import { logger } from './logger';
 import { getOrder } from './shop';
 
 const CULQI_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
+
+const UNAVAILABLE_MESSAGE = 'Uno de los cafés de tu pedido se agotó. Ajusta tu pedido abajo o escríbenos por WhatsApp.';
 
 type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
@@ -17,7 +20,7 @@ type Order = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 async function stockIssue(order: Order): Promise<{ message: string; issues: Quote['issues'] } | null> {
   const quote = await orderingFor(getDb()).quoteOrder(order);
   if (!quote.issues.length) return null;
-  return { message: 'Uno de los cafés de tu pedido se agotó. Ajusta tu pedido abajo o escríbenos por WhatsApp.', issues: quote.issues };
+  return { message: UNAVAILABLE_MESSAGE, issues: quote.issues };
 }
 
 /**
@@ -55,7 +58,7 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
 
   const db = getDb();
   const [existing] = await db
-    .select({ reference: payments.providerReference })
+    .select({ reference: payments.providerReference, expiresAt: payments.expiresAt })
     .from(payments)
     .where(
       and(
@@ -70,6 +73,7 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
     .limit(1);
 
   let culqiOrderId = existing?.reference ?? null;
+  let culqiOrderExpiresAt = existing?.expiresAt ?? null;
   if (!culqiOrderId) {
     const expiresAt = new Date(Date.now() + CULQI_ORDER_TTL_MS);
     const created = await gateway.createOrder({
@@ -82,6 +86,7 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
     });
     if (created.ok) {
       culqiOrderId = created.order.id;
+      culqiOrderExpiresAt = expiresAt;
       await db.insert(payments).values({
         orderId: order.id,
         providerReference: culqiOrderId,
@@ -94,6 +99,14 @@ export async function startPayment(orderId: string): Promise<StartPaymentResult>
     } else {
       // Sin orden el checkout igual ofrece tarjeta y Yape.
       logger.warn('[culqi] no se pudo crear la orden; solo tarjeta y Yape', { status: created.status });
+    }
+  }
+
+  // PagoEfectivo y billeteras tardan horas: la reserva dura hasta que venza la orden de Culqi (tope de 48 h, ADR 0005).
+  if (culqiOrderExpiresAt) {
+    const reservation = await unitOfWork.run(tx => orderingFor(tx).extendReservation(order, culqiOrderExpiresAt));
+    if (reservation.status === 'unavailable') {
+      return { status: 'unavailable', message: UNAVAILABLE_MESSAGE, issues: reservation.issues };
     }
   }
 

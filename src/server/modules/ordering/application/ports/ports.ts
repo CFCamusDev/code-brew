@@ -19,6 +19,8 @@ export interface StockReservations {
   replace(orderId: string, lines: { variantId: number; quantity: number }[], expiresAt: Date): Promise<void>;
   /** Vencimiento de la reserva vigente más lejana del pedido; null si no tiene ninguna vigente. */
   currentExpiry(orderId: string, now: Date): Promise<Date | null>;
+  /** Marca como liberadas las reservas vigentes de esos pedidos (cancelación). Idempotente. */
+  release(orderIds: string[], now: Date): Promise<void>;
 }
 
 /** Envío visto desde pedidos: lo implementa un adaptador sobre el módulo shipping. */

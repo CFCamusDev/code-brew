@@ -71,6 +71,14 @@ export function createDrizzleStockReservations(tx: Executor): StockReservations 
         .from(stockReservations)
         .where(and(eq(stockReservations.orderId, orderId), isNull(stockReservations.releasedAt), gt(stockReservations.expiresAt, now)));
       return row?.expiresAt ? new Date(row.expiresAt) : null;
+    },
+    async release(orderIds, now) {
+      if (!orderIds.length) return;
+      // greatest(): la constraint exige released_at >= created_at y el reloj de la app puede ir un poco detrás de la base.
+      await tx
+        .update(stockReservations)
+        .set({ releasedAt: sql`greatest(${now.toISOString()}::timestamptz, ${stockReservations.createdAt})` })
+        .where(and(inArray(stockReservations.orderId, orderIds), isNull(stockReservations.releasedAt)));
     }
   };
 }

@@ -1,7 +1,9 @@
 import { systemClock, type Clock } from '../../shared/clock';
 import { createOrder } from './application/create-order';
 import type { OrderingDeps } from './application/ports/ports';
+import { extendReservation } from './application/extend-reservation';
 import { quoteCartUseCase } from './application/quote-cart';
+import { releaseReservations } from './application/release-reservations';
 import { quoteOrder } from './application/quote-order';
 import { updateOrderItems } from './application/update-order-items';
 import type { CartLine, OrderCustomer } from './domain/types';
@@ -35,6 +37,9 @@ export function orderingFor(executor: Executor, clock: Clock = systemClock) {
     quoteCart: (items: CartLine[], destination?: { zoneSlug?: string; region?: string }) => quoteCartUseCase(deps, items, destination),
     quoteOrder: (order: Parameters<typeof quoteOrder>[1]) => quoteOrder(deps, order),
     createOrder: (items: CartLine[], customer: OrderCustomer) => createOrder(deps, items, customer),
-    updateOrderItems: (orderId: string, items: CartLine[]) => updateOrderItems(deps, orderId, items)
+    updateOrderItems: (orderId: string, items: CartLine[]) => updateOrderItems(deps, orderId, items),
+    extendReservation: (order: Parameters<typeof extendReservation>[1], gatewayOrderExpiresAt: Date) =>
+      extendReservation(deps, order, gatewayOrderExpiresAt),
+    releaseReservations: (orderIds: string[]) => releaseReservations(deps, orderIds)
   };
 }

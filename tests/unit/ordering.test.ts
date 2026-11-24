@@ -3,6 +3,9 @@ import { FixedClock } from '../../src/server/shared/clock';
 import { createOrder } from '../../src/server/modules/ordering/application/create-order';
 import type { NewOrder, OrderingDeps, OrderLineRecord } from '../../src/server/modules/ordering/application/ports/ports';
 import { quoteCartUseCase } from '../../src/server/modules/ordering/application/quote-cart';
+import { extendReservation } from '../../src/server/modules/ordering/application/extend-reservation';
+import { releaseReservations } from '../../src/server/modules/ordering/application/release-reservations';
+import { reservationExpiry } from '../../src/server/modules/ordering/domain/reservation-expiry';
 import { updateOrderItems } from '../../src/server/modules/ordering/application/update-order-items';
 import { quoteOrder } from '../../src/server/modules/ordering/application/quote-order';
 import { availableStock, quoteCart, type ShippingRules } from '../../src/server/modules/ordering/domain/cart-quote';
@@ -71,7 +74,7 @@ describe('CotizarCarrito (dominio)', () => {
 });
 
 /** Dependencias en memoria para los casos de uso. */
-interface MemoryReservation { orderId: string; variantId: number; quantity: number; expiresAt: Date }
+interface MemoryReservation { orderId: string; variantId: number; quantity: number; expiresAt: Date; releasedAt?: Date }
 
 function memoryDeps(variants: CatalogVariant[], orderStatus = 'pending', clock = new FixedClock(new Date('2026-11-17T10:00:00Z'))) {
   const inserted: NewOrder[] = [];
@@ -89,7 +92,7 @@ function memoryDeps(variants: CatalogVariant[], orderStatus = 'pending', clock =
           .map(v => ({
             ...v,
             reserved: reservations
-              .filter(r => r.variantId === v.variantId && r.expiresAt > now && r.orderId !== excludeOrderId)
+              .filter(r => r.variantId === v.variantId && !r.releasedAt && r.expiresAt > now && r.orderId !== excludeOrderId)
               .reduce((sum, r) => sum + r.quantity, 0)
           }))
     },
@@ -101,8 +104,11 @@ function memoryDeps(variants: CatalogVariant[], orderStatus = 'pending', clock =
         reservations.push(...lines.map(l => ({ orderId, variantId: l.variantId, quantity: l.quantity, expiresAt })));
       },
       currentExpiry: async (orderId, now) => {
-        const live = reservations.filter(r => r.orderId === orderId && r.expiresAt > now).map(r => r.expiresAt.getTime());
+        const live = reservations.filter(r => r.orderId === orderId && !r.releasedAt && r.expiresAt > now).map(r => r.expiresAt.getTime());
         return live.length ? new Date(Math.max(...live)) : null;
+      },
+      release: async (orderIds, now) => {
+        for (const r of reservations) if (orderIds.includes(r.orderId) && !r.releasedAt) r.releasedAt = now;
       }
     },
     orders: {
@@ -275,5 +281,84 @@ describe('ActualizarLineasDePedido', () => {
     await expect(updateOrderItems(deps, 'o-1', [line(1)])).rejects.toBeInstanceOf(CartIssuesError);
     expect(items).toEqual([]);
     expect(totals).toEqual([]);
+  });
+});
+
+describe('Vencimiento de reservas por método de pago (S3.3)', () => {
+  const order = { id: 'o-1', items: [line(2)], shippingZoneId: 5, shippingRegion: 'Lima' };
+  const MIN = 60 * 1000;
+  const HOUR = 60 * MIN;
+
+  it('tarjeta y Yape: 30 minutos', () => {
+    const now = new Date('2026-11-17T10:00:00Z');
+    expect(reservationExpiry(now)).toEqual(new Date(now.getTime() + 30 * MIN));
+  });
+
+  it('PagoEfectivo o billetera: hasta el vencimiento de la orden de Culqi', () => {
+    const now = new Date('2026-11-17T10:00:00Z');
+    expect(reservationExpiry(now, new Date(now.getTime() + 24 * HOUR))).toEqual(new Date(now.getTime() + 24 * HOUR));
+  });
+
+  it('con tope de 48 horas aunque la orden de Culqi dure más', () => {
+    const now = new Date('2026-11-17T10:00:00Z');
+    expect(reservationExpiry(now, new Date(now.getTime() + 72 * HOUR))).toEqual(new Date(now.getTime() + 48 * HOUR));
+  });
+
+  it('nunca menos de 30 minutos: una orden que vence antes no acorta el pago con tarjeta', () => {
+    const now = new Date('2026-11-17T10:00:00Z');
+    expect(reservationExpiry(now, new Date(now.getTime() + 5 * MIN))).toEqual(new Date(now.getTime() + 30 * MIN));
+  });
+
+  it('al crearse la orden de Culqi se extiende la reserva y no se acorta', async () => {
+    const { deps, reservations, clock } = memoryDeps([variant({ variantId: 9, stock: 3 })]);
+    await createOrder(deps, [line(2)], customer);
+    clock.advance(10 * MIN);
+    const culqiExpiry = new Date(clock.now().getTime() + 24 * HOUR);
+    await expect(extendReservation(deps, order, culqiExpiry)).resolves.toEqual({ status: 'extended', expiresAt: culqiExpiry });
+    expect(reservations).toEqual([{ orderId: 'o-1', variantId: 9, quantity: 2, expiresAt: culqiExpiry }]);
+    // Una orden que vence antes que la reserva actual no la acorta.
+    await extendReservation(deps, order, new Date(clock.now().getTime() + 1 * HOUR));
+    expect(reservations[0].expiresAt).toEqual(culqiExpiry);
+  });
+
+  it('extendida, la reserva sigue apartando stock pasados los 30 minutos (reloj simulado)', async () => {
+    const { deps, clock } = memoryDeps([variant({ variantId: 9, stock: 2 })]);
+    await createOrder(deps, [line(2)], customer);
+    await extendReservation(deps, order, new Date(clock.now().getTime() + 24 * HOUR));
+    clock.advance(2 * HOUR);
+    await expect(createOrder(deps, [line(1)], customer)).rejects.toBeInstanceOf(CartIssuesError);
+    clock.advance(23 * HOUR);
+    await expect(createOrder(deps, [line(1)], customer)).resolves.toMatchObject({ id: 'o-2' });
+  });
+
+  it('si la reserva ya había vencido, se vuelve a prometer solo si el stock sigue disponible', async () => {
+    const { deps, reservations, clock } = memoryDeps([variant({ variantId: 9, stock: 2 })]);
+    await createOrder(deps, [line(2)], customer);
+    clock.advance(45 * MIN);
+    const culqiExpiry = new Date(clock.now().getTime() + 24 * HOUR);
+    await expect(extendReservation(deps, order, culqiExpiry)).resolves.toMatchObject({ status: 'extended' });
+    expect(reservations[0].expiresAt).toEqual(culqiExpiry);
+
+    // Otro cliente se quedó con el stock mientras tanto: no se puede volver a prometer.
+    const taken = memoryDeps([variant({ variantId: 9, stock: 2 })]);
+    await createOrder(taken.deps, [line(2)], customer);
+    taken.clock.advance(45 * MIN);
+    await createOrder(taken.deps, [line(2)], customer);
+    const result = await extendReservation(taken.deps, order, new Date(taken.clock.now().getTime() + 24 * HOUR));
+    expect(result).toMatchObject({ status: 'unavailable' });
+  });
+
+  it('no extiende pedidos que ya no están pendientes', async () => {
+    const { deps, reservations } = memoryDeps([variant({ variantId: 9, stock: 3 })], 'cancelled');
+    await expect(extendReservation(deps, order, new Date('2026-11-18T10:00:00Z'))).resolves.toEqual({ status: 'closed' });
+    expect(reservations).toEqual([]);
+  });
+
+  it('cancelar el pedido libera su reserva de inmediato, sin esperar al vencimiento', async () => {
+    const { deps } = memoryDeps([variant({ variantId: 9, stock: 1 })]);
+    await createOrder(deps, [line(1)], customer);
+    await expect(createOrder(deps, [line(1)], customer)).rejects.toBeInstanceOf(CartIssuesError);
+    await releaseReservations(deps, ['o-1']);
+    await expect(createOrder(deps, [line(1)], customer)).resolves.toMatchObject({ id: 'o-2' });
   });
 });

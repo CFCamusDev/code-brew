@@ -1,5 +1,5 @@
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { api, customer, db } from './helpers';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { ADMIN, api, customer, db, login } from './helpers';
 
 // S3.2: el pedido reserva el stock al crearse (ADR 0005). Prueba contra el servidor real y PostgreSQL.
 const SKU = 'espresso-250';
@@ -7,6 +7,10 @@ const line = (quantity: number) => ({ sku: SKU, grind: 'Grano entero', quantity 
 const order = (quantity: number) => api('/api/orders', { body: { items: [line(quantity)], customer, acceptedPolicies: true } });
 
 const sql = db();
+let adminCookie = '';
+beforeAll(async () => {
+  adminCookie = await login(ADMIN);
+});
 afterAll(() => sql.end());
 
 async function stockOf() {
@@ -107,6 +111,36 @@ describe('reserva de stock al crear el pedido', () => {
     // La unidad que sobró queda libre para otro cliente.
     expect((await order(1)).status).toBe(201);
     expect((await order(1)).status).toBe(409);
+  });
+
+  // S3.3: cancelar el pedido libera su reserva de inmediato.
+  it('cancelar el pedido desde el panel libera su reserva y el stock queda disponible', async () => {
+    await setStock(1);
+    const created = await order(1);
+    expect(created.status).toBe(201);
+    expect((await order(1)).status).toBe(409);
+
+    const cancelled = await api(`/api/admin/orders/${created.json.id}`, { body: { action: 'status', to: 'cancelled' }, cookie: adminCookie });
+    expect(cancelled.status).toBe(200);
+    const { id } = await stockOf();
+    const rows = await reservations(id);
+    expect(rows[0].released_at).not.toBeNull();
+    expect((await order(1)).status).toBe(201);
+  });
+
+  it('la tarea de pedidos abandonados también libera las reservas que seguían vigentes', async () => {
+    await setStock(1);
+    const created = await order(1);
+    expect(created.status).toBe(201);
+    await sql`update orders set created_at = now() - interval '3 days' where id = ${created.json.id}`;
+
+    const task = await api('/api/admin/tareas/cancelar-abandonados', { body: {}, cookie: adminCookie });
+    expect(task.status).toBe(200);
+    const [{ status }] = await sql`select status from orders where id = ${created.json.id}`;
+    expect(status).toBe('cancelled');
+    const { id } = await stockOf();
+    expect((await reservations(id))[0].released_at).not.toBeNull();
+    expect((await order(1)).status).toBe(201);
   });
 
   // S3.4 (parcial): pagar libera la reserva y no causa doble conteo del stock disponible.
